@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, Store, Eye, EyeOff, Check, Mountain, ArrowLeft } from 'lucide-react';
+import { User, Store, Eye, EyeOff, Check, Mountain, ArrowLeft, Loader2 } from 'lucide-react';
 import Navigation from '../components/Navigation';
+import { supabase } from '../config/supabase';
 import '../components/SignUp.css';
 
 const SignUpPage = () => {
@@ -10,6 +11,7 @@ const SignUpPage = () => {
   const [selectedRole, setSelectedRole] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -17,7 +19,8 @@ const SignUpPage = () => {
     confirmPassword: '',
     phoneNumber: '',
     businessName: '',
-    businessLicense: '',
+    panNumber: '',
+    businessAddress: '',
     agreeToTerms: false,
   });
   const [errors, setErrors] = useState({});
@@ -68,12 +71,21 @@ const SignUpPage = () => {
   const validateForm = () => {
     const newErrors = {};
 
+    // Full name - MUST be at least 2 words
     if (!formData.fullName.trim()) {
       newErrors.fullName = 'Full name is required';
     } else if (formData.fullName.trim().length < 2) {
       newErrors.fullName = 'Name must be at least 2 characters';
+    } else {
+      const nameParts = formData.fullName.trim().split(/\s+/);
+      if (nameParts.length < 2) {
+        newErrors.fullName = 'Please enter your full name (first and last name)';
+      } else if (nameParts.some(part => part.length < 2)) {
+        newErrors.fullName = 'Each name must be at least 2 characters';
+      }
     }
 
+    // Email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!formData.email) {
       newErrors.email = 'Email is required';
@@ -81,6 +93,7 @@ const SignUpPage = () => {
       newErrors.email = 'Please enter a valid email';
     }
 
+    // Password
     if (!formData.password) {
       newErrors.password = 'Password is required';
     } else if (formData.password.length < 8) {
@@ -89,25 +102,36 @@ const SignUpPage = () => {
       newErrors.password = 'Password must include uppercase, lowercase, and number';
     }
 
+    // Confirm password
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match';
     }
 
+    // Phone number
     if (!formData.phoneNumber) {
       newErrors.phoneNumber = 'Phone number is required';
     } else if (!/^\+?[\d\s-()]+$/.test(formData.phoneNumber)) {
       newErrors.phoneNumber = 'Please enter a valid phone number';
     }
 
+    // Vendor specific
     if (selectedRole === 'vendor') {
       if (!formData.businessName.trim()) {
         newErrors.businessName = 'Business name is required';
       }
-      if (!formData.businessLicense.trim()) {
-        newErrors.businessLicense = 'Business license number is required';
+
+      if (!formData.panNumber.trim()) {
+        newErrors.panNumber = 'PAN number is required';
+      } else if (!/^\d{9}$/.test(formData.panNumber)) {
+        newErrors.panNumber = 'PAN must be exactly 9 digits';
+      }
+
+      if (!formData.businessAddress.trim()) {
+        newErrors.businessAddress = 'Business address is required';
       }
     }
 
+    // Terms
     if (!formData.agreeToTerms) {
       newErrors.agreeToTerms = 'You must agree to the terms and conditions';
     }
@@ -116,23 +140,72 @@ const SignUpPage = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (validateForm()) {
-      console.log('Form submitted:', { ...formData, role: selectedRole });
-      
-      setTimeout(() => {
-        alert('Account created successfully! Please check your email for verification.');
-        navigate('/login');
-      }, 500);
+
+    if (!validateForm()) {
+      const firstError = document.querySelector('.error');
+      if (firstError) {
+        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return;
+    }
+
+    setIsLoading(true);
+    setErrors({});
+
+    try {
+      console.log('Starting signup...');
+
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            full_name: formData.fullName,
+            phone_number: formData.phoneNumber,
+            role: selectedRole,
+            business_name: selectedRole === 'vendor' ? formData.businessName : null,
+            pan_number: selectedRole === 'vendor' ? formData.panNumber : null,
+            business_address: selectedRole === 'vendor' ? formData.businessAddress : null,
+          }
+        }
+      });
+
+      if (authError) {
+        console.error('Auth error:', authError);
+        throw authError;
+      }
+
+      console.log('Signup successful:', authData);
+
+      alert(
+        `Account created successfully! 🎉\n\n` +
+        `Welcome, ${formData.fullName}!\n\n` +
+        `You can now sign in with your credentials.`
+      );
+
+      navigate('/login');
+
+    } catch (error) {
+      console.error('Signup error:', error);
+
+      if (error.message?.includes('already registered')) {
+        setErrors({ email: 'This email is already registered. Please login instead.' });
+      } else if (error.message?.includes('Full name must include')) {
+        setErrors({ fullName: error.message });
+      } else {
+        setErrors({ general: error.message || 'An error occurred during signup. Please try again.' });
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="signup-page">
       <Navigation />
-      
+
       <div className="signup-container">
         {step === 1 && (
           <div className="role-selection">
@@ -152,10 +225,10 @@ const SignUpPage = () => {
                   <div className="role-icon-box">
                     <role.icon className="role-icon" />
                   </div>
-                  
+
                   <h3 className="role-title">{role.title}</h3>
                   <p className="role-description">{role.description}</p>
-                  
+
                   <ul className="role-features-list">
                     {role.features.map((feature, idx) => (
                       <li key={idx}>
@@ -180,7 +253,7 @@ const SignUpPage = () => {
 
         {step === 2 && (
           <div className="registration-form">
-            <button className="back-btn" onClick={() => setStep(1)}>
+            <button className="back-btn" onClick={() => setStep(1)} disabled={isLoading}>
               <ArrowLeft size={20} />
               <span>Back to account selection</span>
             </button>
@@ -194,6 +267,12 @@ const SignUpPage = () => {
               <p className="form-subtitle">Fill in your details to get started</p>
             </div>
 
+            {errors.general && (
+              <div className="alert alert-error">
+                {errors.general}
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="signup-form">
               <div className="form-group">
                 <label htmlFor="fullName">Full Name <span className="required">*</span></label>
@@ -205,6 +284,7 @@ const SignUpPage = () => {
                   placeholder="Enter your full name"
                   value={formData.fullName}
                   onChange={handleInputChange}
+                  disabled={isLoading}
                 />
                 {errors.fullName && <span className="error-text">{errors.fullName}</span>}
               </div>
@@ -219,6 +299,7 @@ const SignUpPage = () => {
                   placeholder="your.email@example.com"
                   value={formData.email}
                   onChange={handleInputChange}
+                  disabled={isLoading}
                 />
                 {errors.email && <span className="error-text">{errors.email}</span>}
               </div>
@@ -233,6 +314,7 @@ const SignUpPage = () => {
                   placeholder="+977 XXX XXXX"
                   value={formData.phoneNumber}
                   onChange={handleInputChange}
+                  disabled={isLoading}
                 />
                 {errors.phoneNumber && <span className="error-text">{errors.phoneNumber}</span>}
               </div>
@@ -240,32 +322,57 @@ const SignUpPage = () => {
               {selectedRole === 'vendor' && (
                 <>
                   <div className="form-group">
-                    <label htmlFor="businessName">Business Name <span className="required">*</span></label>
+                    <label htmlFor="businessName">
+                      Business Name <span className="required">*</span>
+                    </label>
                     <input
                       type="text"
                       id="businessName"
                       name="businessName"
                       className={`form-input ${errors.businessName ? 'error' : ''}`}
-                      placeholder="Your company or business name"
+                      placeholder="e.g., Himalayan Vehicle Rentals"
                       value={formData.businessName}
                       onChange={handleInputChange}
+                      disabled={isLoading}
                     />
                     {errors.businessName && <span className="error-text">{errors.businessName}</span>}
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor="businessLicense">NATTA License Number <span className="required">*</span></label>
+                    <label htmlFor="panNumber">
+                      PAN Number <span className="required">*</span>
+                    </label>
                     <input
                       type="text"
-                      id="businessLicense"
-                      name="businessLicense"
-                      className={`form-input ${errors.businessLicense ? 'error' : ''}`}
-                      placeholder="Your NATTA registration number"
-                      value={formData.businessLicense}
+                      id="panNumber"
+                      name="panNumber"
+                      className={`form-input ${errors.panNumber ? 'error' : ''}`}
+                      placeholder="e.g., 123456789"
+                      value={formData.panNumber}
                       onChange={handleInputChange}
+                      disabled={isLoading}
+                      maxLength="9"
                     />
-                    {errors.businessLicense && <span className="error-text">{errors.businessLicense}</span>}
-                    <span className="input-hint">We verify all vendors with NATTA</span>
+                    {errors.panNumber && <span className="error-text">{errors.panNumber}</span>}
+                    <span className="input-hint">9-digit PAN number</span>
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="businessAddress">
+                      Business Address <span className="required">*</span>
+                    </label>
+                    <textarea
+                      id="businessAddress"
+                      name="businessAddress"
+                      className={`form-input ${errors.businessAddress ? 'error' : ''}`}
+                      placeholder="e.g., Thamel, Kathmandu"
+                      value={formData.businessAddress}
+                      onChange={handleInputChange}
+                      disabled={isLoading}
+                      rows="2"
+                      style={{ resize: 'vertical' }}
+                    />
+                    {errors.businessAddress && <span className="error-text">{errors.businessAddress}</span>}
                   </div>
                 </>
               )}
@@ -281,11 +388,13 @@ const SignUpPage = () => {
                     placeholder="Create a strong password"
                     value={formData.password}
                     onChange={handleInputChange}
+                    disabled={isLoading}
                   />
                   <button
                     type="button"
                     className="password-toggle-btn"
                     onClick={() => setShowPassword(!showPassword)}
+                    disabled={isLoading}
                   >
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
@@ -305,11 +414,13 @@ const SignUpPage = () => {
                     placeholder="Re-enter your password"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
+                    disabled={isLoading}
                   />
                   <button
                     type="button"
                     className="password-toggle-btn"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    disabled={isLoading}
                   >
                     {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
@@ -324,6 +435,7 @@ const SignUpPage = () => {
                     name="agreeToTerms"
                     checked={formData.agreeToTerms}
                     onChange={handleInputChange}
+                    disabled={isLoading}
                   />
                   <span>
                     I agree to the <Link to="/terms">Terms of Service</Link> and <Link to="/privacy">Privacy Policy</Link>
@@ -332,8 +444,15 @@ const SignUpPage = () => {
                 {errors.agreeToTerms && <span className="error-text">{errors.agreeToTerms}</span>}
               </div>
 
-              <button type="submit" className="submit-button">
-                Create Account
+              <button type="submit" className="submit-button" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="spinner" size={20} />
+                    <span>Creating Account...</span>
+                  </>
+                ) : (
+                  'Create Account'
+                )}
               </button>
 
               <div className="form-footer">

@@ -144,6 +144,7 @@
   margin-bottom: 1.5rem;
   border: 2px solid;
   font-size: 0.95rem;
+  border-radius: 4px;
 }
 
 .alert-error {
@@ -293,7 +294,7 @@
   text-decoration: underline;
 }
 
-/* Submit Button */
+/* Submit Button with Loading */
 .submit-btn {
   width: 100%;
   padding: 1.125rem;
@@ -307,6 +308,10 @@
   transition: all var(--transition-medium);
   box-shadow: var(--shadow-md);
   margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
 .submit-btn:hover:not(:disabled) {
@@ -319,6 +324,20 @@
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
+}
+
+/* Loading Spinner */
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Divider */
