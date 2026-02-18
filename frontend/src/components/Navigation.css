@@ -35,7 +35,7 @@
   justify-content: space-between;
 }
 
-/* Logo Styles */
+/* Logo */
 .logo {
   display: flex;
   align-items: center;
@@ -83,7 +83,6 @@
   top: -4px;
 }
 
-/* Scrolled state logo colors */
 .navigation.scrolled .logo-nepal {
   color: var(--color-primary);
 }
@@ -128,7 +127,6 @@
   width: 100%;
 }
 
-/* Scrolled state nav links */
 .navigation.scrolled .nav-link {
   color: var(--color-text-secondary);
   text-shadow: none;
@@ -157,7 +155,223 @@
   color: var(--color-primary);
 }
 
-/* Mobile Menu Toggle */
+/* ============================================
+   PROFILE DROPDOWN
+   ============================================ */
+
+.profile-dropdown {
+  position: relative;
+}
+
+.profile-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 0.4rem 0.875rem 0.4rem 0.4rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  color: var(--color-white);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.profile-trigger:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: var(--color-accent);
+}
+
+.navigation.scrolled .profile-trigger {
+  background: none;
+  border: 2px solid var(--color-border);
+  color: var(--color-text);
+}
+
+.navigation.scrolled .profile-trigger:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+/* Avatar Circle */
+.profile-avatar {
+  width: 32px;
+  height: 32px;
+  background: var(--color-accent);
+  color: var(--color-white);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
+.navigation.scrolled .profile-avatar {
+  background: var(--color-primary);
+}
+
+.profile-name {
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Chevron */
+.chevron {
+  transition: transform var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.chevron-open {
+  transform: rotate(180deg);
+}
+
+/* Dropdown Menu */
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 0.75rem);
+  right: 0;
+  width: 260px;
+  background: var(--color-white);
+  border: 2px solid var(--color-border);
+  box-shadow: var(--shadow-xl);
+  z-index: 1000;
+  animation: dropdownFadeIn 0.15s ease;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Dropdown Header */
+.dropdown-header {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 1.25rem;
+  background: var(--color-bg-secondary);
+}
+
+.dropdown-avatar {
+  width: 44px;
+  height: 44px;
+  background: var(--color-primary);
+  color: var(--color-white);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.125rem;
+  flex-shrink: 0;
+}
+
+.dropdown-user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  overflow: hidden;
+}
+
+.dropdown-name {
+  font-weight: 700;
+  color: var(--color-primary);
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dropdown-email {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dropdown-role {
+  font-size: 0.8rem;
+  color: var(--color-accent);
+  font-weight: 600;
+  margin-top: 0.1rem;
+}
+
+/* Divider */
+.dropdown-divider {
+  height: 1px;
+  background: var(--color-border);
+}
+
+/* Dropdown Items */
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1.25rem;
+  color: var(--color-text);
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  text-align: left;
+}
+
+.dropdown-item:hover {
+  background: var(--color-bg-secondary);
+  color: var(--color-primary);
+  padding-left: 1.5rem;
+}
+
+.dropdown-item svg {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+  transition: color var(--transition-fast);
+}
+
+.dropdown-item:hover svg {
+  color: var(--color-accent);
+}
+
+/* Logout - Red */
+.dropdown-logout {
+  color: #dc2626;
+}
+
+.dropdown-logout:hover {
+  background: #fef2f2;
+  color: #dc2626;
+  padding-left: 1.5rem;
+}
+
+.dropdown-logout svg {
+  color: #dc2626;
+}
+
+.dropdown-logout:hover svg {
+  color: #dc2626;
+}
+
+/* ============================================
+   MOBILE MENU TOGGLE
+   ============================================ */
+
 .mobile-menu-toggle {
   display: none;
   background: rgba(255, 255, 255, 0.1);
@@ -191,7 +405,10 @@
   height: 28px;
 }
 
-/* Mobile Menu */
+/* ============================================
+   MOBILE MENU
+   ============================================ */
+
 .mobile-menu {
   display: none;
   flex-direction: column;
@@ -247,7 +464,57 @@
   text-align: center;
 }
 
-/* Responsive */
+/* Mobile User Info */
+.mobile-user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 0.5rem;
+}
+
+.navigation.scrolled .mobile-user-info {
+  background: var(--color-bg-secondary);
+  border-color: var(--color-border);
+}
+
+.mobile-avatar {
+  width: 40px;
+  height: 40px;
+  background: var(--color-accent);
+  color: var(--color-white);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.mobile-user-name {
+  font-weight: 700;
+  color: var(--color-white);
+  font-size: 0.95rem;
+}
+
+.navigation.scrolled .mobile-user-name {
+  color: var(--color-primary);
+}
+
+.mobile-user-role {
+  font-size: 0.8rem;
+  color: var(--color-accent);
+  font-weight: 600;
+  margin-top: 0.2rem;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
 @media (max-width: 968px) {
   .navigation .container {
     padding: 0 2rem;
