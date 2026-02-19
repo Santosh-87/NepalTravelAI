@@ -14,8 +14,8 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
 
     const checkAuth = async () => {
         try {
-            // Get current session
-            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+            const { data: { session }, error: sessionError } =
+                await supabase.auth.getSession();
 
             if (sessionError) throw sessionError;
 
@@ -26,18 +26,14 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
 
             setUser(session.user);
 
-            // Get user profile with role
-            const { data: profileData, error: profileError } = await supabase
-                .from('user_profiles')
-                .select('*')
-                .eq('id', session.user.id)
-                .single();
+            const { data: profileData, error: profileError } =
+                await supabase
+                    .from('user_profiles')
+                    .select('*')
+                    .eq('id', session.user.id)
+                    .single();
 
-            if (profileError) {
-                console.error('Error loading profile:', profileError);
-                setLoading(false);
-                return;
-            }
+            if (profileError) throw profileError;
 
             setProfile(profileData);
 
@@ -48,61 +44,54 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
         }
     };
 
-    // Show loading state
+    // 🔄 Still loading auth
     if (loading) {
         return (
             <div style={{
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
-                minHeight: '100vh',
-                fontSize: '1.125rem',
-                color: '#4a4a4a'
+                minHeight: '100vh'
             }}>
                 Loading...
             </div>
         );
     }
 
-    // Redirect to login if not authenticated
+    // ❌ Not logged in
     if (!user) {
         return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
-    // Check role-based access
-    if (allowedRoles.length > 0 && profile) {
-        if (!allowedRoles.includes(profile.role)) {
+    // 🚨 If roles are required, profile MUST exist
+    if (allowedRoles.length > 0) {
+
+        if (!profile) {
             return (
                 <div style={{
                     display: 'flex',
-                    flexDirection: 'column',
                     justifyContent: 'center',
                     alignItems: 'center',
-                    minHeight: '100vh',
-                    padding: '2rem',
-                    textAlign: 'center'
+                    minHeight: '100vh'
                 }}>
-                    <h2 style={{ fontSize: '2rem', color: '#1a4d6f', marginBottom: '1rem' }}>
-                        Access Denied
-                    </h2>
-                    <p style={{ fontSize: '1.125rem', color: '#4a4a4a', marginBottom: '2rem' }}>
-                        You don't have permission to access this page.
-                    </p>
-                    <a
-                        href="/"
-                        style={{
-                            padding: '1rem 2rem',
-                            background: '#1a4d6f',
-                            color: 'white',
-                            textDecoration: 'none',
-                            fontWeight: '600',
-                            borderRadius: '4px'
-                        }}
-                    >
-                        Go to Homepage
-                    </a>
+                    Loading profile...
                 </div>
             );
+        }
+        console.log("PROFILE ROLE:", profile?.role);
+        console.log("ALLOWED ROLES:", allowedRoles);
+        // ❌ Wrong role
+        if (!allowedRoles.includes(profile.role)) {
+            return <Navigate to="/" replace />;
+        }
+
+        // 🚨 Vendor not approved → force pending page
+        if (
+            profile.role === 'vendor' &&
+            !profile.is_vendor_approved &&
+            location.pathname !== '/vendor/pending'
+        ) {
+            return <Navigate to="/vendor/pending" replace />;
         }
     }
 

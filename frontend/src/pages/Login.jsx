@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom'; 
 import { Eye, EyeOff, Mountain, Mail, Lock, Loader2 } from 'lucide-react';
 import Navigation from '../components/Navigation';
 import { supabase } from '../config/supabase';
-import '../components/Login.css';
+import './Login.css';
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({ email: '', password: '', rememberMe: false });
   const [errors, setErrors] = useState({});
+  
+  // Step 1: Initialize navigate
+  const navigate = useNavigate();
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -35,6 +38,8 @@ const LoginPage = () => {
     setErrors({});
 
     try {
+      console.log('🔐 Starting login...');
+      
       // Step 1: Sign in
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email: formData.email,
@@ -42,17 +47,25 @@ const LoginPage = () => {
       });
 
       if (authError) throw authError;
+      console.log('✅ Auth successful');
 
-      // Step 2: Get user profile for role-based redirect
+      // Step 2: Get user profile
       const { data: profile, error: profileError } = await supabase
         .from('user_profiles')
-        .select('role, is_vendor_approved, full_name')
+        .select('*')  // get all columns to see what's available
         .eq('id', authData.user.id)
         .single();
 
-      if (profileError) throw new Error('Could not load your profile. Please try again.');
+      if (profileError) {
+        console.error('❌ Profile error:', profileError);
+        throw new Error('Could not load your profile. Please try again.');
+      }
 
-      // Step 3: Save to localStorage for quick access
+      console.log('📋 FULL PROFILE DATA:', profile);
+      console.log('📋 Role:', profile.role);
+      console.log('📋 is_vendor_approved:', profile.is_vendor_approved);
+
+      // Step 3: Save to localStorage
       localStorage.setItem('user', JSON.stringify({
         id: authData.user.id,
         email: authData.user.email,
@@ -61,15 +74,26 @@ const LoginPage = () => {
         isVendorApproved: profile.is_vendor_approved,
       }));
 
-      // Step 4: Redirect based on role
+      // Step 4: Redirect based on role 
       if (profile.role === 'vendor') {
-        window.location.href = profile.is_vendor_approved ? '/vendor/dashboard' : '/vendor/pending';
+        console.log('🚚 User is VENDOR');
+        if (profile.is_vendor_approved === true) {
+          console.log('✅ Vendor APPROVED → redirecting to /vendor/dashboard');
+          navigate('/vendor/dashboard'); 
+        } else {
+          console.log('⏳ Vendor NOT approved → redirecting to /vendor/pending');
+          navigate('/vendor/pending'); 
+        }
+      } else if (profile.role === 'tourist') {
+        console.log('🧭 User is TOURIST → redirecting to homepage');
+        navigate('/'); 
       } else {
-        window.location.href = '/';
+        console.log('❓ Unknown role:', profile.role, '→ redirecting to homepage');
+        navigate('/'); 
       }
 
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('❌ Login error:', error);
       setIsLoading(false);
 
       if (error.message?.includes('Invalid login credentials')) {

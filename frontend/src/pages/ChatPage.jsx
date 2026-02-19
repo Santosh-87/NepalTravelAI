@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, RotateCcw, Sparkles, Mountain, Car, Map } from 'lucide-react';
 import Navigation from '../components/Navigation';
-import '../components/ChatPage.css';
+import './ChatPage.css';
 
 const ChatPage = () => {
   const [messages, setMessages] = useState([

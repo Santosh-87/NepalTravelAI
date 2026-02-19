@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { User, Store, Eye, EyeOff, Check, Mountain, ArrowLeft, Loader2 } from 'lucide-react';
 import Navigation from '../components/Navigation';
 import { supabase } from '../config/supabase';
-import '../components/SignUp.css';
+import './SignUp.css';
 
 const SignUpPage = () => {
   const [step, setStep] = useState(1);
