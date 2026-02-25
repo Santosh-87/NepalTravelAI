@@ -45,4 +45,3 @@ for query in test_queries:
 print("="*60)
 print("TEST COMPLETE")
 print("="*60)
-print("\nIf you see relevant content above, RAG is working correctly.")
