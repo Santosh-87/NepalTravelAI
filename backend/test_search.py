@@ -20,7 +20,8 @@ test_queries = [
     "Tell me about hidden places in Nepal",
     "What are the major tourist attractions?",
     "Heritage site entry fees",
-    "Best time to trek in Nepal"
+    "Best time to trek in Nepal",
+    "What is the entry fee for Chitwan National Park?",
 ]
 
 print("\n" + "="*60)

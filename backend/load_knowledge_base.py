@@ -16,15 +16,13 @@ class KnowledgeLoader:
         self.db_path = db_path
         self.collection_name = 'nepal_tourism'
         
-        print("Initializing Knowledge Base Loader")
+        print("Knowledge Base Loader - Fixed Version")
         print("-" * 60)
         
-        # Load embedding model
-        print("\nLoading embedding model (30 seconds)...")
+        print("\nLoading embedding model...")
         self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
-        print("  Embedding model loaded")
+        print("  Model loaded")
         
-        # Initialize ChromaDB
         print("\nInitializing ChromaDB...")
         self.client = chromadb.PersistentClient(
             path=self.db_path,
@@ -36,44 +34,57 @@ class KnowledgeLoader:
             metadata={"description": "Nepal tourism knowledge base"}
         )
         
-        print(f"  ChromaDB initialized")
-        print(f"  Current documents: {self.collection.count()}")
+        print(f"  ChromaDB ready")
+        print(f"  Current chunks: {self.collection.count()}")
     
-    def chunk_text(self, text, chunk_size=500, overlap=50):
-        """Split text into overlapping chunks for better context preservation"""
-        words = text.split()
-        chunks = []
+    def chunk_by_paragraphs(self, text, target_words=400, min_words=100):
+        """
+        Better chunking: Split by paragraphs, then combine to reach target size
+        """
+        # Split by double newline (paragraphs)
+        paragraphs = [p.strip() for p in text.split('\n\n') if p.strip()]
         
-        for i in range(0, len(words), chunk_size - overlap):
-            chunk = ' '.join(words[i:i + chunk_size])
-            if len(chunk.strip()) > 100:
-                chunks.append(chunk)
+        chunks = []
+        current_chunk = []
+        current_word_count = 0
+        
+        for para in paragraphs:
+            para_words = len(para.split())
+            
+            
+            if current_word_count + para_words > target_words and current_chunk:
+                chunk_text = '\n\n'.join(current_chunk)
+                if len(chunk_text.split()) >= min_words:
+                    chunks.append(chunk_text)
+                current_chunk = [para]
+                current_word_count = para_words
+            else:
+                current_chunk.append(para)
+                current_word_count += para_words
+        
+        
+        if current_chunk:
+            chunk_text = '\n\n'.join(current_chunk)
+            if len(chunk_text.split()) >= min_words:
+                chunks.append(chunk_text)
         
         return chunks
     
-    def load_document(self, filepath):
-        """Load single markdown file"""
-        with open(filepath, 'r', encoding='utf-8') as f:
-            return f.read()
-    
     def generate_id(self, content):
-        """Generate unique ID for chunk"""
         return hashlib.md5(content.encode()).hexdigest()
     
     def load_all(self):
-        """Load all markdown files from knowledge base"""
         print("\n" + "="*60)
         print("LOADING KNOWLEDGE BASE")
         print("="*60)
         
-        # Find all .md files
         md_files = list(self.kb_path.rglob('*.md'))
         
         if not md_files:
-            print(f"\nERROR: No .md files found in {self.kb_path}")
+            print(f"\nERROR: No files in {self.kb_path}")
             return False
         
-        print(f"\nFound {len(md_files)} markdown documents")
+        print(f"\nFound {len(md_files)} documents")
         
         total_chunks = 0
         
@@ -81,8 +92,8 @@ class KnowledgeLoader:
             try:
                 print(f"\nProcessing: {filepath.name}")
                 
-                # Load content
-                content = self.load_document(filepath)
+                with open(filepath, 'r', encoding='utf-8') as f:
+                    content = f.read()
                 
                 # Extract title
                 title = "Untitled"
@@ -91,13 +102,21 @@ class KnowledgeLoader:
                         title = line.replace('# ', '').strip()
                         break
                 
+                # Count total words
+                total_words = len(content.split())
                 print(f"  Title: {title}")
+                print(f"  Total words: {total_words}")
                 
-                # Chunk document
-                chunks = self.chunk_text(content)
-                print(f"  Chunks: {len(chunks)}")
+                # Use new chunking
+                chunks = self.chunk_by_paragraphs(content)
+                print(f"  Created chunks: {len(chunks)}")
                 
-                # Prepare for ChromaDB
+                # Show chunk sizes
+                if chunks:
+                    chunk_sizes = [len(c.split()) for c in chunks]
+                    print(f"  Chunk sizes: min={min(chunk_sizes)}, max={max(chunk_sizes)}, avg={sum(chunk_sizes)//len(chunk_sizes)}")
+                
+                # Prepare for database
                 documents = []
                 metadatas = []
                 ids = []
@@ -115,32 +134,33 @@ class KnowledgeLoader:
                     ids.append(doc_id)
                 
                 # Add to database
-                self.collection.add(
-                    documents=documents,
-                    metadatas=metadatas,
-                    ids=ids
-                )
-                
-                total_chunks += len(chunks)
-                print(f"  Added to database: SUCCESS")
+                if documents:
+                    self.collection.add(
+                        documents=documents,
+                        metadatas=metadatas,
+                        ids=ids
+                    )
+                    total_chunks += len(chunks)
+                    print(f"  Status: SUCCESS")
+                else:
+                    print(f"  Status: NO CHUNKS CREATED")
                 
             except Exception as e:
                 print(f"  ERROR: {e}")
+                import traceback
+                traceback.print_exc()
         
-        # Summary
         print("\n" + "="*60)
         print("SUMMARY")
         print("="*60)
-        print(f"\nDocuments processed: {len(md_files)}")
-        print(f"Total chunks created: {total_chunks}")
+        print(f"\nDocuments: {len(md_files)}")
+        print(f"Total chunks: {total_chunks}")
         print(f"Database size: {self.collection.count()}")
-        print(f"\nDatabase location: {Path(self.db_path).absolute()}")
-        print(f"Knowledge base location: {self.kb_path.absolute()}")
+        print(f"\nDatabase: {Path(self.db_path).absolute()}")
         
         return True
     
     def search(self, query, n_results=3):
-        """Test search functionality"""
         results = self.collection.query(
             query_texts=[query],
             n_results=n_results
