@@ -14,13 +14,20 @@ import re
 
 class KnowledgeLoader:
 
-    def __init__(self, kb_path='knowledge_base', db_path='chroma_db'):
-        self.kb_path = Path(kb_path)
-        self.db_path = db_path
+    def __init__(self, kb_path=None, db_path=None):
+
+        # relative to backend/ regardless of where script is run from
+        BACKEND_DIR = Path(__file__).resolve().parent.parent
+
+        self.kb_path = Path(kb_path) if kb_path else BACKEND_DIR / "knowledge_base"
+        self.db_path = str(Path(db_path) if db_path else BACKEND_DIR / "chroma_db")
         self.collection_name = 'nepal_tourism'
 
         print("Initializing Knowledge Base Loader")
         print("-" * 60)
+        print(f"\n  Backend dir : {BACKEND_DIR}")
+        print(f"  KB path     : {self.kb_path}")
+        print(f"  DB path     : {self.db_path}")
 
         print("\nLoading embedding model...")
         self.ef = embedding_functions.SentenceTransformerEmbeddingFunction(
@@ -28,7 +35,6 @@ class KnowledgeLoader:
         )
         print("  Embedding model loaded")
 
-        # Initialize ChromaDB
         print("\nInitializing ChromaDB...")
         self.client = chromadb.PersistentClient(
             path=self.db_path,
@@ -463,8 +469,11 @@ if __name__ == '__main__':
     for query in test_queries:
         print(f"\n🔍 Query: {query}")
         results = loader.search(query, n_results=3)
+        if not results['documents']:
+            print("  No results found.")
+            continue
         for i, doc in enumerate(results['documents']):
             print(f"  [{i+1}] Relevance: {1 - results['distances'][i]:.3f}")
-            print(f"       Source : {results['metadatas'][i]['title']}")
-            print(f"       Type   : {results['metadatas'][i]['data_type']}")
+            print(f"       Source : {results['metadatas'][i].get('title', 'N/A')}")
+            print(f"       Type   : {results['metadatas'][i].get('data_type', 'markdown')}")
             print(f"       Preview: {doc[:120]}...")

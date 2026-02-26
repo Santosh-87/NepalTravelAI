@@ -22,6 +22,7 @@ test_queries = [
     "Heritage site entry fees",
     "Best time to trek in Nepal",
     "What is the entry fee for Chitwan National Park?",
+    "I want the cost for fullday sightseeing tour in Kathmandu",
 ]
 
 print("\n" + "="*60)
