@@ -1,0 +1,50 @@
+{
+  "source": "NATTA - Nepal Tourist Vehicle Association",
+  "description": "Official surcharge rules, VAT policy, and special conditions for all tourist vehicle rates in Nepal.",
+  "last_updated": "2026-02-26",
+  "base_rate_note": "All rates listed in natta_routes.jsonl are the CAR base rate in Nepali Rupees (NPR). To get the price for any other vehicle, multiply the car base rate by that vehicle's multiplier from natta_multipliers.json.",
+  "vat": {
+    "rate_percent": 13,
+    "included_in_listed_rates": false,
+    "note": "13% VAT is NOT included in any listed rates. Always add 13% VAT on top of the final calculated price."
+  },
+  "time_surcharges": {
+    "after_8pm": {
+      "multiplier": 1.5,
+      "description": "Arrival, Departure, and Disposal trips that start or finish after 8:00 PM are charged at 1.5x the base rate."
+    },
+    "after_midnight": {
+      "multiplier": 2.0,
+      "description": "Trips that start or finish after 12:00 AM midnight are charged at 2.0x the base rate."
+    }
+  },
+  "road_type_surcharges": {
+    "offroad_gravel_hill": {
+      "extra_percent": 25,
+      "description": "Off-road, gravel road, and hill road trips incur an additional 25% charge on top of the standard rate."
+    }
+  },
+  "disposal_rules": {
+    "minimum_hours": 4,
+    "note": "Disposal (hourly hire) has a minimum charge of 4 hours (Half Day). You cannot book disposal for less than 4 hours.",
+    "car_rate_per_hour_npr": 660,
+    "full_day_disposal_hours": 8,
+    "full_day_car_rate_per_hour_npr": 990,
+    "full_day_note": "Full Day Disposal is 8 hours. After 8 PM the per-hour rate applies for additional hours."
+  },
+  "overnight_stay": {
+    "car_base_rate_npr": 3000,
+    "description": "Per night overnight stay charge for the driver. Multiply by vehicle multiplier for other vehicle types.",
+    "note": "Applies for every overnight stop during a multi-day itinerary."
+  },
+  "facilities": {
+    "ac_included": true,
+    "note": "Air conditioning and all other available facilities in the vehicle are included in the listed rates."
+  },
+  "within_ring_road_pickup": {
+    "car_base_rate_npr": 600,
+    "description": "Tour officer or guide pick-up and drop within Kathmandu Ring Road.",
+    "note": "Multiply by vehicle multiplier for other vehicle types."
+  },
+  "calculation_guide": "Step 1: Find the route in natta_routes.jsonl and get the car_base_rate_npr. Step 2: Multiply by the vehicle multiplier from natta_multipliers.json based on number of passengers. Step 3: Apply road type surcharge (+25%) if applicable. Step 4: Apply time surcharge (x1.5 after 8PM, x2.0 after midnight) if applicable. Step 5: Add 13% VAT for the final price."
+}

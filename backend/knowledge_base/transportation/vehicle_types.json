@@ -1,0 +1,50 @@
+{
+  "source": "NATTA - Nepal Tourist Vehicle Association",
+  "description": "Official vehicle type multipliers. All prices are calculated by multiplying the Car base rate by the vehicle multiplier. Car is the base unit (1.0x).",
+  "last_updated": "2026-02-26",
+  "vehicles": {
+    "car": {
+      "label": "Car",
+      "multiplier": 1.0,
+      "pax_min": 1,
+      "pax_max": 3,
+      "description": "Standard car. Base rate unit. Suitable for 1 to 3 passengers."
+    },
+    "van": {
+      "label": "Van",
+      "multiplier": 1.5,
+      "pax_min": 4,
+      "pax_max": 6,
+      "description": "Van or minivan. 1.5x the car base rate. Suitable for 4 to 6 passengers."
+    },
+    "jeep": {
+      "label": "Jeep",
+      "multiplier": 1.75,
+      "pax_min": 4,
+      "pax_max": 6,
+      "description": "Jeep or 4WD. 1.75x the car base rate. Suitable for 4 to 6 passengers. Recommended for hill and off-road routes."
+    },
+    "hiace": {
+      "label": "Hiace",
+      "multiplier": 1.75,
+      "pax_min": 7,
+      "pax_max": 14,
+      "description": "Toyota Hiace microbus. 1.75x the car base rate. Suitable for 7 to 14 passengers."
+    },
+    "coaster": {
+      "label": "Coaster / Mini Bus",
+      "multiplier": 2.5,
+      "pax_min": 15,
+      "pax_max": 25,
+      "description": "Coaster or mini bus. 2.5x the car base rate. Suitable for 15 to 25 passengers."
+    },
+    "bus": {
+      "label": "Bus",
+      "multiplier": 3.0,
+      "pax_min": 25,
+      "pax_max": 35,
+      "description": "Full-size tourist bus. 3.0x the car base rate. Suitable for 25 to 35 passengers."
+    }
+  },
+  "selection_guide": "To recommend the right vehicle: 1-3 pax use Car, 4-6 pax use Van or Jeep, 7-14 pax use Hiace, 15-25 pax use Coaster, 25-35 pax use Bus. For hill or off-road routes always prefer Jeep over Van even for smaller groups."
+}
