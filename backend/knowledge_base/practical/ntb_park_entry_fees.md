@@ -1,7 +1,7 @@
 # NTB Park Entry Fees
 
 Source: https://ntb.gov.np/plan-your-trip/before-you-come/park-entry-fees
-Last updated: February 24, 2026
+Last updated: February 27, 2026
 
 ## Overview
 

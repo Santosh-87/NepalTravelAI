@@ -2,9 +2,9 @@
 
 **Sources:**
 - https://wanderingwithadromomaniac.com/ultimate-guide-to-visiting-chitwan-national-park/
-- https://ntb.gov.np/places-to-go
+- https://www.himalayanglacier.com/chitwan-national-park/
 
-**Last updated:** February 25, 2026
+**Last updated:** February 27, 2026
 
 ---
 
@@ -109,7 +109,7 @@ There are a ton of species of mammals and birds to see in Chitwan National Park 
 If you enjoy wildlife encounters and are looking for a place with high biodiversity make sure to visit the nearby country of Bangladesh. This small country has one of the highest biodiversities of any country in the world and is definitely worth the visit.
 
 
-Nicole is a wildlife veterinarian and aspiring professional explorer. She has travelled to 3 continents and studies endangered species for wildlife conservation. Go to her about page to read Nicoles story From a small town girl told she couldnt do it to conquering it all. If you want to send Nicole a message visit her contact page.
+Nicole is a wildlife veterinarian and aspiring professional explorer. She has travelled to 3 continents and studies endangered species for wildlife conservation. Go to her about page to read Nicole's story "From a small town girl told she couldn't do it to conquering it all." If you want to send Nicole a message visit her contact page.
 
 ---
 
@@ -119,6 +119,4 @@ Nicole is a wildlife veterinarian and aspiring professional explorer. She has tr
 - Check seasonal weather before planning
 - Book accommodations in advance during peak season
 
-*Information compiled from publicly available sources. Always verify with official sources before traveling.*
-
-*Last updated: February 25, 2026*
+*Last updated: February 27, 2026*
