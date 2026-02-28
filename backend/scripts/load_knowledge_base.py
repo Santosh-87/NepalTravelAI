@@ -16,7 +16,6 @@ class KnowledgeLoader:
 
     def __init__(self, kb_path=None, db_path=None):
 
-        # relative to backend/ regardless of where script is run from
         BACKEND_DIR = Path(__file__).resolve().parent.parent
 
         self.kb_path = Path(kb_path) if kb_path else BACKEND_DIR / "knowledge_base"
@@ -50,20 +49,18 @@ class KnowledgeLoader:
         print(f"  ChromaDB initialized")
         print(f"  Current documents: {self.collection.count()}")
 
-    # Preprocess markdown content by removing metadata lines, horizontal rules, and redundant headings
+    # ── Preprocessing ─────────────────────────────────────────────────────
 
     def preprocess_document(self, text, doc_title=''):
+        """Remove metadata lines, horizontal rules, and redundant title headings."""
         lines = text.split('\n')
         cleaned = []
         for line in lines:
             stripped = line.strip()
-            # Skip metadata lines
-            if re.match(r'^\*?(Source:|Last updated:|Information accurate)', stripped):
+            if re.match(r'^\*?(Source:|Last updated:|Information accurate|\*\*Source|Sources:)', stripped):
                 continue
-            # Skip horizontal rules and blank lines
             if stripped in ['---', '']:
                 continue
-            # Only skip headings that exactly repeat the document title
             if re.match(r'^#{1,2}\s+', stripped):
                 heading_text = re.sub(r'^#{1,2}\s+', '', stripped).strip()
                 if heading_text.lower() == doc_title.lower():
@@ -71,16 +68,18 @@ class KnowledgeLoader:
             cleaned.append(line)
         return '\n'.join(cleaned)
 
-    def enrich_table_chunk(self, chunk, title):
-        if chunk.count('|') > 4:
-            return (
-                f"The following table shows fee and pricing information for {title} "
-                f"in Nepal, including costs for foreign nationals, SAARC nationals, "
-                f"Chinese nationals, and Nepali citizens:\n\n{chunk}"
-            )
-        return chunk
+    def enrich_chunk_with_title(self, chunk, title, category):
+        """
+        Prepend document title and category to every chunk.
+        Ensures RAG always knows which document a chunk belongs to,
+        even when the chunk content does not mention the topic by name.
+        e.g. '[Everest Base Camp Trek | treks] Day 03: Fly to Lukla...'
+        """
+        prefix = f"[{title} | {category}] "
+        return prefix + chunk
 
-    def chunk_text(self, text, chunk_size=300, overlap=30):
+    def chunk_text(self, text, chunk_size=500, overlap=50):
+        """Split text into overlapping word-based chunks."""
         words = text.split()
         chunks = []
         for i in range(0, len(words), chunk_size - overlap):
@@ -92,13 +91,13 @@ class KnowledgeLoader:
     def generate_id(self, content):
         return hashlib.md5(content.encode()).hexdigest()
 
-    # Load markdown files from knowledge base, preprocess, chunk, enrich tables, and add to ChromaDB
+    # ── Markdown Loader ───────────────────────────────────────────────────
 
     def load_markdown_files(self):
         """Load all markdown files from knowledge base."""
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("LOADING MARKDOWN DOCUMENTS")
-        print("="*60)
+        print("=" * 60)
 
         md_files = list(self.kb_path.rglob('*.md'))
 
@@ -125,18 +124,18 @@ class KnowledgeLoader:
                         title = line.replace('# ', '').strip()
                         break
 
-                print(f"  Title: {title}")
+                print(f"  Title   : {title}")
 
                 category = filepath.parent.name
                 chunks = self.chunk_text(content)
-                print(f"  Chunks: {len(chunks)}")
+                print(f"  Chunks  : {len(chunks)}")
 
                 documents = []
                 metadatas = []
                 ids = []
 
                 for idx, chunk in enumerate(chunks):
-                    enriched_chunk = self.enrich_table_chunk(chunk, title)
+                    enriched_chunk = self.enrich_chunk_with_title(chunk, title, category)
                     doc_id = f"{filepath.stem}_{idx}_{self.generate_id(enriched_chunk)[:8]}"
 
                     documents.append(enriched_chunk)
@@ -157,7 +156,7 @@ class KnowledgeLoader:
                 )
 
                 total_chunks += len(chunks)
-                print(f"  Added {len(chunks)} chunks")
+                print(f"  Added   : {len(chunks)} chunks")
 
             except Exception as e:
                 print(f"  ERROR processing {filepath.name}: {e}")
@@ -165,17 +164,13 @@ class KnowledgeLoader:
         print(f"\n  Markdown total: {total_chunks} chunks from {len(md_files)} files")
         return total_chunks
 
-    # Transport-specific loaders: rental routes and pricing policies. These are converted into plain English paragraphs for better RAG retrieval and chatbot explanations.
+    # ── Transport Loaders ─────────────────────────────────────────────────
 
     def load_transport_routes(self):
-        """
-        Load rental_pricing.jsonl into ChromaDB.
-        Each route is one document — the rag_text field is what gets embedded.
-        All other fields go into metadata for filtering.
-        """
-        print("\n" + "="*60)
+        """Load rental_pricing.jsonl into ChromaDB."""
+        print("\n" + "=" * 60)
         print("LOADING TRANSPORT ROUTES (rental_pricing.jsonl)")
-        print("="*60)
+        print("=" * 60)
 
         routes_path = self.kb_path / "transportation" / "rental_pricing.jsonl"
 
@@ -201,14 +196,12 @@ class KnowledgeLoader:
         ids = []
 
         for route in routes:
-           
             rag_text = route.get("rag_text", "").strip()
             if not rag_text:
                 print(f"  [SKIP] Route {route.get('id')} has empty rag_text")
                 continue
 
             doc_id = f"transport_route_{route['id']}"
-
             documents.append(rag_text)
             metadatas.append({
                 'source': str(routes_path),
@@ -226,28 +219,19 @@ class KnowledgeLoader:
             ids.append(doc_id)
 
         if documents:
-            self.collection.add(
-                documents=documents,
-                metadatas=metadatas,
-                ids=ids
-            )
+            self.collection.add(documents=documents, metadatas=metadatas, ids=ids)
             print(f"  Added {len(documents)} transport route chunks")
 
         return len(documents)
 
     def load_transport_policy(self):
-        """
-        Load pricing_rules.json and vehicle_types.json into ChromaDB.
-        These are converted into plain English paragraphs so the
-        chatbot can retrieve and explain pricing rules naturally.
-        """
-        print("\n" + "="*60)
+        """Load pricing_rules.json and vehicle_types.json into ChromaDB."""
+        print("\n" + "=" * 60)
         print("LOADING TRANSPORT POLICY FILES")
-        print("="*60)
+        print("=" * 60)
 
         total = 0
 
-        # 1. pricing_rules.json
         policy_path = self.kb_path / "transportation" / "pricing_rules.json"
 
         if policy_path.exists():
@@ -340,7 +324,6 @@ class KnowledgeLoader:
         else:
             print(f"  WARNING: {policy_path} not found — skipping.")
 
-       
         vehicles_path = self.kb_path / "transportation" / "vehicle_types.json"
 
         if vehicles_path.exists():
@@ -349,7 +332,6 @@ class KnowledgeLoader:
 
             vehicle_chunks = []
 
-            # One chunk describing all vehicles together (for "what vehicle should I use?" queries)
             all_vehicles_text = (
                 "NATTA Tourist Vehicle Types and Multipliers in Nepal: "
                 f"{vehicles_data.get('description', '')} "
@@ -363,7 +345,6 @@ class KnowledgeLoader:
                 )
             vehicle_chunks.append(("vehicle_types_overview", all_vehicles_text))
 
-            # One chunk per vehicle type (for specific vehicle queries)
             for key, v in vehicles_data["vehicles"].items():
                 chunk_text = (
                     f"NATTA Vehicle Type — {v['label']}: "
@@ -396,31 +377,31 @@ class KnowledgeLoader:
 
         return total
 
-    # Master loader to load all knowledge base sources
+    # ── Master Loader ─────────────────────────────────────────────────────
 
     def load_all(self):
         """Load ALL knowledge base sources — markdown + transport pricing."""
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("LOADING FULL KNOWLEDGE BASE")
-        print("="*60)
+        print("=" * 60)
 
-        md_chunks        = self.load_markdown_files()
-        route_chunks     = self.load_transport_routes()
-        policy_chunks    = self.load_transport_policy()
+        md_chunks     = self.load_markdown_files()
+        route_chunks  = self.load_transport_routes()
+        policy_chunks = self.load_transport_policy()
 
         total = md_chunks + route_chunks + policy_chunks
 
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"  LOAD COMPLETE")
         print(f"  Markdown chunks  : {md_chunks}")
         print(f"  Route chunks     : {route_chunks}")
         print(f"  Policy chunks    : {policy_chunks}")
         print(f"  Total chunks     : {total}")
         print(f"  Collection size  : {self.collection.count()}")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
         return True
 
-    # Search function to query ChromaDB with relevance filtering
+    # ── Search ────────────────────────────────────────────────────────────
 
     def search(self, query, n_results=5, min_relevance=0.30):
         raw = self.collection.query(
@@ -454,9 +435,9 @@ if __name__ == '__main__':
     loader = KnowledgeLoader()
     loader.load_all()
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("TEST SEARCHES")
-    print("="*60)
+    print("=" * 60)
 
     test_queries = [
         "How much does it cost to go from Kathmandu to Pokhara?",
@@ -464,6 +445,9 @@ if __name__ == '__main__':
         "Is VAT included in the transport rates?",
         "Chitwan National Park entry fee",
         "What is the night surcharge for transport?",
+        "How many days is the Everest Base Camp trek?",
+        "What permits do I need for Manaslu Circuit?",
+        "Entry fee for Bhaktapur Durbar Square",
     ]
 
     for query in test_queries:

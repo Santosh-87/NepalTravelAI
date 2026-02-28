@@ -76,18 +76,6 @@ It is believed that Upper Mustangs residents have not modernized their culture a
 
 ---
 
-## What Makes Nepal Nirvana Trails Unique?
-
-Any type of tourist plan includes unseen risks unforeseen. Nepal Nirvana Trails has experienced and well-trained personnel to help you out throughout the trip. They will carry out all the responsibilities from the start to the end of the journey that you may need. You will be experiencing the beauty of traveling to tribal Nepal in a new and innovative way.
-
-You will be taking the trip with a team of veteran professionals who have excelled in taking tourists to that particular region so you will get as much information about the place as you want. Our more than two-decade veterans in the Himalayas make us a reliable and trustworthy tour partner.
-
-We invite all the visitors to visit the magical place of Upper Mustang and booking is open throughout the year. You can choose your preferred time of the year to visit the place.
-
-You can also check more information about other similar tour and trekking packages and directly contact us for inquiries or bookings.
-
----
-
 
 **Travel Tips:**
 - Verify current information with local tourism offices

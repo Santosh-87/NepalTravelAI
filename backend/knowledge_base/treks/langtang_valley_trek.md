@@ -1,6 +1,7 @@
 # Langtang Valley Trek
 
 **Sources:**
+- https://www.nepalhikingteam.com/langtang-valley-trekking
 - https://www.himalayanglacier.com/langtang-valley-trek/
 - https://www.nepalhikingteam.com/langtang-valley-trekking
 

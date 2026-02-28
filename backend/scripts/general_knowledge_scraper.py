@@ -2,8 +2,9 @@
 Nepal Tourism Knowledge Base Scraper
 Scrapes Nepal-specific tourism sources for the RAG knowledge base.
 
-All URLs verified sources: ntb.gov.np, nepalhikingteam.com, himalayanglacier.com,
-         wikipedia.org, nepalhikingteam.com
+Sources: ntb.gov.np, nepalhikingteam.com, nepaltrekkingroutes.com,
+         nepaltraveladventure.com, guyontheroad.com, vertexholiday.com,
+         charlotteplansatrip.com, thelongestwayhome.com
 """
 
 import requests
@@ -42,12 +43,13 @@ class NepalScraper:
     # ── Core HTML Fetcher ─────────────────────────────────────────────────────
 
     def _fetch(self, url):
-        for attempt in range(2):   # try twice
+        """Fetch URL. Retries once on 429. Returns (soup, raw_text) or (None, None)."""
+        for attempt in range(2):
             try:
                 response = self.session.get(url, headers=self.headers, timeout=30)
 
                 if response.status_code == 429:
-                    wait = 15 if attempt == 0 else 30
+                    wait = 20 if attempt == 0 else 40
                     print(f"    Rate limited (429) — waiting {wait}s before retry...")
                     time.sleep(wait)
                     continue
@@ -72,6 +74,7 @@ class NepalScraper:
     # ── Section Extractor ─────────────────────────────────────────────────────
 
     def _extract_sections(self, soup, url, name):
+        """Extract structured sections from a BeautifulSoup object."""
         main_content = (
             soup.find('article') or
             soup.find('div', class_=re.compile(r'post|content|entry|main|article|blog|single', re.I)) or
@@ -292,6 +295,12 @@ class NepalScraper:
         safe_name = re.sub(r'[^\w\s-]', '_', name.lower()).replace(' ', '_')
         safe_name = re.sub(r'_+', '_', safe_name).strip('_')
         output_file = self.output_dir / category / f"{safe_name}.md"
+
+        # Skip if already exists with real content (> 1 KB)
+        if output_file.exists() and output_file.stat().st_size > 1000:
+            print(f"  SKIPPED (exists): {output_file.name}")
+            return True
+
         output_file.write_text(markdown, encoding='utf-8')
         size_kb = output_file.stat().st_size / 1024
         print(f"  SAVED: {output_file.name} ({size_kb:.1f} KB)")
@@ -331,8 +340,9 @@ class NepalScraper:
             {
                 'name': 'Nepal Trekking Permits',
                 'urls': [
-                    'https://www.nepalhikingteam.com/trekking-permit',
-                    'https://www.himalayanglacier.com/trekking-permits-in-nepal/',
+                    'https://www.immigration.gov.np/en/page/trekking-permit',
+                    'https://ntb.gov.np/plan-your-trip/before-you-come/trekking-permit',
+                    'https://followalice.com/knowledge/nepal-trekking-permits-and-fees',
                 ],
                 'type': 'multi',
                 'category': 'practical'
@@ -344,21 +354,19 @@ class NepalScraper:
                 'category': 'practical'
             },
             {
-                'name': 'Nepal Travel Tips',
+                'name': 'Nepal Travel Cost',
                 'urls': [
-                    'https://www.nepalhikingteam.com/nepal-travel-guide',
-                    'https://www.himalayanglacier.com/nepal-travel-tips/',
+                    'https://www.himalayanst.com/blog/nepal-trip-cost',
+                    'https://ashmitatrek.com/blog/how-much-money-is-enough-to-visit-nepal',
+                    'https://realadventurenepal.com/blog/how-much-does-a-nepal-trip-cost',
                 ],
                 'type': 'multi',
                 'category': 'practical'
             },
             {
-                'name': 'Nepal Travel Cost',
-                'urls': [
-                    'https://www.himalayanglacier.com/nepal-trip-cost/',
-                    'https://www.nepalhikingteam.com/nepal-budget-travel',
-                ],
-                'type': 'multi',
+                'name': 'Nepal Trekking Costs',
+                'url': 'https://www.nepalhikingteam.com/nepal-trekking-costs',
+                'type': 'single',
                 'category': 'practical'
             },
             {
@@ -373,54 +381,42 @@ class NepalScraper:
                 'name': 'Kathmandu Valley',
                 'urls': [
                     'https://www.nepalhikingteam.com/kathmandu-valley',
-                    'https://www.himalayanglacier.com/places-to-visit-in-kathmandu/',
+                    'https://nepaltrekkingroutes.com/blog/kathmandu-sightseeing-tour-itinerary',
+                    'https://www.nepaltraveladventure.com/one-day-kathmandu-tour.php',
+                    'https://www.guyontheroad.com/3-days-in-kathmandu/',
+                    'https://mercure.accor.com/en/mercure-local-guide/cultural-treasures/places-to-see-in-kathmandu-nepal.html',
                 ],
                 'type': 'multi',
                 'category': 'destinations'
             },
             {
                 'name': 'Pokhara',
-                'urls': [
-                    'https://www.laidbacktrip.com/posts/things-to-do-in-pokhara',
-                    'https://www.himalayanglacier.com/things-to-do-in-pokhara/',
-                ],
-                'type': 'multi',
+                'url': 'https://www.laidbacktrip.com/posts/things-to-do-in-pokhara',
+                'type': 'single',
                 'category': 'destinations'
             },
             {
                 'name': 'Chitwan National Park',
-                'urls': [
-                    'https://wanderingwithadromomaniac.com/ultimate-guide-to-visiting-chitwan-national-park/',
-                    'https://www.himalayanglacier.com/chitwan-national-park/',
-                ],
-                'type': 'multi',
+                'url': 'https://wanderingwithadromomaniac.com/ultimate-guide-to-visiting-chitwan-national-park/',
+                'type': 'single',
                 'category': 'destinations'
             },
             {
                 'name': 'Lumbini',
-                'urls': [
-                    'https://www.nepalhikingteam.com/lumbini',
-                    'https://www.himalayanglacier.com/lumbini-the-birthplace-of-buddha/',
-                ],
-                'type': 'multi',
+                'url': 'https://www.nepalhikingteam.com/lumbini',
+                'type': 'single',
                 'category': 'destinations'
             },
             {
                 'name': 'Bhaktapur',
-                'urls': [
-                    'https://www.himalayanglacier.com/bhaktapur-durbar-square/',
-                    'https://www.nepalhikingteam.com/bhaktapur-durbar-square',
-                ],
-                'type': 'multi',
+                'url': 'https://www.nepalhikingteam.com/bhaktapur-durbar-square',
+                'type': 'single',
                 'category': 'destinations'
             },
             {
                 'name': 'Bardiya National Park',
-                'urls': [
-                    'https://www.himalayanglacier.com/bardia-national-park/',
-                    'https://www.nepalhikingteam.com/bardia-national-park',
-                ],
-                'type': 'multi',
+                'url': 'https://www.nepalhikingteam.com/package/bardia-jungle-safari-tours',
+                'type': 'single',
                 'category': 'destinations'
             },
             {
@@ -432,8 +428,8 @@ class NepalScraper:
             {
                 'name': 'Bandipur',
                 'urls': [
-                    'https://www.himalayanglacier.com/bandipur-nepal/',
-                    'https://www.nepalhikingteam.com/bandipur-village',
+                    'https://www.charlotteplansatrip.com/en/nepal-en/bandipur-2/',
+                    'https://www.thelongestwayhome.com/travel-guides/nepal/bandipur/bandipur.html',
                 ],
                 'type': 'multi',
                 'category': 'destinations'
@@ -443,6 +439,12 @@ class NepalScraper:
                 'url': 'https://www.himalayanglacier.com/major-tourist-attractions-in-nepal/',
                 'type': 'single',
                 'category': 'destinations'
+            },
+            {
+                'name': 'Top 10 Short Tours Nepal',
+                'url': 'https://vertexholiday.com/10-best-short-tours-in-nepal/',
+                'type': 'single',
+                'category': 'practical'
             },
 
             # ── TREKS ─────────────────────────────────────────────────────
@@ -454,65 +456,47 @@ class NepalScraper:
             },
             {
                 'name': 'Everest Base Camp Trek',
-                'urls': [
-                    'https://www.himalayanglacier.com/everest-base-camp-trek/',
-                    'https://www.nepalhikingteam.com/everest-base-camp-trekking-14-days',
-                ],
-                'type': 'multi',
+                'url': 'https://www.nepalhikingteam.com/package/everest-base-camp-trek',
+                'type': 'single',
                 'category': 'treks'
             },
             {
                 'name': 'Annapurna Base Camp Trek',
-                'urls': [
-                    'https://www.himalayanglacier.com/annapurna-base-camp-trek/',
-                    'https://www.nepalhikingteam.com/annapurna-base-camp-trekking',
-                ],
-                'type': 'multi',
+                'url': 'https://www.nepalhikingteam.com/package/annapurna-base-camp-trek',
+                'type': 'single',
                 'category': 'treks'
             },
             {
                 'name': 'Annapurna Circuit Trek',
-                'urls': [
-                    'https://www.himalayanglacier.com/annapurna-circuit-trek/',
-                    'https://www.nepalhikingteam.com/annapurna-circuit-trekking',
-                ],
-                'type': 'multi',
+                'url': 'https://www.nepalhikingteam.com/package/annapurna-circuit-trek',
+                'type': 'single',
                 'category': 'treks'
             },
             {
                 'name': 'Langtang Valley Trek',
                 'urls': [
-                    'https://www.himalayanglacier.com/langtang-valley-trek/',
-                    'https://www.nepalhikingteam.com/langtang-valley-trekking',
-                ],
+                        'https://www.nepalhikingteam.com/langtang-valley-trekking',
+                        'https://www.himalayanglacier.com/langtang-valley-trek/',
+                        ],
                 'type': 'multi',
                 'category': 'treks'
             },
             {
                 'name': 'Manaslu Circuit Trek',
-                'urls': [
-                    'https://www.himalayanglacier.com/manaslu-circuit-trek/',
-                    'https://www.nepalhikingteam.com/manaslu-circuit-trekking',
-                ],
-                'type': 'multi',
+                'url': 'https://www.nepalhikingteam.com/package/manaslu-circuit-trek',
+                'type': 'single',
                 'category': 'treks'
             },
             {
                 'name': 'Gokyo Lakes Trek',
-                'urls': [
-                    'https://www.himalayanglacier.com/gokyo-lakes-trek/',
-                    'https://www.nepalhikingteam.com/gokyo-lake-trekking',
-                ],
-                'type': 'multi',
+                'url': 'https://www.nepalhikingteam.com/package/everest-gokyo-lake-trek',
+                'type': 'single',
                 'category': 'treks'
             },
             {
                 'name': 'Poon Hill Trek',
-                'urls': [
-                    'https://www.himalayanglacier.com/poon-hill-trek/',
-                    'https://www.nepalhikingteam.com/poon-hill-trekking',
-                ],
-                'type': 'multi',
+                'url': 'https://www.nepalhikingteam.com/package/ghorepani-poon-hill-trekking',
+                'type': 'single',
                 'category': 'treks'
             },
 
@@ -525,23 +509,18 @@ class NepalScraper:
             },
             {
                 'name': 'Upper Mustang',
-                'urls': [
-                    'https://www.himalayanglacier.com/upper-mustang-trek/',
-                    'https://www.nepalhikingteam.com/upper-mustang-trek',
-                ],
-                'type': 'multi',
+                'url': 'https://www.nepalhikingteam.com/package/upper-mustang-trek',
+                'type': 'single',
                 'category': 'hidden_gems'
             },
             {
                 'name': 'Rara Lake Trek',
-                'urls': [
-                    'https://www.himalayanglacier.com/rara-lake-trek/',
-                    'https://www.nepalhikingteam.com/rara-lake-trekking',
-                ],
-                'type': 'multi',
-                'category': 'hidden_gems'
+                'url': 'https://www.nepalhikingteam.com/package/rara-lake-trek',
+                'type': 'single',
+                'category': 'treks'
             },
         ]
+
         results = {}
         skipped = []
 
@@ -572,8 +551,8 @@ class NepalScraper:
                 skipped.append(target['name'])
 
             if i < len(targets):
-                print("  Waiting 3 seconds...")
-                time.sleep(3)
+                print("  Waiting 5 seconds...")
+                time.sleep(5)
 
         success_count = sum(1 for v in results.values() if v)
 
@@ -592,7 +571,7 @@ class NepalScraper:
                 print(f"     - {name}")
 
         print(f"\n  Knowledge base: {self.output_dir.absolute()}")
-        print("\n  Next step: python load_knowledge_base.py")
+        
         return results
 
 

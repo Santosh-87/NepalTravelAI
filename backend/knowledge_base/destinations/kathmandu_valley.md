@@ -2,7 +2,10 @@
 
 **Sources:**
 - https://www.nepalhikingteam.com/kathmandu-valley
-- https://www.himalayanglacier.com/places-to-visit-in-kathmandu/
+- https://nepaltrekkingroutes.com/blog/kathmandu-sightseeing-tour-itinerary
+- https://www.nepaltraveladventure.com/one-day-kathmandu-tour.php
+- https://www.guyontheroad.com/3-days-in-kathmandu/
+- https://mercure.accor.com/en/mercure-local-guide/cultural-treasures/places-to-see-in-kathmandu-nepal.html
 
 **Last updated:** February 27, 2026
 
@@ -230,6 +233,307 @@ To see Mount Everest from Kathmandu, consider a scenic flight, a helicopter tour
 ## Final Words
 
 Kathmandu has suitable weather for sightseeing tours all year round. One should visit Kathmandu once and taste its timeless arts, culture, history, and architecture. Its excellent world heritage sites are must-see destinations sites in Nepal. One will indeed have a splendid time exploring the epicenter of the Himalayan kingdom.
+
+---
+
+## 3 Days In Kathmandu: The Ultimate Kathmandu Itinerary
+
+There are many reasons why visit Nepal, and Kathmandu is one of them.
+
+Kathmandu is a crowded city, it has heavy air pollution, and it is prone to many earthquakes, but despite all this, it is considered a popular city and all the many tourists who come to Nepal come first to it and from there go for the variety of trips that Nepal has to offer.
+
+Kathmandu is known as a secret and mysterious gem that is worth exploring and testing all its charms, and this is exactly what the many tourists who visit it try to do.
+
+I visited Kathmandu as part of my solo travel to Nepal.
+
+In Kathmandu, you can not expect luxurious accommodation and high-level tourism services. However, you will be exposed to a different and unique cultural experience.
+
+For many people getting off the plane and entering Kathmandu is an instructive and unique experience.
+
+The sounds, the colorful sights, and the smells that can easily lead to sensory flooding are different from other places in the world.
+
+Wandering the stone streets of Kathmandu will expose you to an abundance of shops, a spectacular variety of colors, street food, and many temples but also the chaos of transportation, cars crossing everywhere, and many traffic jams within ancient, narrow, and cobbled streets.
+
+Kathmandu is a noisy, vibrant city, exhausting and tiring but charming!
+
+---
+
+## When to visit Kathmandu?
+
+During these seasons, thousands of tourists visit Kathmandu, which will lead to rising prices, full occupancy in hotels, and crowds of people on treks.
+
+From December to February. The winter months are cold in the high mountains.
+
+The temperatures in Kathmandu are cold but quite comfortable, and you can hike during this time.
+
+From May to December, rains fall in the country, but it is possible to travel to Kathmandu anyway because the amount of precipitation is not as great as in other areas.
+
+---
+
+## How many days to spend in kathmandu?
+
+3 days in Kathmandu is the perfect amount of time. You will have plenty of time to see the must-see places in Kathmandu, as well as experience the Kathmandu Valley and its charming places.
+
+Usually, those who come to Kathmandu come and get organized before leaving for a trek.
+
+So, in 3 days in Kathmandu, you can be impressed by the attractions in Kathmandu and get prepared for the trek. Buy some hiking gear if necessary, or close the last things related to the trek.
+
+Of course, it is also possible to stay in Kathmandu for a week or more. But in my opinion, 3 days is the ideal amount of time to visit Kathmandu.
+
+---
+
+## Where to stay in kathmandu?
+
+Elbrus Home  Great place to stay! 5 minutes walk from Thamel center.
+
+Private rooms  dorms. Nice atmosphere, Spacious rooms, and cute garden area. Definitely, one of the best places to stay in Kathmandu.
+
+Hotel Jampa  The hotel is located in the center of Thamel, but in a quiet alley, which makes all the difference. The hotel has Strong Wi-Fi and is close enough to any point in Thamel.
+
+Baber Mahal Vilas  If you want a luxury hotel in Kathmandu, this is the hotel for you.
+
+Flock Hostel Kathmandu  The hostel is clean and has a cozy dorm, with many showers with hot water.The beautiful common room and the restaurant offer great food.
+
+---
+
+## Walk around the Thamel
+
+After settling into the hotel, I set out to explore the city.
+
+The Thamel area, the undisputed tourist district of the city, will provide you with several hours of employment.
+
+Wander the narrow streets and be impressed by the many shops where you will find a huge selection of souvenirs, clothes, jewelry, bags, and basically, anything you want to buy.
+
+Aside from the impressive selection of stores, The Thamel is also known for its beautiful culinary offerings.
+
+To start the day, go to one of Kathmandus best bakeries and stock up on fresh pastries on the way.
+
+---
+
+## Durbar Square
+
+The Old Royal Palace Square is a large and impressive courtyard of ancient and magnificent historic buildings, in the square of over fifty temples, palaces, and prayer buildings from the 12th to 18th centuries.
+
+The important building in Durbar Square is the ancient royal palace (Hanuman Dhoka) which contains a small museum.
+
+Beyond the interesting buildings, the special atmosphere and the human landscape are a reason in themselves to visit the square, you will witness the lively movement of local passers-by, peddlers trading around vegetables and other souvenirs, curious tourists, and women carrying offerings to gods in temples, Believers light candles and vectors and above all the bustle of the bustling city wins.
+
+---
+
+## Swayambhunath Monkey Temple
+
+The Monkey Temple Swayambhunath is one of the most famous Buddhist temples in Nepal, named after the monkeys who sit in it and make it their home, roaming comfortably and entertaining the visitors.
+
+Stupa, two thousand years old, built on a hill overlooking the Kathmandu Valley, provides passers-by with an exciting cultural experience and a meeting with families who bring flowers and drink to the statues at the foot of the hill, Tibetan pilgrims, and others.
+
+Believer people are circling the stupa and spinning the prayer wheels around it, monks dressed in red robes and crowds of monkeys.
+
+It is best to arrive in the morning so you can watch the puja ceremony or at night when the monks in their red robes walk quietly around the prayer wheels and mumble prayer mantras.
+
+Prepare your feet for climbing hundreds of steps until you reach the temple at the top of the hill. The view is just spectacular!
+
+Tip: It is recommended not to wear gold witnesses, necklaces, and other shiny items, it attracts the attention of the monkeys, and they will not be ashamed to tear them from your body.
+
+---
+
+## Patan
+
+The city with a thousand golden roofs, full of temples and palaces, artisans and craftsmen, quiet and peaceful, and the oldest of the cities of the Kathmandu Valley, lies across the Bagmati River and offers an impressive architectural and artistic abundance that is an attraction for many tourists.
+
+The local Durbar Square excels in impressive architecture, and at its center is the Royal Palace, one of the most impressive buildings in the Kathmandu Valley.
+
+Next to it is the Patan Museum which displays a collection of bronze sculptures, royal artifacts, and religion.
+
+In the square stands a tall and spectacular statue of the King Yoganarendra Mallows Statue of the King with the Cobra Snake.
+
+Other points of interest in the city are the Kwa Bahal Buddhist monastery, where you can also see the gilded temple guarded by holy turtles walking around the courtyard, and it is the spiritual center of Patan, the Mahabuddha temple interesting in its terra-cotta art, and Kumbeshwar.
+
+Before you leave Patan, take a short detour through the streets south of Durbar Square, this is a charming area with countless metal deaf people and colorful shops.
+
+---
+
+## Pashupatinath temple
+
+The most important and sacred Hindu temple in Nepal is dedicated to the god Shiva and is known by the guys as the cremation (Pashupatinath).
+
+The entrance to the temple itself is forbidden to non-believers, but in the wide-area around it, you will find ancient buildings, gates, magnificent temples, painted faces, and monkeys.
+
+On the banks of the Bagmati River, a cremation ceremony is held, where you can watch closely and take photos.
+
+A visit to the area is recommended and allows for a unique and fascinating experience.
+
+---
+
+## Day 3: Discover the Kathmandu Valley
+
+Kathmandu Valley is the area around Kathmandu, the capital of Nepal.
+
+It is an area of plains and hills, full of villages and towns, fields, forests, and agricultural terraces. There are several touristy places in the valley, but for the most part, it is not touristy, it is a great opportunity to see the views of the hills, especially with the locals in Nepal.
+
+---
+
+## How do you get around Kathmandu Valley?
+
+You can get around the Kathmandu Valley by bus, taxi, bike, and even on foot.
+
+The famous Kathmandu Valley Trek passes through Nagarkot, Dhulikhel, Namobuddha Monastery, and Panauti, but there are many more hiking options in the valley.
+
+However, you can join an organized day trip from Kathmandu that will take you to the main places in Kathmandu Valley.
+
+---
+
+## Bhaktapur
+
+25 km from Kathmandu reveals another world, in the form of the ancient and magical city of Kings in Bhaktapur, also known as the City of Believers. And winding and instills in the visitor an atmosphere of holiness.
+
+Bhaktapur has three tourist centers with ancient temples, many artists, restaurants, and guesthouses:
+
+Durbar Square  Similar to the squares in Patan and Kathmandu, the square contains dozens of Hindu and Buddhist palaces, temples, and statues. Prominent among them is a palace with 55 windows, in which the Nepalese kings lived until 1769, and today serves as the National Art Gallery of Nepal.
+
+Outside the palace is a temple to the goddess Telju, and next to it is a huge bell that rings twice a day in honor of the goddess.
+
+You can go up to the roofs of some of the temples and get a beautiful panoramic view of the whole city and the Kathmandu Valley (the ascent to the rooftops is free, but please note that most palaces and temples are not accessible).
+
+Dattatreya Square  This square is laden with Hindu monasteries and temples, most of which are built of wood and clay and were built in the 15th century.
+
+In the vicinity of the square, you will find many restaurants and cafes where you can rest from walking in the city and watch the believers coming to the various temples.
+
+Taumadhi Square  In this square stands the largest pagoda in Nepal, Nyatapola, which is built on five floors. Around you will find additional temples decorated with murals and Hindu statues.
+
+Around the square, you can find many pots, art very common in the city.
+
+If you ask nicely  the potters will agree to teach you their secrets.
+
+---
+
+## Nagarkot
+
+Probably the most visited place in the rural part of the Kathmandu Valley, and rightly so.
+
+Nagarkot offers clear mountain air a short distance from the major cities within the valley, and spectacular views of the Himalayas on good days  lucky ones will also see the summit of Everest.
+
+The main reason people come to the village is the landscapes around it, especially at sunset and sunrise.
+
+There is an observation tower  about 4 km from the village is an observation tower used by the Nepalese army.
+
+From the tower you can see large parts of the Kathmandu Valley and the snowy Himalayan landscapes.
+
+In addition, there is an observation post in the temple  on top of one of the hills in the village stands a small Hindu temple, which is an ideal place to watch the sunrise.
+
+The hill is a 5-15 minute walk from all the hotels in the village and is easy to reach.
+
+The temple is located near the Hotel Peace Mountain, and it is recommended to arrive about half before sunrise itself to see the valley and mountains come to life.
+
+---
+
+## Rafting
+
+Rafting in Nepal is among the well-known and well-known attractions in the country. In the streets of the Thamel, you will find dozens of companies for rafting trips, offering trips from one to two weeks, in rushing rivers in a wild and green landscape.
+
+The companies provide guides, rafting, camping equipment, food, permits, travel, and waterproof packaging, for your equipment and cameras.
+
+You can book a tour in advance on this site or through a travel agency in Kathmandu. Accommodation for rafting trips is camping. In the afternoon they set up tents and get ready for dinner, usually cooked by the Nepali staff.
+
+There are varying degrees of difficulty and challenge between rivers (marked 1 for the easiest and 5 for the most difficult).
+
+---
+
+## bungee jumping
+
+One of the tallest bungee sites in the world. 160 meters of intoxication in a free and fast fall towards the turbulent waters of the San Cossi River.
+
+If you feel you need more adrenaline and a challenge, you can continue from there and combine stormy rafting with the jump.
+
+---
+
+## Preparations for the treks
+
+Thousands of tourists come every year to do trekking in Nepal.
+
+Nepal is known as the land of treks because eight of the ten highest peaks in the world are in its territory.
+
+Kathmandu serves as a convenient get-together and exit point for almost all of the countrys famous treks, including the two most famous around Annapurna and Everest Base Camp.
+
+---
+
+## 4 great restaurants in kathmandu that you must try
+
+Or2k  an excellent vegetarian restaurant that offers Mediterranean food like shakshuka hummus and a variety of great dishes, the seating in the restaurant is on the floor with cushions which gives an atmosphere of freedom in the air
+
+Newa Momo Restaurant  A Great local restaurant at ridiculous prices. The restaurant specializes in Nepals well-known Momo dishes, dumplings stuffed with a variety of options most often in vegetables or chicken breast. The place is a local house with a few tables.
+
+Fusion Himalaya Cafe  Restaurant  Fine local food at great prices. Although the place is small, it has a great atmosphere. One of the best places to eat in Kathmandu!
+
+Himalayan java cafe  A lovely place with excellent coffee and good breakfasts.
+
+Fun atmosphere, observation of the main square, a bit expensive but highly recommended and worth it.
+
+---
+
+## Final thoughts after three days in Kathmandu
+
+Kathmandu has a lot of air pollution and poor infrastructure, yet in the tourist center called Thamel, you can find a variety of shops and a variety of restaurants for the well-being of the tourists. But make no mistake  a short walk from the Thamel, you will see the real face of the capital, with streets full of dust and poverty popping up on the corners.
+
+With 3 days in Kathmandu, you can explore the real Nepal around the corner.
+
+The vast majority of the people you will meet there are smiling and kind because its part of their culture.
+
+The city of Kathmandu and Nepal itself, have this special magic that is inexplicable.
+
+You have to come to visit and feel it on your own.
+
+I hope this guide to 3 days in Kathmandu will help you plan your trip to Nepal in the best way.
+
+---
+
+## Here are some websites I use whenever preparing for my next journey anywhere around the world.
+
+- Book affordable flights on Expedia, a great website that show the best routes and flight deals to your destination.
+
+- Find a budget-friendly deal on all sorts of accommodation types on Booking.com.
+
+- Buy the most flexible and budget-friendly travel insurance at SafteyWing.
+
+- Pre-book a private transfer from Kathmandu to the city center.
+
+- Check the best day trips from Kathmandu to maximize your trip.
+
+
+The complete guide to solo travel in nepal
+
+How to plan the ultimate norway road trip
+
+2 weeks in sicily: the perfect sicily road trip
+
+---
+
+## Guy on the road
+
+After completing my military service at 22, I stepped beyond my countrys borders for the first time. A trip to South America changed everythingI realized I wanted to live differently. Over the years, I pursued a degree while continuing to explore the world, knowing this was my true path.
+
+---
+
+## Join the Journey
+
+Want to be part of the adventure? Reach outId love to connect!
+
+---
+
+## READ MORE
+
+- February 2, 2024
+
+---
+
+## 12 Best Reasons To Visit Nepal In 2024
+
+- March 23, 2023
+
+---
+
+## The Complete Guide To Solo Travel In Nepal
+
+- December 24, 2022
 
 ---
 
