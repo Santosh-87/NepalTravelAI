@@ -14,6 +14,13 @@ import re
 
 class KnowledgeLoader:
 
+    # Fee/park files: split per ### heading (one chunk per site)
+    # All other markdown files: standard word chunking
+    HEADING_SPLIT_FILES = {
+        'ntb_heritage_site_fees',
+        'ntb_park_entry_fees',
+    }
+
     def __init__(self, kb_path=None, db_path=None):
 
         BACKEND_DIR = Path(__file__).resolve().parent.parent
@@ -71,8 +78,6 @@ class KnowledgeLoader:
     def enrich_chunk_with_title(self, chunk, title, category):
         """
         Prepend document title and category to every chunk.
-        Ensures RAG always knows which document a chunk belongs to,
-        even when the chunk content does not mention the topic by name.
         e.g. '[Everest Base Camp Trek | treks] Day 03: Fly to Lukla...'
         """
         prefix = f"[{title} | {category}] "
@@ -86,6 +91,40 @@ class KnowledgeLoader:
             chunk = ' '.join(words[i:i + chunk_size])
             if len(chunk.strip()) > 80:
                 chunks.append(chunk)
+        return chunks
+
+    def split_by_heading(self, content, title, category):
+        """
+        Split on ### headings — one chunk per site/park.
+        Used for fee files that list many sites in one document.
+
+        Prepends SITE: <name> so the exact site name dominates the
+        embedding — prevents wrong site chunks from winning retrieval.
+
+        e.g. 'SITE: Bhaktapur Durbar Square' beats
+             'SITE: National Art Museum Bhaktapur' for the query
+             'entry fee for Bhaktapur Durbar Square'
+        """
+        chunks = []
+        sections = content.split('\n### ')
+
+        for section in sections:
+            section = section.strip()
+            if not section:
+                continue
+            # Re-add heading marker removed by split
+            if not section.startswith('#'):
+                section = '### ' + section
+            # Skip very short intro sections (overview paragraphs)
+            if len(section) < 80:
+                continue
+            # Extract site name from ### heading line
+            first_line = section.split('\n')[0]
+            site_name = re.sub(r'^#+\s*', '', first_line).strip()
+            # SITE: prefix boosts exact site name matching in embeddings
+            prefix = f"[{title} | {category}] SITE: {site_name}. "
+            chunks.append(prefix + section)
+
         return chunks
 
     def generate_id(self, content):
@@ -127,25 +166,35 @@ class KnowledgeLoader:
                 print(f"  Title   : {title}")
 
                 category = filepath.parent.name
-                chunks = self.chunk_text(content)
+
+                # Fee files: one chunk per ### site heading
+                # All other markdown: standard overlapping word chunking
+                if filepath.stem in self.HEADING_SPLIT_FILES:
+                    chunks = self.split_by_heading(content, title, category)
+                    print(f"  Mode    : heading-split")
+                else:
+                    chunks = [
+                        self.enrich_chunk_with_title(c, title, category)
+                        for c in self.chunk_text(content)
+                    ]
+                    print(f"  Mode    : word-chunked")
+
                 print(f"  Chunks  : {len(chunks)}")
 
                 documents = []
                 metadatas = []
-                ids = []
+                ids       = []
 
                 for idx, chunk in enumerate(chunks):
-                    enriched_chunk = self.enrich_chunk_with_title(chunk, title, category)
-                    doc_id = f"{filepath.stem}_{idx}_{self.generate_id(enriched_chunk)[:8]}"
-
-                    documents.append(enriched_chunk)
+                    doc_id = f"{filepath.stem}_{idx}_{self.generate_id(chunk)[:8]}"
+                    documents.append(chunk)
                     metadatas.append({
-                        'source': str(filepath),
-                        'title': title,
-                        'category': category,
-                        'chunk_index': idx,
+                        'source':       str(filepath),
+                        'title':        title,
+                        'category':     category,
+                        'chunk_index':  idx,
                         'total_chunks': len(chunks),
-                        'data_type': 'markdown'
+                        'data_type':    'markdown'
                     })
                     ids.append(doc_id)
 
@@ -166,8 +215,31 @@ class KnowledgeLoader:
 
     # ── Transport Loaders ─────────────────────────────────────────────────
 
+    def _load_vehicle_multipliers(self):
+        """
+        Load vehicle multipliers from vehicle_types.json.
+        Returns dict: { 'Car': 1.0, 'Van': 1.5, 'Hiace': 1.75, ... }
+        Used to pre-calculate vehicle prices inside every route chunk.
+        """
+        vehicles_path = self.kb_path / "transportation" / "vehicle_types.json"
+        if vehicles_path.exists():
+            with open(vehicles_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            return {v['label']: v['multiplier'] for v in data['vehicles'].values()}
+        # Fallback if file missing
+        return {
+            'Car': 1.0, 'Van': 1.5, 'Jeep': 1.75,
+            'Hiace': 1.75, 'Coaster / Mini Bus': 2.5, 'Bus': 3.0
+        }
+
     def load_transport_routes(self):
-        """Load rental_pricing.jsonl into ChromaDB."""
+        """
+        Load rental_pricing.jsonl into ChromaDB.
+
+        Each route chunk is enriched with pre-calculated vehicle prices
+        from vehicle_types.json so queries like 'hiace from KTM to Pokhara'
+        match the route chunk directly — LLM never has to multiply itself.
+        """
         print("\n" + "=" * 60)
         print("LOADING TRANSPORT ROUTES (rental_pricing.jsonl)")
         print("=" * 60)
@@ -177,6 +249,10 @@ class KnowledgeLoader:
         if not routes_path.exists():
             print(f"\n  WARNING: {routes_path} not found — skipping.")
             return 0
+
+        # Load multipliers once, reuse for every route
+        multipliers = self._load_vehicle_multipliers()
+        print(f"\n  Vehicle multipliers loaded: {list(multipliers.keys())}")
 
         routes = []
         with open(routes_path, 'r', encoding='utf-8') as f:
@@ -189,11 +265,11 @@ class KnowledgeLoader:
                 except json.JSONDecodeError as e:
                     print(f"  [ERROR] Line {line_num}: {e}")
 
-        print(f"\n  Found {len(routes)} routes")
+        print(f"  Found {len(routes)} routes")
 
         documents = []
         metadatas = []
-        ids = []
+        ids       = []
 
         for route in routes:
             rag_text = route.get("rag_text", "").strip()
@@ -201,37 +277,64 @@ class KnowledgeLoader:
                 print(f"  [SKIP] Route {route.get('id')} has empty rag_text")
                 continue
 
+            # Enrich with pre-calculated vehicle prices (before VAT)
+            # This allows vehicle-type queries (e.g. 'hiace', 'coaster') to
+            # match route chunks directly without needing a separate lookup
+            car_rate = route.get('car_base_rate_npr', 0)
+            if car_rate and multipliers:
+                vehicle_prices = " | ".join(
+                    f"{label} NPR {round(car_rate * mult):,}"
+                    for label, mult in multipliers.items()
+                )
+                rag_text += (
+                    f" Pre-calculated vehicle prices (car base NPR {car_rate:,},"
+                    f" add 13% VAT): {vehicle_prices}."
+                )
+
             doc_id = f"transport_route_{route['id']}"
             documents.append(rag_text)
             metadatas.append({
-                'source': str(routes_path),
-                'title': route.get('route_name', ''),
-                'category': 'transport',
-                'data_type': 'transport_route',
-                'route_id': route.get('id', ''),
-                'category_name': route.get('category_name', ''),
-                'trip_type': route.get('trip_type', ''),
-                'car_base_rate_npr': route.get('car_base_rate_npr', 0),
-                'distance_km': route.get('distance_km') or 0,
-                'duration_hours': route.get('duration_hours') or 0,
+                'source':             str(routes_path),
+                'title':              route.get('route_name', ''),
+                'category':           'transport',
+                'data_type':          'transport_route',
+                'route_id':           route.get('id', ''),
+                'category_name':      route.get('category_name', ''),
+                'trip_type':          route.get('trip_type', ''),
+                'car_base_rate_npr':  route.get('car_base_rate_npr', 0),
+                'distance_km':        route.get('distance_km') or 0,
+                'duration_hours':     route.get('duration_hours') or 0,
                 'has_rate_deviation': str(route.get('has_rate_deviation', False)),
             })
             ids.append(doc_id)
 
         if documents:
             self.collection.add(documents=documents, metadatas=metadatas, ids=ids)
-            print(f"  Added {len(documents)} transport route chunks")
+            print(f"  Added {len(documents)} transport route chunks (with vehicle prices)")
 
         return len(documents)
 
     def load_transport_policy(self):
-        """Load pricing_rules.json and vehicle_types.json into ChromaDB."""
+        """
+        Load pricing_rules.json and vehicle_types.json into ChromaDB.
+
+        pricing_rules.json → 6 policy chunks (VAT, night surcharge,
+        road surcharge, disposal, overnight, base rule)
+        NOTE: calculation_guide chunk removed — prices are now pre-calculated
+        in route chunks so the LLM does not need to calculate.
+
+        vehicle_types.json → 1 overview chunk only (for passenger-count
+        vehicle recommendation queries like 'what vehicle for 10 people?')
+        NOTE: individual per-vehicle chunks removed — multiplier info is
+        now baked into every route chunk directly.
+        """
         print("\n" + "=" * 60)
         print("LOADING TRANSPORT POLICY FILES")
         print("=" * 60)
 
         total = 0
 
+        # ── pricing_rules.json ─────────────────────────────────────────────
         policy_path = self.kb_path / "transportation" / "pricing_rules.json"
 
         if policy_path.exists():
@@ -295,21 +398,16 @@ class KnowledgeLoader:
                         "Multiply by vehicle multiplier for other vehicle types."
                     )
                 ),
-                (
-                    "pricing_rules_calculation",
-                    (
-                        "How to calculate the final NATTA transport price step by step: "
-                        f"{policy['calculation_guide']}"
-                    )
-                ),
+                # NOTE: pricing_rules_calculation removed — pre-calculated
+                # vehicle prices in route chunks make this redundant.
             ]
 
             documents = [chunk[1] for chunk in policy_chunks]
             metadatas = [
                 {
-                    'source': str(policy_path),
-                    'title': 'NATTA Pricing Rules',
-                    'category': 'transport',
+                    'source':    str(policy_path),
+                    'title':     'NATTA Pricing Rules',
+                    'category':  'transport',
                     'data_type': 'pricing_policy',
                     'rule_type': chunk[0],
                 }
@@ -324,53 +422,41 @@ class KnowledgeLoader:
         else:
             print(f"  WARNING: {policy_path} not found — skipping.")
 
+        # ── vehicle_types.json ─────────────────────────────────────────────
         vehicles_path = self.kb_path / "transportation" / "vehicle_types.json"
 
         if vehicles_path.exists():
             with open(vehicles_path, 'r', encoding='utf-8') as f:
                 vehicles_data = json.load(f)
 
-            vehicle_chunks = []
-
-            all_vehicles_text = (
-                "NATTA Tourist Vehicle Types and Multipliers in Nepal: "
+            # ONE overview chunk only — for passenger-count recommendation queries
+            # e.g. "what vehicle should I use for 10 passengers?"
+            # Individual per-vehicle chunks removed — multipliers are now
+            # baked directly into every route chunk via load_transport_routes()
+            overview_text = (
+                "NATTA Tourist Vehicle Types and Passenger Capacity in Nepal: "
                 f"{vehicles_data.get('description', '')} "
                 f"{vehicles_data.get('selection_guide', '')} "
                 "Vehicle details: "
             )
             for key, v in vehicles_data["vehicles"].items():
-                all_vehicles_text += (
+                overview_text += (
                     f"{v['label']} (multiplier {v['multiplier']}x, "
                     f"{v['pax_min']} to {v['pax_max']} passengers) — {v['description']}. "
                 )
-            vehicle_chunks.append(("vehicle_types_overview", all_vehicles_text))
 
-            for key, v in vehicles_data["vehicles"].items():
-                chunk_text = (
-                    f"NATTA Vehicle Type — {v['label']}: "
-                    f"{v['description']} "
-                    f"Multiplier: {v['multiplier']}x the car base rate. "
-                    f"Suitable for {v['pax_min']} to {v['pax_max']} passengers. "
-                    f"To calculate price: multiply the car base rate of the route by {v['multiplier']}."
-                )
-                vehicle_chunks.append((f"vehicle_type_{key}", chunk_text))
-
-            documents = [chunk[1] for chunk in vehicle_chunks]
-            metadatas = [
-                {
-                    'source': str(vehicles_path),
-                    'title': 'NATTA Vehicle Types',
-                    'category': 'transport',
+            self.collection.add(
+                documents=[overview_text],
+                metadatas=[{
+                    'source':    str(vehicles_path),
+                    'title':     'NATTA Vehicle Types',
+                    'category':  'transport',
                     'data_type': 'vehicle_types',
-                    'vehicle_key': chunk[0],
-                }
-                for chunk in vehicle_chunks
-            ]
-            ids = [f"transport_vehicle_{chunk[0]}" for chunk in vehicle_chunks]
-
-            self.collection.add(documents=documents, metadatas=metadatas, ids=ids)
-            print(f"  Added {len(documents)} vehicle type chunks from vehicle_types.json")
-            total += len(documents)
+                }],
+                ids=["transport_vehicle_overview"]
+            )
+            print(f"  Added 1 vehicle overview chunk from vehicle_types.json")
+            total += 1
 
         else:
             print(f"  WARNING: {vehicles_path} not found — skipping.")
@@ -441,17 +527,18 @@ if __name__ == '__main__':
 
     test_queries = [
         "How much does it cost to go from Kathmandu to Pokhara?",
+        "How much does a hiace from Kathmandu to Pokhara cost?",
         "What vehicle should I use for 8 passengers?",
         "Is VAT included in the transport rates?",
-        "Chitwan National Park entry fee",
         "What is the night surcharge for transport?",
+        "Chitwan National Park entry fee",
         "How many days is the Everest Base Camp trek?",
         "What permits do I need for Manaslu Circuit?",
         "Entry fee for Bhaktapur Durbar Square",
     ]
 
     for query in test_queries:
-        print(f"\n🔍 Query: {query}")
+        print(f"\n Query: {query}")
         results = loader.search(query, n_results=3)
         if not results['documents']:
             print("  No results found.")

@@ -48,10 +48,17 @@ Guidelines:
 - Never fabricate prices, permit fees, or trek details
 - Always prioritise traveller safety when relevant
 
+FOR ENTRY FEES AND SITE PRICES:
+- Always list ALL nationality tiers from the context: Foreign Nationals, SAARC Nationals, Chinese Nationals, and Nepalese
+- Never show only one price — show the full breakdown
+- Format as a bullet list: Foreign: NPR X | SAARC: NPR Y | Nepalese: NPR Z
+
 FOR TRANSPORT PRICING:
-- The base rate listed is always for a standard CAR
-- State the car base rate clearly and mention 13% VAT is added on top
-- Other vehicles cost more — multiply the car rate by the vehicle multiplier"""
+- Use ONLY the first route chunk in the context — that is the direct route
+- State the route name and the pre-calculated vehicle price from the context
+- Always show: Vehicle price NPR X + 13% VAT = NPR Y (total)
+- Do NOT combine multiple routes or do multi-step calculations
+- Do NOT fabricate prices — only use numbers explicitly stated in the context"""
 
 FALLBACK_SYSTEM_PROMPT = """You are NepalTravel AI, a knowledgeable and friendly Nepal travel assistant.
 
@@ -113,6 +120,18 @@ class ChatView(APIView):
 
     THRESHOLD = getattr(settings, 'RAG_RELEVANCE_THRESHOLD', 0.40)
 
+    # If any of these words appear in the query → transport chunks rank first
+    VEHICLE_KEYWORDS = {
+        'hiace', 'van', 'jeep', 'coaster', 'bus', 'minibus',
+        'microbus', 'vehicle', 'car', 'transport', 'ride',
+        'driver', 'pickup', 'drop', 'transfer'
+    }
+
+    def _is_transport_query(self, message: str) -> bool:
+        """Return True if the query is clearly about transport/vehicle pricing."""
+        words = set(message.lower().split())
+        return bool(words & self.VEHICLE_KEYWORDS)
+
     def post(self, request):
         start = time.time()
 
@@ -140,26 +159,36 @@ class ChatView(APIView):
             sources = []
 
             if use_rag:
-                # Separate content chunks from transport chunks.
-                # When a query matches both (e.g. "entry fee for Bhaktapur"),
-                # content (practical/treks/destinations) surfaces first.
-                preferred = []
-                transport = []
+                preferred         = []   # practical, treks, destinations
+                transport_routes  = []   # data_type = transport_route
+                transport_policy  = []   # data_type = pricing_policy or vehicle_types
 
                 for i in range(len(docs)):
-                    cat   = metas[i].get('category', '')
+                    cat       = metas[i].get('category', '')
+                    data_type = metas[i].get('data_type', '')
                     entry = {
                         'doc':       docs[i],
                         'meta':      metas[i],
                         'relevance': round(1 - distances[i], 3),
                     }
-                    if cat == 'transport':
-                        transport.append(entry)
-                    else:
+                    if cat != 'transport':
                         preferred.append(entry)
+                    elif data_type == 'transport_route':
+                        transport_routes.append(entry)
+                    else:
+                        # pricing_policy and vehicle_types
+                        transport_policy.append(entry)
 
-                # Content first, transport fills remaining slots
-                ranked = preferred + transport
+                if self._is_transport_query(message):
+                    # ONE route chunk (best match) + ONE policy chunk (VAT rule)
+                    # + ONE content chunk (in case query also involves a place)
+                    # Prevents LLM from mixing prices from multiple route chunks
+                    ranked = transport_routes[:1] + transport_policy[:1] + preferred[:1]
+                    print(f"  [RERANK] transport-first | routes={len(transport_routes)} policy={len(transport_policy)} content={len(preferred)}")
+                else:
+                    # Content first, transport fills remaining slots
+                    ranked = preferred + transport_routes + transport_policy
+                    print(f"  [RERANK] content-first | content={len(preferred)} transport={len(transport_routes)}")
 
                 for entry in ranked[:3]:
                     context += entry['doc'] + "\n\n"
