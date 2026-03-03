@@ -277,18 +277,33 @@ class KnowledgeLoader:
                 print(f"  [SKIP] Route {route.get('id')} has empty rag_text")
                 continue
 
+            # Prepend route name prominently so embedding matches
+            # the correct route when user mentions a place name
+            route_name = route.get('route_name', '')
+            if route_name:
+                rag_text = f"ROUTE: {route_name}. {rag_text}"
+
             # Enrich with pre-calculated vehicle prices (before VAT)
             # This allows vehicle-type queries (e.g. 'hiace', 'coaster') to
             # match route chunks directly without needing a separate lookup
             car_rate = route.get('car_base_rate_npr', 0)
             if car_rate and multipliers:
+                # Strip old "Multiply by vehicle multiplier" instruction
+                # It contradicts the pre-calculated prices below
+                rag_text = rag_text.replace(
+                    "Multiply by vehicle multiplier for other vehicle types. ", ""
+                ).replace(
+                    "Multiply by vehicle multiplier for other vehicle types.", ""
+                )
+
                 vehicle_prices = " | ".join(
                     f"{label} NPR {round(car_rate * mult):,}"
                     for label, mult in multipliers.items()
                 )
+                # FINAL prices — LLM must NOT multiply again
                 rag_text += (
-                    f" Pre-calculated vehicle prices (car base NPR {car_rate:,},"
-                    f" add 13% VAT): {vehicle_prices}."
+                    f" FINAL vehicle prices before VAT (do NOT multiply further)"
+                    f" — car base NPR {car_rate:,}: {vehicle_prices}."
                 )
 
             doc_id = f"transport_route_{route['id']}"

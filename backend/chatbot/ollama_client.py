@@ -25,14 +25,15 @@ class OllamaClient:
             "system": system_prompt,
             "stream": False,
             "options": {
-                "temperature": 0.7,
-                "top_p":       0.9,
-                "num_predict": 600,
+                "num_predict": 300,
+                "temperature": 0.2,
+                "num_ctx":     1024,
+                "num_thread":  8,
             }
         }
 
         try:
-            response = requests.post(self.api_url, json=payload, timeout=90)
+            response = requests.post(self.api_url, json=payload, timeout=300)
             response.raise_for_status()
             return response.json().get('response', '').strip()
 

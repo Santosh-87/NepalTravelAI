@@ -53,12 +53,21 @@ FOR ENTRY FEES AND SITE PRICES:
 - Never show only one price — show the full breakdown
 - Format as a bullet list: Foreign: NPR X | SAARC: NPR Y | Nepalese: NPR Z
 
-FOR TRANSPORT PRICING:
-- Use ONLY the first route chunk in the context — that is the direct route
-- State the route name and the pre-calculated vehicle price from the context
-- Always show: Vehicle price NPR X + 13% VAT = NPR Y (total)
-- Do NOT combine multiple routes or do multi-step calculations
-- Do NOT fabricate prices — only use numbers explicitly stated in the context"""
+FOR SINGLE ROUTE TRANSPORT PRICING:
+- The context contains FINAL pre-calculated vehicle prices — do NOT multiply them again
+- Read the vehicle price directly from the context
+- Show: Vehicle price NPR X (before VAT)
+- Then show: If VAT bill required: +13% VAT = NPR Y → Total NPR Z
+- Do NOT fabricate prices — only use numbers explicitly stated in the context
+
+FOR MULTI-SEGMENT ITINERARY OR QUOTATION:
+- List each segment on its own line with its pre-VAT price from the context
+- For overnight stays: Car overnight = NPR 3,000 per night, multiply by vehicle multiplier
+- Sum all segment prices into a single TOTAL BEFORE VAT at the bottom
+- Do NOT add VAT to each line separately
+- At the very end show once: "If VAT bill required: +13% VAT = NPR X → Grand Total NPR Y"
+- If a segment is not found in the context, say "rate not available" for that line
+- Do NOT fabricate any prices"""
 
 FALLBACK_SYSTEM_PROMPT = """You are NepalTravel AI, a knowledgeable and friendly Nepal travel assistant.
 
@@ -120,17 +129,29 @@ class ChatView(APIView):
 
     THRESHOLD = getattr(settings, 'RAG_RELEVANCE_THRESHOLD', 0.40)
 
-    # If any of these words appear in the query → transport chunks rank first
+    # Transport/vehicle words → transport chunks rank first
     VEHICLE_KEYWORDS = {
         'hiace', 'van', 'jeep', 'coaster', 'bus', 'minibus',
         'microbus', 'vehicle', 'car', 'transport', 'ride',
         'driver', 'pickup', 'drop', 'transfer'
     }
 
+    # Itinerary/quotation words → multi-segment mode (more chunks passed)
+    ITINERARY_KEYWORDS = {
+        'itinerary', 'quotation', 'quote', 'trip', 'tour',
+        'arrival', 'departure', 'overnight', 'nights', 'days',
+        'package', 'multi', 'full', 'complete', 'sightseeing'
+    }
+
     def _is_transport_query(self, message: str) -> bool:
         """Return True if the query is clearly about transport/vehicle pricing."""
         words = set(message.lower().split())
         return bool(words & self.VEHICLE_KEYWORDS)
+
+    def _is_itinerary_query(self, message: str) -> bool:
+        """Return True if the query is asking for a multi-segment itinerary or quotation."""
+        words = set(message.lower().split())
+        return bool(words & self.ITINERARY_KEYWORDS)
 
     def post(self, request):
         start = time.time()
@@ -144,7 +165,19 @@ class ChatView(APIView):
 
         try:
             # ── Step 1: Search ChromaDB ───────────────────────────────────
-            results = _knowledge_base.search(message, n_results=8)
+            # Use more results for itinerary queries so all segments
+            # have a chance to be retrieved
+            is_transport  = self._is_transport_query(message)
+            is_itinerary  = self._is_itinerary_query(message)
+
+            if is_transport and is_itinerary:
+                n_results = 15   # multi-segment — need many route chunks
+            elif is_transport:
+                n_results = 8    # single route query
+            else:
+                n_results = 8    # content query
+
+            results = _knowledge_base.search(message, n_results=n_results)
 
             docs      = results['documents']
             metas     = results['metadatas']
@@ -179,18 +212,26 @@ class ChatView(APIView):
                         # pricing_policy and vehicle_types
                         transport_policy.append(entry)
 
-                if self._is_transport_query(message):
-                    # ONE route chunk (best match) + ONE policy chunk (VAT rule)
-                    # + ONE content chunk (in case query also involves a place)
-                    # Prevents LLM from mixing prices from multiple route chunks
+                if is_transport and is_itinerary:
+                    # Multi-segment itinerary — pass up to 5 route chunks
+                    # so arrival, sightseeing, intercity, overnight, departure
+                    # all have a route chunk in context
+                    # Also pass 2 policy chunks (VAT + overnight rule)
+                    ranked = transport_routes[:5] + transport_policy[:2] + preferred[:1]
+                    print(f"  [RERANK] itinerary-mode | routes={len(transport_routes)} policy={len(transport_policy)} content={len(preferred)}")
+
+                elif is_transport:
+                    # Single route query — 1 route only prevents price confusion
                     ranked = transport_routes[:1] + transport_policy[:1] + preferred[:1]
                     print(f"  [RERANK] transport-first | routes={len(transport_routes)} policy={len(transport_policy)} content={len(preferred)}")
+
                 else:
                     # Content first, transport fills remaining slots
                     ranked = preferred + transport_routes + transport_policy
                     print(f"  [RERANK] content-first | content={len(preferred)} transport={len(transport_routes)}")
 
-                for entry in ranked[:3]:
+                # Cap context at 4 chunks maximum to avoid overloading LLM
+                for entry in ranked[:4]:
                     context += entry['doc'] + "\n\n"
                     sources.append({
                         'title':     entry['meta'].get('title', 'Unknown'),
