@@ -53,10 +53,11 @@ FOR ENTRY FEES AND SITE PRICES:
 - Never show only one price — show the full breakdown
 - Format as a bullet list: Foreign: NPR X | SAARC: NPR Y | Nepalese: NPR Z
 
-FOR SINGLE ROUTE TRANSPORT PRICING:
-- The context contains FINAL pre-calculated vehicle prices — do NOT multiply them again
-- Read the vehicle price directly from the context
-- Show: Vehicle price NPR X (before VAT)
+FOR TRANSPORT PRICING:
+- Find the route chunk whose title matches the destination in the question
+- Use ONLY that matching route chunk for prices — ignore all other route chunks
+- State the route name and the pre-calculated vehicle price from the context
+- Always show: Vehicle price NPR X (before VAT)
 - Then show: If VAT bill required: +13% VAT = NPR Y → Total NPR Z
 - Do NOT fabricate prices — only use numbers explicitly stated in the context
 
@@ -140,7 +141,7 @@ class ChatView(APIView):
     ITINERARY_KEYWORDS = {
         'itinerary', 'quotation', 'quote', 'trip', 'tour',
         'arrival', 'departure', 'overnight', 'nights', 'days',
-        'package', 'multi', 'full', 'complete', 'sightseeing'
+        'package', 'multi', 'full', 'complete'
     }
 
     def _is_transport_query(self, message: str) -> bool:
@@ -221,8 +222,9 @@ class ChatView(APIView):
                     print(f"  [RERANK] itinerary-mode | routes={len(transport_routes)} policy={len(transport_policy)} content={len(preferred)}")
 
                 elif is_transport:
-                    # Single route query — 1 route only prevents price confusion
-                    ranked = transport_routes[:1] + transport_policy[:1] + preferred[:1]
+                    # Top 3 routes so correct destination chunk is always included
+                    # (ChromaDB may rank correct chunk 2nd or 3rd due to embedding similarity)
+                    ranked = transport_routes[:3] + transport_policy[:1]
                     print(f"  [RERANK] transport-first | routes={len(transport_routes)} policy={len(transport_policy)} content={len(preferred)}")
 
                 else:

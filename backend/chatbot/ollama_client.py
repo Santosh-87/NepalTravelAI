@@ -27,13 +27,13 @@ class OllamaClient:
             "options": {
                 "num_predict": 300,
                 "temperature": 0.2,
-                "num_ctx":     1024,
+                "num_ctx":     768,
                 "num_thread":  8,
             }
         }
 
         try:
-            response = requests.post(self.api_url, json=payload, timeout=300)
+            response = requests.post(self.api_url, json=payload, timeout=180)
             response.raise_for_status()
             return response.json().get('response', '').strip()
 
