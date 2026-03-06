@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from '../config/supabase';
+import authService from '../services/auth';
 
 const AuthContext = createContext({});
 
@@ -17,58 +17,55 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            setUser(session?.user ?? null);
-            if (session?.user) {
-                loadUserProfile(session.user.id);
-            } else {
-                setLoading(false);
-            }
-        });
-
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-            async (event, session) => {
-                console.log('Auth event:', event);
-                setUser(session?.user ?? null);
-
-                if (session?.user) {
-                    await loadUserProfile(session.user.id);
-                } else {
-                    setProfile(null);
-                    setLoading(false);
-                }
-            }
-        );
-
-        return () => subscription.unsubscribe();
+        initAuth();
     }, []);
 
-    const loadUserProfile = async (userId) => {
+    const initAuth = async () => {
         try {
-            const { data, error } = await supabase
-                .from('user_profiles')
-                .select('*')
-                .eq('id', userId)
-                .single();
+            // If no token exists, skip profile fetch
+            if (!authService.isAuthenticated()) {
+                setLoading(false);
+                return;
+            }
 
-            if (error) throw error;
-            setProfile(data);
+            await loadUserProfile();
+
+        } catch (error) {
+            console.error('Auth init failed:', error);
+            authService.clearTokens();
+            setLoading(false);
+        }
+    };
+
+    const loadUserProfile = async () => {
+        try {
+            const profileData = await authService.getProfile();
+            setUser(profileData);
+            setProfile(profileData);
         } catch (error) {
             console.error('Error loading profile:', error);
+            // Token likely expired or invalid — clear session
+            authService.clearTokens();
+            setUser(null);
+            setProfile(null);
         } finally {
             setLoading(false);
         }
+    };
+
+    const signOut = async () => {
+        await authService.logout();
+        setUser(null);
+        setProfile(null);
     };
 
     const value = {
         user,
         profile,
         loading,
-        signOut: async () => {
-            await supabase.auth.signOut();
-            setUser(null);
-            setProfile(null);
-        }
+        signOut,
+        // A method to refresh profile data (e.g. after role approval) without reloading the page
+        refreshProfile: loadUserProfile,
     };
 
     return (

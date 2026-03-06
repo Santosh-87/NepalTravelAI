@@ -1,25 +1,29 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Menu, X, Mountain, LogOut, User, ChevronDown, Settings } from 'lucide-react';
-import { supabase } from '../config/supabase';
+import authService from '../services/auth';
 import './Navigation.css';
 
 const Navigation = () => {
+  const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [user, setUser] = useState(null);
-  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
   const profileRef = useRef(null);
 
-  // Load Profile from DB
-  const loadProfile = async (userId) => {
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-    if (!error && data) setProfile(data);
+  // Load user profile from Django
+  const loadProfile = async () => {
+    try {
+      const profileData = await authService.getProfile();
+      setUser(profileData);
+    } catch (error) {
+      console.error('Failed to load profile:', error);
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -27,33 +31,19 @@ const Navigation = () => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
 
-    // Check existing session on page load
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setUser(session.user);
-        loadProfile(session.user.id);
-      }
-    });
-
-    // Listen for login / logout events
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        setUser(session.user);
-        loadProfile(session.user.id);
-      }
-      if (event === 'SIGNED_OUT') {
-        setUser(null);
-        setProfile(null);
-      }
-    });
+    // Check if user is authenticated on mount
+    if (authService.isAuthenticated()) {
+      loadProfile();
+    } else {
+      setLoading(false);
+    }
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      subscription.unsubscribe();
     };
   }, []);
 
-  // Close dropdown outside of click
+  // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (profileRef.current && !profileRef.current.contains(e.target)) {
@@ -64,36 +54,53 @@ const Navigation = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Logout
-  const handleLogout = () => {
-    console.log('🔴 LOGOUT CLICKED');
-    
-    supabase.auth.signOut(); // Fire and forget
-    
-    localStorage.clear();
-    sessionStorage.clear();
+  // Logout handler
+  const handleLogout = async () => {
+    console.log('Logging out...');
+
+    await authService.logout();
+
     setUser(null);
-    setProfile(null);
     setIsProfileOpen(false);
     setIsMobileMenuOpen(false);
-    
-    console.log('🔴 Redirecting to homepage...');
-    window.location.href = '/';
+
+    console.log('Redirecting to homepage...');
+    navigate('/');
   };
 
-
+  // Get user initial for avatar
   const getInitial = () => {
-    if (profile?.full_name) return profile.full_name.charAt(0).toUpperCase();
+    if (user?.full_name) return user.full_name.charAt(0).toUpperCase();
     if (user?.email) return user.email.charAt(0).toUpperCase();
     return 'U';
   };
 
+  // Get user first name
   const getFirstName = () => {
-    if (profile?.full_name) return profile.full_name.split(' ')[0];
+    if (user?.full_name) return user.full_name.split(' ')[0];
     return user?.email?.split('@')[0] || 'User';
   };
 
-  // Render
+  // Show loading state briefly
+  if (loading) {
+    return (
+      <nav className="navigation">
+        <div className="container">
+          <div className="nav-content">
+            <Link to="/" className="logo">
+              <Mountain className="logo-icon" />
+              <span className="logo-text">
+                <span className="logo-nepal">Nepal</span>
+                <span className="logo-travel">Travel</span>
+                <span className="logo-ai">AI</span>
+              </span>
+            </Link>
+          </div>
+        </div>
+      </nav>
+    );
+  }
+
   return (
     <nav className={`navigation ${isScrolled ? 'scrolled' : ''}`}>
       <div className="container">
@@ -135,7 +142,10 @@ const Navigation = () => {
                 >
                   <div className="profile-avatar">{getInitial()}</div>
                   <span className="profile-name">{getFirstName()}</span>
-                  <ChevronDown size={16} className={`chevron ${isProfileOpen ? 'chevron-open' : ''}`} />
+                  <ChevronDown
+                    size={16}
+                    className={`chevron ${isProfileOpen ? 'chevron-open' : ''}`}
+                  />
                 </button>
 
                 {isProfileOpen && (
@@ -143,23 +153,37 @@ const Navigation = () => {
                     <div className="dropdown-header">
                       <div className="dropdown-avatar">{getInitial()}</div>
                       <div className="dropdown-user-info">
-                        <span className="dropdown-name">{profile?.full_name || 'User'}</span>
+                        <span className="dropdown-name">{user.full_name || 'User'}</span>
                         <span className="dropdown-email">{user.email}</span>
                         <span className="dropdown-role">
-                          {profile?.role === 'vendor' ? '🏪 Vendor' : '🧭 Tourist'}
+                          {user.role === 'vendor' ? '🏪 Vendor' : '🧭 Tourist'}
                         </span>
                       </div>
                     </div>
                     <div className="dropdown-divider" />
-                    <Link to="/profile" className="dropdown-item" onClick={() => setIsProfileOpen(false)}>
-                      <User size={16} /><span>View Profile</span>
+                    <Link
+                      to="/profile"
+                      className="dropdown-item"
+                      onClick={() => setIsProfileOpen(false)}
+                    >
+                      <User size={16} />
+                      <span>View Profile</span>
                     </Link>
-                    <Link to="/profile/edit" className="dropdown-item" onClick={() => setIsProfileOpen(false)}>
-                      <Settings size={16} /><span>Edit Profile</span>
+                    <Link
+                      to="/profile/edit"
+                      className="dropdown-item"
+                      onClick={() => setIsProfileOpen(false)}
+                    >
+                      <Settings size={16} />
+                      <span>Edit Profile</span>
                     </Link>
                     <div className="dropdown-divider" />
-                    <button className="dropdown-item dropdown-logout" onClick={handleLogout}>
-                      <LogOut size={16} /><span>Logout</span>
+                    <button
+                      className="dropdown-item dropdown-logout"
+                      onClick={handleLogout}
+                    >
+                      <LogOut size={16} />
+                      <span>Logout</span>
                     </button>
                   </div>
                 )}
@@ -168,7 +192,10 @@ const Navigation = () => {
           )}
 
           {/* Mobile hamburger */}
-          <button className="mobile-menu-toggle" onClick={() => setIsMobileMenuOpen(prev => !prev)}>
+          <button
+            className="mobile-menu-toggle"
+            onClick={() => setIsMobileMenuOpen(prev => !prev)}
+          >
             {isMobileMenuOpen ? <X /> : <Menu />}
           </button>
         </div>
@@ -176,31 +203,84 @@ const Navigation = () => {
         {/* Mobile menu */}
         {isMobileMenuOpen && (
           <div className="mobile-menu">
-            <Link to="/features" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>Features</Link>
-            <Link to="/marketplace" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>Vehicle Marketplace</Link>
-            <Link to="/community" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>Community</Link>
-            <Link to="/about" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>About</Link>
+            <Link
+              to="/features"
+              className="mobile-nav-link"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Features
+            </Link>
+            <Link
+              to="/marketplace"
+              className="mobile-nav-link"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Vehicle Marketplace
+            </Link>
+            <Link
+              to="/community"
+              className="mobile-nav-link"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Community
+            </Link>
+            <Link
+              to="/about"
+              className="mobile-nav-link"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              About
+            </Link>
 
             <div className="mobile-nav-actions">
               {!user ? (
                 <>
-                  <Link to="/login" className="btn btn-secondary" onClick={() => setIsMobileMenuOpen(false)}>Sign In</Link>
-                  <Link to="/signup" className="btn btn-accent" onClick={() => setIsMobileMenuOpen(false)}>Get Started</Link>
+                  <Link
+                    to="/login"
+                    className="btn btn-secondary"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    to="/signup"
+                    className="btn btn-accent"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Get Started
+                  </Link>
                 </>
               ) : (
                 <>
                   <div className="mobile-user-info">
                     <div className="mobile-avatar">{getInitial()}</div>
                     <div>
-                      <div className="mobile-user-name">{profile?.full_name || 'User'}</div>
+                      <div className="mobile-user-name">{user.full_name || 'User'}</div>
                       <div className="mobile-user-role">
-                        {profile?.role === 'vendor' ? '🏪 Vendor' : '🧭 Tourist'}
+                        {user.role === 'vendor' ? '🏪 Vendor' : '🧭 Tourist'}
                       </div>
                     </div>
                   </div>
-                  <Link to="/profile" className="btn btn-secondary" onClick={() => setIsMobileMenuOpen(false)}>View Profile</Link>
-                  <Link to="/profile/edit" className="btn btn-secondary" onClick={() => setIsMobileMenuOpen(false)}>Edit Profile</Link>
-                  <button className="btn btn-accent" onClick={handleLogout}>Logout</button>
+                  <Link
+                    to="/profile"
+                    className="btn btn-secondary"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    View Profile
+                  </Link>
+                  <Link
+                    to="/profile/edit"
+                    className="btn btn-secondary"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Edit Profile
+                  </Link>
+                  <button
+                    className="btn btn-accent"
+                    onClick={handleLogout}
+                  >
+                    Logout
+                  </button>
                 </>
               )}
             </div>

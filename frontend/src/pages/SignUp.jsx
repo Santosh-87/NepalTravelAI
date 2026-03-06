@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { User, Store, Eye, EyeOff, Check, Mountain, ArrowLeft, Loader2 } from 'lucide-react';
 import Navigation from '../components/Navigation';
-import { supabase } from '../config/supabase';
+import authService from '../services/auth';
 import './SignUp.css';
 
 const SignUpPage = () => {
@@ -13,14 +13,14 @@ const SignUpPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [formData, setFormData] = useState({
-    fullName: '',
+    full_name: '',
     email: '',
     password: '',
     confirmPassword: '',
-    phoneNumber: '',
-    businessName: '',
-    panNumber: '',
-    businessAddress: '',
+    phone_number: '',
+    business_name: '',
+    pan_number: '',
+    business_address: '',
     agreeToTerms: false,
   });
   const [errors, setErrors] = useState({});
@@ -66,12 +66,12 @@ const SignUpPage = () => {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.fullName.trim()) {
-      newErrors.fullName = 'Full name is required';
+    if (!formData.full_name.trim()) {
+      newErrors.full_name = 'Full name is required';
     } else {
-      const parts = formData.fullName.trim().split(/\s+/);
-      if (parts.length < 2) newErrors.fullName = 'Please enter first and last name';
-      else if (parts.some(p => p.length < 2)) newErrors.fullName = 'Each name must be at least 2 characters';
+      const parts = formData.full_name.trim().split(/\s+/);
+      if (parts.length < 2) newErrors.full_name = 'Please enter first and last name';
+      else if (parts.some(p => p.length < 2)) newErrors.full_name = 'Each name must be at least 2 characters';
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -86,15 +86,15 @@ const SignUpPage = () => {
     if (formData.password !== formData.confirmPassword)
       newErrors.confirmPassword = 'Passwords do not match';
 
-    if (!formData.phoneNumber) newErrors.phoneNumber = 'Phone number is required';
-    else if (!/^\+?[\d\s\-()]+$/.test(formData.phoneNumber))
-      newErrors.phoneNumber = 'Please enter a valid phone number';
+    if (!formData.phone_number) newErrors.phone_number = 'Phone number is required';
+    else if (!/^\+?[\d\s\-()]+$/.test(formData.phone_number))
+      newErrors.phone_number = 'Please enter a valid phone number';
 
     if (selectedRole === 'vendor') {
-      if (!formData.businessName.trim()) newErrors.businessName = 'Business name is required';
-      if (!formData.panNumber.trim()) newErrors.panNumber = 'PAN number is required';
-      else if (!/^\d{9}$/.test(formData.panNumber)) newErrors.panNumber = 'PAN must be exactly 9 digits';
-      if (!formData.businessAddress.trim()) newErrors.businessAddress = 'Business address is required';
+      if (!formData.business_name.trim()) newErrors.business_name = 'Business name is required';
+      if (!formData.pan_number.trim()) newErrors.pan_number = 'PAN number is required';
+      else if (!/^\d{9}$/.test(formData.pan_number)) newErrors.pan_number = 'PAN must be exactly 9 digits';
+      if (!formData.business_address.trim()) newErrors.business_address = 'Business address is required';
     }
 
     if (!formData.agreeToTerms) newErrors.agreeToTerms = 'You must agree to the terms';
@@ -112,40 +112,25 @@ const SignUpPage = () => {
     setSuccessMessage('');
 
     try {
-      // Step 1: Create the account
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      // Build payload for authService — matches Django backend field names
+      const userData = {
         email: formData.email,
         password: formData.password,
-        options: {
-          shouldCreateSession: false,
-          data: {
-            full_name: formData.fullName,
-            phone_number: formData.phoneNumber,
-            role: selectedRole,
-            business_name: selectedRole === 'vendor' ? formData.businessName : null,
-            pan_number: selectedRole === 'vendor' ? formData.panNumber : null,
-            business_address: selectedRole === 'vendor' ? formData.businessAddress : null,
-          },
-        },
-      });
+        password_confirm: formData.confirmPassword,
+        full_name: formData.full_name,
+        phone_number: formData.phone_number,
+        role: selectedRole,
+        ...(selectedRole === 'vendor' && {
+          business_name: formData.business_name,
+          pan_number: formData.pan_number,
+          business_address: formData.business_address,
+        }),
+      };
 
-      if (authError) throw authError;
+      await authService.register(userData);
 
-      // Email already exists
-      if (authData?.user?.identities?.length === 0) {
-        setErrors({ email: 'This email is already registered. Please sign in.' });
-        setIsLoading(false);
-        return;
-      }
-
-      if (!authData?.user) throw new Error('Account creation failed. Please try again.');
-
-      // Step 2: Sign out immediately — kills any temp session Supabase created
-      await supabase.auth.signOut();
-
-      // Step 3: Show success, then redirect
       setIsLoading(false);
-      setSuccessMessage(`Welcome, ${formData.fullName.split(' ')[0]}! Account created. Redirecting to login...`);
+      setSuccessMessage(`Welcome, ${formData.full_name.split(' ')[0]}! Account created. Redirecting to login...`);
 
       setTimeout(() => {
         window.location.href = '/login';
@@ -155,9 +140,9 @@ const SignUpPage = () => {
       console.error('Signup error:', error);
       setIsLoading(false);
 
-      if (error.message?.includes('already registered')) {
+      if (error.message?.toLowerCase().includes('email') && error.message?.toLowerCase().includes('exist')) {
         setErrors({ email: 'This email is already registered. Please sign in.' });
-      } else if (error.message?.includes('Password')) {
+      } else if (error.message?.toLowerCase().includes('password')) {
         setErrors({ password: error.message });
       } else {
         setErrors({ general: error.message || 'Something went wrong. Please try again.' });
@@ -218,14 +203,10 @@ const SignUpPage = () => {
               <p className="form-subtitle">Fill in your details to get started</p>
             </div>
 
-            {/* Success message */}
             {successMessage && (
-              <div className="alert alert-success">
-                ✅ {successMessage}
-              </div>
+              <div className="alert alert-success">✅ {successMessage}</div>
             )}
 
-            {/* General error */}
             {errors.general && (
               <div className="alert alert-error">{errors.general}</div>
             )}
@@ -234,14 +215,14 @@ const SignUpPage = () => {
 
               {/* Full Name */}
               <div className="form-group">
-                <label htmlFor="fullName">Full Name <span className="required">*</span></label>
+                <label htmlFor="full_name">Full Name <span className="required">*</span></label>
                 <input
-                  type="text" id="fullName" name="fullName"
-                  className={`form-input ${errors.fullName ? 'error' : ''}`}
+                  type="text" id="full_name" name="full_name"
+                  className={`form-input ${errors.full_name ? 'error' : ''}`}
                   placeholder="e.g., Ram Sharma"
-                  value={formData.fullName} onChange={handleInputChange} disabled={isLoading}
+                  value={formData.full_name} onChange={handleInputChange} disabled={isLoading}
                 />
-                {errors.fullName && <span className="error-text">{errors.fullName}</span>}
+                {errors.full_name && <span className="error-text">{errors.full_name}</span>}
               </div>
 
               {/* Email */}
@@ -258,52 +239,52 @@ const SignUpPage = () => {
 
               {/* Phone */}
               <div className="form-group">
-                <label htmlFor="phoneNumber">Phone Number <span className="required">*</span></label>
+                <label htmlFor="phone_number">Phone Number <span className="required">*</span></label>
                 <input
-                  type="tel" id="phoneNumber" name="phoneNumber"
-                  className={`form-input ${errors.phoneNumber ? 'error' : ''}`}
+                  type="tel" id="phone_number" name="phone_number"
+                  className={`form-input ${errors.phone_number ? 'error' : ''}`}
                   placeholder="+977 98XXXXXXXX"
-                  value={formData.phoneNumber} onChange={handleInputChange} disabled={isLoading}
+                  value={formData.phone_number} onChange={handleInputChange} disabled={isLoading}
                 />
-                {errors.phoneNumber && <span className="error-text">{errors.phoneNumber}</span>}
+                {errors.phone_number && <span className="error-text">{errors.phone_number}</span>}
               </div>
 
               {/* Vendor-only fields */}
               {selectedRole === 'vendor' && (
                 <>
                   <div className="form-group">
-                    <label htmlFor="businessName">Business Name <span className="required">*</span></label>
+                    <label htmlFor="business_name">Business Name <span className="required">*</span></label>
                     <input
-                      type="text" id="businessName" name="businessName"
-                      className={`form-input ${errors.businessName ? 'error' : ''}`}
+                      type="text" id="business_name" name="business_name"
+                      className={`form-input ${errors.business_name ? 'error' : ''}`}
                       placeholder="e.g., Himalayan Vehicle Rentals"
-                      value={formData.businessName} onChange={handleInputChange} disabled={isLoading}
+                      value={formData.business_name} onChange={handleInputChange} disabled={isLoading}
                     />
-                    {errors.businessName && <span className="error-text">{errors.businessName}</span>}
+                    {errors.business_name && <span className="error-text">{errors.business_name}</span>}
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor="panNumber">PAN Number <span className="required">*</span></label>
+                    <label htmlFor="pan_number">PAN Number <span className="required">*</span></label>
                     <input
-                      type="text" id="panNumber" name="panNumber"
-                      className={`form-input ${errors.panNumber ? 'error' : ''}`}
+                      type="text" id="pan_number" name="pan_number"
+                      className={`form-input ${errors.pan_number ? 'error' : ''}`}
                       placeholder="123456789" maxLength="9"
-                      value={formData.panNumber} onChange={handleInputChange} disabled={isLoading}
+                      value={formData.pan_number} onChange={handleInputChange} disabled={isLoading}
                     />
-                    {errors.panNumber && <span className="error-text">{errors.panNumber}</span>}
+                    {errors.pan_number && <span className="error-text">{errors.pan_number}</span>}
                     <span className="input-hint">9-digit PAN number</span>
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor="businessAddress">Business Address <span className="required">*</span></label>
+                    <label htmlFor="business_address">Business Address <span className="required">*</span></label>
                     <textarea
-                      id="businessAddress" name="businessAddress"
-                      className={`form-input ${errors.businessAddress ? 'error' : ''}`}
+                      id="business_address" name="business_address"
+                      className={`form-input ${errors.business_address ? 'error' : ''}`}
                       placeholder="e.g., Thamel, Kathmandu"
-                      rows="2" style={{ resize: 'vertical' }}
-                      value={formData.businessAddress} onChange={handleInputChange} disabled={isLoading}
+                      rows="2"
+                      value={formData.business_address} onChange={handleInputChange} disabled={isLoading}
                     />
-                    {errors.businessAddress && <span className="error-text">{errors.businessAddress}</span>}
+                    {errors.business_address && <span className="error-text">{errors.business_address}</span>}
                   </div>
                 </>
               )}
@@ -357,11 +338,10 @@ const SignUpPage = () => {
 
               {/* Submit */}
               <button type="submit" className="submit-button" disabled={isLoading || !!successMessage}>
-                {isLoading ? (
-                  <><Loader2 className="spinner" size={20} /><span>Creating Account...</span></>
-                ) : (
-                  'Create Account'
-                )}
+                {isLoading
+                  ? <><Loader2 className="spinner" size={20} /><span>Creating Account...</span></>
+                  : 'Create Account'
+                }
               </button>
 
               <div className="form-footer">
@@ -370,6 +350,7 @@ const SignUpPage = () => {
             </form>
           </div>
         )}
+
       </div>
     </div>
   );

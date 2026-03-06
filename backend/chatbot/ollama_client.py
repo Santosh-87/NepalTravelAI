@@ -11,7 +11,7 @@ class OllamaClient:
 
     def __init__(self):
         self.base_url = getattr(settings, 'OLLAMA_BASE_URL', 'http://localhost:11434')
-        self.model    = getattr(settings, 'OLLAMA_MODEL', 'llama3.2:3b')
+        self.model    = getattr(settings, 'OLLAMA_MODEL', 'llama3.2:1b-instruct-q4_K_M')
         self.api_url  = f"{self.base_url}/api/generate"
 
     def generate(self, prompt, system_prompt):
@@ -25,15 +25,16 @@ class OllamaClient:
             "system": system_prompt,
             "stream": False,
             "options": {
-                "num_predict": 300,
-                "temperature": 0.2,
-                "num_ctx":     768,
-                "num_thread":  8,
+                "num_predict": 350,
+                "temperature": 0.1,
+                "num_ctx": 1024,
+                "num_thread":  4,
+                "repeat_penalty": 1.1,
             }
         }
 
         try:
-            response = requests.post(self.api_url, json=payload, timeout=180)
+            response = requests.post(self.api_url, json=payload, timeout=300)
             response.raise_for_status()
             return response.json().get('response', '').strip()
 

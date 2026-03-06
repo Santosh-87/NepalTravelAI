@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { supabase } from '../config/supabase';
+import authService from '../services/auth';
 
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     const [loading, setLoading] = useState(true);
@@ -14,37 +14,28 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
 
     const checkAuth = async () => {
         try {
-            const { data: { session }, error: sessionError } =
-                await supabase.auth.getSession();
-
-            if (sessionError) throw sessionError;
-
-            if (!session) {
+            // Check if token exists
+            if (!authService.isAuthenticated()) {
                 setLoading(false);
                 return;
             }
 
-            setUser(session.user);
+            // Fetch profile using token
+            const profileData = await authService.getProfile();
 
-            const { data: profileData, error: profileError } =
-                await supabase
-                    .from('user_profiles')
-                    .select('*')
-                    .eq('id', session.user.id)
-                    .single();
-
-            if (profileError) throw profileError;
-
+            setUser(profileData);
             setProfile(profileData);
 
         } catch (error) {
             console.error('Auth check failed:', error);
+            // Token is invalid or expired — clear it
+            authService.clearTokens();
         } finally {
             setLoading(false);
         }
     };
 
-    // 🔄 Still loading auth
+    // Still loading auth
     if (loading) {
         return (
             <div style={{
@@ -58,12 +49,12 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
         );
     }
 
-    // ❌ Not logged in
+    // Not logged in
     if (!user) {
         return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
-    // 🚨 If roles are required, profile MUST exist
+    // If roles are required, check profile role
     if (allowedRoles.length > 0) {
 
         if (!profile) {
@@ -78,14 +69,16 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
                 </div>
             );
         }
+
         console.log("PROFILE ROLE:", profile?.role);
         console.log("ALLOWED ROLES:", allowedRoles);
-        // ❌ Wrong role
+
+        // Wrong role
         if (!allowedRoles.includes(profile.role)) {
             return <Navigate to="/" replace />;
         }
 
-        // 🚨 Vendor not approved → force pending page
+        // Vendor not approved → force pending page
         if (
             profile.role === 'vendor' &&
             !profile.is_vendor_approved &&

@@ -17,6 +17,7 @@ function App() {
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/get-started" element={<SignUpPage />} />
+        <Route path="/chat" element={<ChatPage />} />
 
         {/* Protected Routes - Tourist Only */}
         <Route

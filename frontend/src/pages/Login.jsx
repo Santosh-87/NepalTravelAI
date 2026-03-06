@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom'; 
+import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Mountain, Mail, Lock, Loader2 } from 'lucide-react';
 import Navigation from '../components/Navigation';
-import { supabase } from '../config/supabase';
+import authService from '../services/auth';
 import './Login.css';
 
 const LoginPage = () => {
@@ -10,8 +10,7 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({ email: '', password: '', rememberMe: false });
   const [errors, setErrors] = useState({});
-  
-  // Step 1: Initialize navigate
+
   const navigate = useNavigate();
 
   const handleInputChange = (e) => {
@@ -39,66 +38,39 @@ const LoginPage = () => {
 
     try {
       console.log('🔐 Starting login...');
-      
-      // Step 1: Sign in
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
-      });
 
-      if (authError) throw authError;
+      // Attempt to log in the user
+      const user = await authService.login(formData.email, formData.password);
+
       console.log('✅ Auth successful');
+      console.log('📋 User:', user);
+      console.log('📋 Role:', user.role);
 
-      // Step 2: Get user profile
-      const { data: profile, error: profileError } = await supabase
-        .from('user_profiles')
-        .select('*')  // get all columns to see what's available
-        .eq('id', authData.user.id)
-        .single();
-
-      if (profileError) {
-        console.error('❌ Profile error:', profileError);
-        throw new Error('Could not load your profile. Please try again.');
-      }
-
-      console.log('📋 FULL PROFILE DATA:', profile);
-      console.log('📋 Role:', profile.role);
-      console.log('📋 is_vendor_approved:', profile.is_vendor_approved);
-
-      // Step 3: Save to localStorage
-      localStorage.setItem('user', JSON.stringify({
-        id: authData.user.id,
-        email: authData.user.email,
-        fullName: profile.full_name,
-        role: profile.role,
-        isVendorApproved: profile.is_vendor_approved,
-      }));
-
-      // Step 4: Redirect based on role 
-      if (profile.role === 'vendor') {
+      // Redirect based on role
+      if (user.role === 'vendor') {
         console.log('🚚 User is VENDOR');
-        if (profile.is_vendor_approved === true) {
+        if (user.isVendorApproved === true) {
           console.log('✅ Vendor APPROVED → redirecting to /vendor/dashboard');
-          navigate('/vendor/dashboard'); 
+          navigate('/vendor/dashboard');
         } else {
           console.log('⏳ Vendor NOT approved → redirecting to /vendor/pending');
-          navigate('/vendor/pending'); 
+          navigate('/vendor/pending');
         }
-      } else if (profile.role === 'tourist') {
+      } else if (user.role === 'tourist') {
         console.log('🧭 User is TOURIST → redirecting to homepage');
-        navigate('/'); 
+        navigate('/');
       } else {
-        console.log('❓ Unknown role:', profile.role, '→ redirecting to homepage');
-        navigate('/'); 
+        console.log('❓ Unknown role:', user.role, '→ redirecting to homepage');
+        navigate('/');
       }
 
     } catch (error) {
       console.error('❌ Login error:', error);
       setIsLoading(false);
 
-      if (error.message?.includes('Invalid login credentials')) {
+      if (error.message?.toLowerCase().includes('invalid') || error.message?.toLowerCase().includes('credentials') || error.message?.toLowerCase().includes('password')) {
         setErrors({ general: 'Wrong email or password. Please try again.' });
-      } else if (error.message?.includes('Email not confirmed')) {
+      } else if (error.message?.toLowerCase().includes('not confirmed') || error.message?.toLowerCase().includes('verify')) {
         setErrors({ general: 'Please verify your email before signing in.' });
       } else {
         setErrors({ general: error.message || 'Something went wrong. Please try again.' });
@@ -215,6 +187,7 @@ const LoginPage = () => {
               </form>
             </div>
           </div>
+
         </div>
       </div>
     </div>
