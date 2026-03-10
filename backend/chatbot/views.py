@@ -171,11 +171,10 @@ class ChatView(APIView):
             metas     = results['metadatas']
             distances = results['distances']
 
-            # ── Step 2: Decide mode ───────────────────────────────────────
+            # ── Step 2: Decide mode
             top_relevance = (1 - distances[0]) if distances else 0.0
             use_rag       = top_relevance >= self.THRESHOLD
 
-            # ── Step 3: Build context and sources ─────────────────────────
             context = ""
             sources = []
 
@@ -202,9 +201,7 @@ class ChatView(APIView):
 
                 if is_transport and is_itinerary:
                     # Multi-segment itinerary — pass up to 5 route chunks
-                    # so arrival, sightseeing, intercity, overnight, departure
-                    # all have a route chunk in context
-                    # Also pass 2 policy chunks (VAT + overnight rule)
+ 
                     ranked = transport_routes[:5] + transport_policy[:2] + preferred[:1]
                     print(f"  [RERANK] itinerary-mode | routes={len(transport_routes)} policy={len(transport_policy)} content={len(preferred)}")
 
@@ -228,7 +225,7 @@ class ChatView(APIView):
                         'relevance': entry['relevance'],
                     })
 
-            # ── Step 4: Build prompt ──────────────────────────────────────
+            # Step 4: Build prompt
             if use_rag:
                 prompt = (
                     f"CONTEXT:\n{context}\n"
@@ -244,7 +241,7 @@ class ChatView(APIView):
 
             print(f"[{mode.upper()}] relevance={top_relevance:.3f} | {message[:60]}")
 
-            # ── Step 5: Generate response ─────────────────────────────────
+            # Generate response 
             answer = _ollama.generate(prompt, system)
 
             return Response({

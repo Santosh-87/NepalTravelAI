@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     
     'chatbot',
+    'marketplace',
     'authentication',
     'rest_framework',
     'corsheaders',

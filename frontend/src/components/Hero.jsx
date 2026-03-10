@@ -1,130 +1,69 @@
-import React, { useEffect, useRef } from 'react';
-import { ArrowRight, Sparkles, Map, Shield } from 'lucide-react';
+import React from 'react';
+import { ArrowRight, MessageSquare } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import './Hero.css';
 
 const Hero = () => {
-  const heroRef = useRef(null);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (heroRef.current) {
-        const scrolled = window.scrollY;
-        const layers = heroRef.current.querySelectorAll('.parallax-layer');
-        
-        layers.forEach((layer, index) => {
-          const speed = (index + 1) * 0.15;
-          layer.style.transform = `translateY(${scrolled * speed}px)`;
-        });
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
   return (
-    <section className="hero" ref={heroRef}>
-      {/* Parallax Background Layers */}
+    <section className="hero">
       <div className="hero-background">
-        <div className="parallax-layer layer-1"></div>
-        <div className="parallax-layer layer-2"></div>
-        <div className="parallax-layer layer-3"></div>
         <div className="hero-overlay"></div>
       </div>
 
-      {/* Content */}
       <div className="container hero-content">
         <div className="hero-text">
-          <div className="hero-badge fade-in-up">
-            <Sparkles size={16} />
-            <span>AI-Powered Travel Planning</span>
-          </div>
-          
-          <h1 className="hero-title fade-in-up delay-1">
-            Discover Nepal
-            <span className="hero-title-accent"> Like Never Before</span>
+          <h1 className="hero-title">
+            Plan Your Nepal Journey
+            <span className="hero-title-accent"> with AI Guidance</span>
           </h1>
-          
-          <p className="hero-description fade-in-up delay-2">
-            Your intelligent companion for exploring the Himalayas. Get personalized 
-            itineraries, NATTA-approved vehicles, and connect with fellow travelers 
-            - all powered by advanced AI technology.
+
+          <p className="hero-description">
+            Get personalized travel recommendations, find NATTA-certified vehicles,
+            and explore Nepal with confidence. Your AI-powered travel assistant for the Himalayas.
           </p>
 
-          <div className="hero-features fade-in-up delay-3">
-            <div className="hero-feature">
-              <Map size={20} />
-              <span>Smart Itineraries</span>
-            </div>
-            <div className="hero-feature">
-              <Shield size={20} />
-              <span>NATTA Certified</span>
-            </div>
-          </div>
-
-          <div className="hero-actions fade-in-up delay-4">
-            <Link to="/chat" className="btn btn-accent hero-btn-primary">
+          <div className="hero-actions">
+            <Link to="/chat" className="btn btn-primary">
+              <MessageSquare size={20} />
               <span>Start Planning</span>
-              <ArrowRight size={20} />
             </Link>
-            <Link to="/explore" className="btn btn-secondary hero-btn-secondary">
-              <span>Explore Features</span>
+            <Link to="/marketplace" className="btn btn-outline">
+              Browse Vehicles
             </Link>
           </div>
 
-          {/* Trust Indicators */}
-          <div className="hero-trust fade-in-up delay-4">
-            <div className="trust-item">
-              <div className="trust-number">500+</div>
-              <div className="trust-label">Vehicles</div>
+          <div className="hero-trust">
+            <div className="trust-badge">
+              <span className="badge-icon">✓</span>
+              <span>NATTA Certified Vehicles</span>
             </div>
-            <div className="trust-divider"></div>
-            <div className="trust-item">
-              <div className="trust-number">NATTA</div>
-              <div className="trust-label">Approved</div>
-            </div>
-            <div className="trust-divider"></div>
-            <div className="trust-item">
-              <div className="trust-number">24/7</div>
-              <div className="trust-label">AI Support</div>
+            <div className="trust-badge">
+              <span className="badge-icon">✓</span>
+              <span>Transparent Pricing</span>
             </div>
           </div>
         </div>
 
-        {/* Hero Visual - AI Chat Preview */}
-        <div className="hero-visual fade-in-up delay-2">
+        <div className="hero-visual">
           <div className="chat-preview">
             <div className="chat-header">
-              <div className="chat-dots">
-                <span></span>
-                <span></span>
-                <span></span>
+              <div className="chat-status">
+                <span className="status-dot"></span>
+                <span>AI Assistant</span>
               </div>
-              <div className="chat-title">NepalTravel AI Assistant</div>
             </div>
-            <div className="chat-messages">
-              <div className="chat-message user-message">
-                Plan a 7-day trek to Everest Base Camp for 4 people
+            <div className="chat-body">
+              <div className="message user">
+                I need transport from Kathmandu to Pokhara for 4 people
               </div>
-              <div className="chat-message ai-message">
-                <div className="typing-indicator">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </div>
-                I'll create a personalized itinerary with NATTA-approved 
-                vehicles and accommodation options...
+              <div className="message assistant">
+                I recommend an SUV for your group. The trip takes 6-7 hours.
+                NATTA rate: NPR 18,000 for round trip. Would you like to see
+                available vehicles?
               </div>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Scroll Indicator */}
-      <div className="scroll-indicator">
-        <div className="scroll-line"></div>
-        <span>Scroll to explore</span>
       </div>
     </section>
   );

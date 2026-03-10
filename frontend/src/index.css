@@ -14,7 +14,7 @@
 
 :root {
   /* Base font size - controls everything */
-  font-size: 22px;  /* Increase to 20px or 22px for even bigger fonts */
+  font-size: 16px;  /* Increase to 20px or 22px for even bigger fonts */
   
   /* Colors */
   --color-primary: #1a4d6f;
@@ -53,10 +53,10 @@
   }
 }
 
-/* Desktop - larger (like your first image) */
+/* Desktop - larger */
 @media (min-width: 1025px) {
   :root {
-    font-size: 20px;  /* Match your first screenshot */
+    font-size: 16px;  
   }
 }
 

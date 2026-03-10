@@ -6,6 +6,7 @@ import SignUpPage from './pages/SignUp';
 import LoginPage from './pages/Login';
 import VendorPending from './pages/VendorPending';
 import ProtectedRoute from './components/ProtectedRoute';
+import VendorDashboard from './pages/vendor/VendorDashboard';
 import './App.css';
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/get-started" element={<SignUpPage />} />
         <Route path="/chat" element={<ChatPage />} />
+        <Route path="/vendor/dashboard" element={<VendorDashboard />} />
 
         {/* Protected Routes - Tourist Only */}
         <Route
@@ -43,10 +45,7 @@ function App() {
           path="/vendor/dashboard"
           element={
             <ProtectedRoute allowedRoles={['vendor']}>
-              <div style={{ padding: '100px 20px', textAlign: 'center' }}>
-                <h1>Vendor Dashboard</h1>
-                <p>Coming soon! You'll be able to manage your vehicles here.</p>
-              </div>
+              <VendorDashboard />
             </ProtectedRoute>
           }
         />

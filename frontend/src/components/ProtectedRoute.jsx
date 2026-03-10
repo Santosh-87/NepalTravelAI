@@ -86,6 +86,14 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
         ) {
             return <Navigate to="/vendor/pending" replace />;
         }
+
+        if (
+            profile.role === 'vendor' &&
+            profile.is_vendor_approved &&
+            location.pathname === '/vendor/pending'
+        ) {
+            return <Navigate to="/vendor/dashboard" replace />;
+        }
     }
 
     return children;

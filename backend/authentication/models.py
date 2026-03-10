@@ -53,6 +53,11 @@ class User(AbstractUser):
         help_text="Business address (vendors only)"
     )
     
+    is_vendor_approved = models.BooleanField(
+        default=False,
+        help_text="Admin approval for vendor account"
+    )
+    
     # Metadata
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

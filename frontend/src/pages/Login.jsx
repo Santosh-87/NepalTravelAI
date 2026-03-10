@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Mountain, Mail, Lock, Loader2 } from 'lucide-react';
-import Navigation from '../components/Navigation';
 import authService from '../services/auth';
 import './Login.css';
 
@@ -80,8 +79,7 @@ const LoginPage = () => {
 
   return (
     <div className="login-page">
-      <Navigation />
-
+    
       <div className="login-container">
         <div className="login-content">
 

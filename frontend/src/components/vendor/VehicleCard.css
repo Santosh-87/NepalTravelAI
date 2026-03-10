@@ -1,0 +1,142 @@
+.vehicle-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: box-shadow 0.3s ease;
+}
+
+.vehicle-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.vehicle-card-header {
+  padding: 20px;
+  border-bottom: 1px solid #e9ecef;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.vehicle-name {
+  margin: 0 0 4px 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #212529;
+}
+
+.vehicle-number {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #6c757d;
+  font-family: monospace;
+}
+
+.vehicle-status {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.813rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.vehicle-card-body {
+  padding: 20px;
+}
+
+.vehicle-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #495057;
+  font-size: 0.9rem;
+}
+
+.vehicle-price {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #667eea;
+}
+
+.vehicle-description {
+  margin: 16px 0;
+  color: #495057;
+  line-height: 1.5;
+  font-size: 0.9rem;
+}
+
+.vehicle-features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.feature-tag {
+  background: #f8f9fa;
+  color: #495057;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.813rem;
+}
+
+.admin-notes {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  padding: 12px;
+  border-radius: 6px;
+  margin-top: 16px;
+  font-size: 0.875rem;
+  color: #856404;
+}
+
+.vehicle-card-actions {
+  padding: 16px 20px;
+  border-top: 1px solid #e9ecef;
+  display: flex;
+  gap: 12px;
+}
+
+.btn-edit,
+.btn-delete {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.btn-edit {
+  background: #f8f9fa;
+  color: #495057;
+  border: 1px solid #dee2e6;
+}
+
+.btn-edit:hover {
+  background: #e9ecef;
+}
+
+.btn-delete {
+  background: #fff;
+  color: #dc3545;
+  border: 1px solid #dc3545;
+}
+
+.btn-delete:hover {
+  background: #dc3545;
+  color: white;
+}
