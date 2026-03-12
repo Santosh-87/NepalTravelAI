@@ -40,7 +40,7 @@ class AuthService {
             throw new Error(data.error || 'Login failed');
         }
 
-        // ✅ Only store tokens after login
+        // Only store tokens after login
         this.setTokens(data.tokens);
 
         return data.user;

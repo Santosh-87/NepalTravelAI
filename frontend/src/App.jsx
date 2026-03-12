@@ -1,12 +1,16 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import ProtectedRoute from './components/ProtectedRoute';
+
 import HomePage from './pages/HomePage';
 import ChatPage from './pages/ChatPage';
 import SignUpPage from './pages/SignUp';
 import LoginPage from './pages/Login';
 import VendorPending from './pages/VendorPending';
-import ProtectedRoute from './components/ProtectedRoute';
 import VendorDashboard from './pages/vendor/VendorDashboard';
+import AddVehicle from './pages/vendor/AddVehicle';
+import MyListings from './pages/vendor/MyListings';
+import MyBookings from './pages/vendor/MyBookings';
 import './App.css';
 
 function App() {
@@ -20,6 +24,9 @@ function App() {
         <Route path="/get-started" element={<SignUpPage />} />
         <Route path="/chat" element={<ChatPage />} />
         <Route path="/vendor/dashboard" element={<VendorDashboard />} />
+        <Route path="/vendor/add-vehicle" element={<AddVehicle />} />
+        <Route path="/vendor/listings" element={<MyListings />} />
+        <Route path="/vendor/bookings" element={<MyBookings />} />
 
         {/* Protected Routes - Tourist Only */}
         <Route
