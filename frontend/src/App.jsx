@@ -11,6 +11,8 @@ import VendorDashboard from './pages/vendor/VendorDashboard';
 import AddVehicle from './pages/vendor/AddVehicle';
 import MyListings from './pages/vendor/MyListings';
 import MyBookings from './pages/vendor/MyBookings';
+import EditVehicle from './pages/vendor/EditVehicle';
+
 import './App.css';
 
 function App() {
@@ -25,6 +27,7 @@ function App() {
         <Route path="/chat" element={<ChatPage />} />
         <Route path="/vendor/dashboard" element={<VendorDashboard />} />
         <Route path="/vendor/add-vehicle" element={<AddVehicle />} />
+        <Route path="/vendor/edit-vehicle/:id" element={<EditVehicle />} />
         <Route path="/vendor/listings" element={<MyListings />} />
         <Route path="/vendor/bookings" element={<MyBookings />} />
 

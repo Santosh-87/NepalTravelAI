@@ -67,8 +67,7 @@ const MyListings = () => {
     };
 
     const handleEdit = (vehicle) => {
-        // TODO: Navigate to edit page
-        alert('Edit functionality coming soon!');
+        navigate(`/vendor/edit-vehicle/${vehicle.id}`);
     };
 
     if (loading) {

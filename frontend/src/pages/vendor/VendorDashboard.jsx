@@ -3,11 +3,12 @@ import VendorLayout from '../../components/vendor/VendorLayout';
 import Stats from '../../components/vendor/Stats';
 import VehicleCard from '../../components/vendor/VehicleCard';
 import marketplaceService from '../../services/marketplace';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Plus, AlertCircle } from 'lucide-react';
 import './VendorDashboard.css';
 
 const VendorDashboard = () => {
+    const navigate = useNavigate();
     const [vehicles, setVehicles] = useState([]);
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -35,7 +36,10 @@ const VendorDashboard = () => {
             setLoading(false);
         }
     };
-
+    const handleEdit = (vehicle) => {
+        navigate(`/vendor/edit-vehicle/${vehicle.id}`);
+    };
+    
     const handleDelete = async (id) => {
         if (!window.confirm('Are you sure you want to delete this vehicle?')) {
             return;
@@ -95,7 +99,7 @@ const VendorDashboard = () => {
                             <VehicleCard
                                 key={vehicle.id}
                                 vehicle={vehicle}
-                                onEdit={() => { }}
+                                onEdit={handleEdit}
                                 onDelete={handleDelete}
                             />
                         ))}
