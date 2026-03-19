@@ -1,0 +1,686 @@
+/* ============================================
+   MARKETPLACE PAGE — scoped variables
+   (avoids polluting the global :root)
+   ============================================ */
+
+.marketplace-page {
+  --mp-primary: #1a4d6f;
+  --mp-accent: #d4a574;
+  --mp-accent-dark: #c49563;
+  --mp-white: #ffffff;
+  --mp-bg: #faf8f5;
+  --mp-text: #2a2a2a;
+  --mp-muted: #6b7280;
+  --mp-border: #e5e7eb;
+
+  /* Match home page font system */
+  --mp-font-display: 'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mp-font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--mp-font-body);
+  background: var(--mp-bg);
+}
+
+/* ============================================
+   HERO SECTION
+   ============================================ */
+
+.marketplace-hero {
+  position: relative;
+  background-image: url("/images/marketplaceBG.jpeg");
+  background-size: cover;
+  background-position: center 40%;
+  background-repeat: no-repeat;
+  min-height: 380px;
+  display: flex;
+  align-items: center;
+  isolation: isolate;
+}
+
+.marketplace-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    160deg,
+    rgba(26, 77, 111, 0.72) 0%,
+    rgba(26, 77, 111, 0.45) 50%,
+    rgba(0, 0, 0, 0.35) 100%
+  );
+  z-index: 0;
+}
+
+.marketplace-hero-container {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 7rem 2rem 3.5rem;
+}
+
+.hero-content {
+  max-width: 560px;
+}
+
+.hero-title {
+  font-family: var(--mp-font-display);
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 0.75rem;
+  line-height: 1.15;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+  animation: fadeInDown 0.6s ease-out both;
+}
+
+.hero-subtitle {
+  font-size: clamp(1rem, 2vw, 1.125rem);
+  color: rgba(255, 255, 255, 0.88);
+  margin: 0;
+  line-height: 1.6;
+  animation: fadeInUp 0.6s ease-out 0.1s both;
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================
+   MARKETPLACE LAYOUT
+   ============================================ */
+
+.marketplace-container {
+  display: grid;
+  grid-template-columns: 268px 1fr;
+  gap: 2.5rem;
+  padding: 3rem 2rem;
+  flex: 1;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ============================================
+   FILTERS SIDEBAR
+   ============================================ */
+
+.marketplace-filters {
+  background: var(--mp-white);
+  border-radius: 14px;
+  padding: 1.75rem;
+  height: fit-content;
+  position: sticky;
+  top: 100px;
+  border: 1px solid var(--mp-border);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+}
+
+.filters-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--mp-border);
+}
+
+.filters-header h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--mp-primary);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.filters-header h3 svg {
+  color: var(--mp-accent);
+}
+
+.close-filters {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--mp-muted);
+  padding: 4px;
+  border-radius: 4px;
+  transition: color 0.15s ease;
+}
+
+.close-filters:hover {
+  color: var(--mp-primary);
+}
+
+.clear-filters-btn {
+  width: 100%;
+  padding: 0.625rem 1rem;
+  background: rgba(212, 165, 116, 0.08);
+  color: var(--mp-accent-dark);
+  border: 1px solid rgba(212, 165, 116, 0.3);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-bottom: 1.5rem;
+}
+
+.clear-filters-btn:hover {
+  background: rgba(212, 165, 116, 0.15);
+  border-color: var(--mp-accent);
+  color: var(--mp-accent);
+}
+
+.filter-group {
+  margin-bottom: 1.5rem;
+}
+
+.filter-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--mp-text);
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.filter-group input,
+.filter-group select {
+  width: 100%;
+  padding: 0.7rem 0.875rem;
+  border: 1.5px solid var(--mp-border);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  background: var(--mp-white);
+  color: var(--mp-text);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  font-family: inherit;
+}
+
+.filter-group input::placeholder {
+  color: var(--mp-muted);
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+  outline: none;
+  border-color: var(--mp-accent);
+  box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.12);
+}
+
+.price-inputs {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.price-inputs input {
+  flex: 1;
+}
+
+.price-inputs span {
+  color: var(--mp-muted);
+  font-size: 0.8rem;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+/* ============================================
+   MOBILE FILTER TOGGLE
+   ============================================ */
+
+.mobile-filter-toggle {
+  display: none;
+  width: 100%;
+  padding: 0.875rem 1rem;
+  background: var(--mp-white);
+  border: 1.5px solid var(--mp-border);
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--mp-primary);
+  cursor: pointer;
+  gap: 0.625rem;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+
+.mobile-filter-toggle:hover {
+  border-color: var(--mp-accent);
+  color: var(--mp-accent);
+  background: rgba(212, 165, 116, 0.04);
+}
+
+/* ============================================
+   MAIN CONTENT AREA
+   ============================================ */
+
+.marketplace-main {
+  min-height: 400px;
+}
+
+.marketplace-header {
+  margin-bottom: 2rem;
+}
+
+.results-info h2 {
+  font-family: var(--mp-font-display);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--mp-primary);
+  margin: 0 0 0.375rem;
+}
+
+.results-count {
+  font-size: 0.95rem;
+  color: var(--mp-muted);
+  margin: 0;
+}
+
+/* ============================================
+   VEHICLES GRID
+   ============================================ */
+
+.vehicles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(295px, 1fr));
+  gap: 1.75rem;
+}
+
+/* ============================================
+   VEHICLE CARD
+   ============================================ */
+
+.vehicle-marketplace-card {
+  background: var(--mp-white);
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--mp-border);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  animation: fadeInUp 0.5s ease-out both;
+}
+
+.vehicle-marketplace-card:nth-child(1)  { animation-delay: 0.05s; }
+.vehicle-marketplace-card:nth-child(2)  { animation-delay: 0.10s; }
+.vehicle-marketplace-card:nth-child(3)  { animation-delay: 0.15s; }
+.vehicle-marketplace-card:nth-child(4)  { animation-delay: 0.20s; }
+.vehicle-marketplace-card:nth-child(5)  { animation-delay: 0.25s; }
+.vehicle-marketplace-card:nth-child(6)  { animation-delay: 0.30s; }
+
+.vehicle-marketplace-card:hover {
+  border-color: var(--mp-accent);
+  box-shadow: 0 12px 36px rgba(26, 77, 111, 0.14);
+  transform: translateY(-6px);
+}
+
+/* --- Image Container --- */
+
+.vehicle-image-container {
+  position: relative;
+  width: 100%;
+  height: 210px;
+  background: linear-gradient(135deg, #eef0f2 0%, #e5e7eb 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.vehicle-image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+
+.vehicle-marketplace-card:hover .vehicle-image-container img {
+  transform: scale(1.06);
+}
+
+.placeholder-icon {
+  font-size: 3.5rem;
+  opacity: 0.5;
+}
+
+.vehicle-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 40%, rgba(26, 77, 111, 0.12) 100%);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.vehicle-marketplace-card:hover .vehicle-overlay {
+  opacity: 1;
+}
+
+.vehicle-type-badge {
+  position: absolute;
+  top: 0.875rem;
+  right: 0.875rem;
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--mp-primary);
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+/* --- Card Body --- */
+
+.vehicle-card-content {
+  padding: 1.375rem 1.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  flex: 1;
+}
+
+.vehicle-name {
+  margin: 0;
+  font-family: var(--mp-font-display);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--mp-primary);
+  line-height: 1.3;
+}
+
+.vehicle-info {
+  display: flex;
+  gap: 1.125rem;
+  flex-wrap: wrap;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--mp-muted);
+  font-size: 0.875rem;
+}
+
+.info-item svg {
+  color: var(--mp-accent);
+  flex-shrink: 0;
+}
+
+.vehicle-description {
+  color: var(--mp-muted);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.vehicle-features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.feature-tag {
+  background: rgba(212, 165, 116, 0.1);
+  color: var(--mp-accent-dark);
+  padding: 0.3rem 0.65rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid rgba(212, 165, 116, 0.2);
+}
+
+/* --- Card Footer --- */
+
+.vehicle-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid var(--mp-border);
+}
+
+.vehicle-price {
+  display: flex;
+  align-items: baseline;
+  gap: 0.375rem;
+  flex-wrap: wrap;
+}
+
+.price-label {
+  font-size: 0.75rem;
+  color: var(--mp-muted);
+  font-weight: 500;
+}
+
+.price-amount {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--mp-accent-dark);
+  font-family: var(--mp-font-display);
+}
+
+.price-period {
+  font-size: 0.8rem;
+  color: var(--mp-muted);
+}
+
+.view-details {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--mp-primary);
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: gap 0.15s ease, color 0.15s ease;
+}
+
+.vehicle-marketplace-card:hover .view-details {
+  gap: 0.55rem;
+  color: var(--mp-accent-dark);
+}
+
+/* ============================================
+   LOADING & EMPTY STATES
+   ============================================ */
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 5rem 2rem;
+  gap: 1.25rem;
+}
+
+.loader {
+  width: 44px;
+  height: 44px;
+  border: 3px solid var(--mp-border);
+  border-top-color: var(--mp-accent);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-state p {
+  color: var(--mp-muted);
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 4.5rem 2rem;
+  background: var(--mp-white);
+  border-radius: 14px;
+  border: 1px dashed var(--mp-border);
+}
+
+.empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1.25rem;
+  line-height: 1;
+}
+
+.empty-state h3 {
+  margin: 0 0 0.625rem;
+  font-family: var(--mp-font-display);
+  color: var(--mp-primary);
+  font-size: 1.375rem;
+  font-weight: 700;
+}
+
+.empty-state p {
+  color: var(--mp-muted);
+  font-size: 0.95rem;
+  margin-bottom: 1.5rem;
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.75rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.btn-primary {
+  background: var(--mp-accent);
+  color: var(--mp-white);
+  box-shadow: 0 3px 12px rgba(212, 165, 116, 0.28);
+}
+
+.btn-primary:hover {
+  background: var(--mp-accent-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(212, 165, 116, 0.38);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 1024px) {
+  .marketplace-container {
+    grid-template-columns: 1fr;
+    gap: 1.75rem;
+    padding: 2rem 1.5rem;
+  }
+
+  .marketplace-filters {
+    position: static;
+  }
+
+  .vehicles-grid {
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .marketplace-hero-container {
+    padding: 5.5rem 1.5rem 2.5rem;
+  }
+
+  .marketplace-container {
+    padding: 1.75rem 1rem;
+  }
+
+  .mobile-filter-toggle {
+    display: flex;
+  }
+
+  .marketplace-filters {
+    display: none;
+    position: fixed;
+    inset: 0;
+    max-width: 320px;
+    height: 100dvh;
+    border-radius: 0;
+    overflow-y: auto;
+    z-index: 999;
+    box-shadow: 8px 0 40px rgba(0, 0, 0, 0.25);
+  }
+
+  .marketplace-filters.open {
+    display: block;
+  }
+
+  .close-filters {
+    display: flex;
+  }
+
+  .vehicles-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .marketplace-header {
+    margin-bottom: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .marketplace-container {
+    padding: 1.25rem 0.875rem;
+  }
+
+  .vehicle-image-container {
+    height: 185px;
+  }
+
+  .vehicle-card-content {
+    padding: 1.125rem;
+  }
+
+  .vehicle-card-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .view-details {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

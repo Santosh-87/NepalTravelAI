@@ -1,53 +1,52 @@
-import React from 'react';
 import { Car, Calendar, CheckCircle, Clock } from 'lucide-react';
 import './Stats.css';
 
-const Stats = ({ vehicles, bookings }) => {
-  const stats = [
+const buildStats = (vehicles, bookings) => [
     {
-      icon: Car,
-      label: 'Total Vehicles',
-      value: vehicles.length,
-      color: '#667eea'
+        Icon: Car,
+        label: 'Total Vehicles',
+        value: vehicles.length,
+        sub: `${vehicles.filter(v => v.status === 'approved').length} approved`,
+        cls: 'blue',
     },
     {
-      icon: CheckCircle,
-      label: 'Approved',
-      value: vehicles.filter(v => v.status === 'approved').length,
-      color: '#28a745'
+        Icon: CheckCircle,
+        label: 'Approved',
+        value: vehicles.filter(v => v.status === 'approved').length,
+        sub: 'Active listings',
+        cls: 'green',
     },
     {
-      icon: Clock,
-      label: 'Pending',
-      value: vehicles.filter(v => v.status === 'pending').length,
-      color: '#ffc107'
+        Icon: Clock,
+        label: 'Pending Review',
+        value: vehicles.filter(v => v.status === 'pending').length,
+        sub: 'Awaiting admin approval',
+        cls: 'gold',
     },
     {
-      icon: Calendar,
-      label: 'Total Bookings',
-      value: bookings.length,
-      color: '#17a2b8'
-    }
-  ];
-  
-  return (
-    <div className="stats-grid">
-      {stats.map((stat, index) => (
-        <div key={index} className="stat-card">
-          <div 
-            className="stat-icon"
-            style={{ background: `${stat.color}15`, color: stat.color }}
-          >
-            <stat.icon size={24} />
-          </div>
-          <div className="stat-content">
-            <div className="stat-value">{stat.value}</div>
-            <div className="stat-label">{stat.label}</div>
-          </div>
-        </div>
-      ))}
+        Icon: Calendar,
+        label: 'Total Bookings',
+        value: bookings.length,
+        sub: `${bookings.filter(b => b.status === 'pending').length} pending`,
+        cls: 'teal',
+    },
+];
+
+const Stats = ({ vehicles, bookings }) => (
+    <div className="vnd-stat-grid">
+        {buildStats(vehicles, bookings).map(({ Icon, label, value, sub, cls }) => (
+            <div key={label} className={`vnd-stat-card vnd-stat-card--${cls}`}>
+                <div className="vnd-stat-icon">
+                    <Icon size={22} />
+                </div>
+                <div className="vnd-stat-body">
+                    <div className="vnd-stat-value">{value}</div>
+                    <div className="vnd-stat-label">{label}</div>
+                    <div className="vnd-stat-sub">{sub}</div>
+                </div>
+            </div>
+        ))}
     </div>
-  );
-};
+);
 
 export default Stats;

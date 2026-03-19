@@ -2,15 +2,15 @@ import React from 'react';
 import { Users, MapPin, Phone, Edit, Trash2 } from 'lucide-react';
 import './VehicleCard.css';
 
-const VehicleCard = ({ vehicle, onEdit, onDelete }) => {
-    const statusColors = {
-        pending: { bg: '#fff3cd', color: '#856404', label: 'Pending Approval' },
-        approved: { bg: '#d4edda', color: '#155724', label: 'Approved' },
-        rejected: { bg: '#f8d7da', color: '#721c24', label: 'Rejected' },
-        inactive: { bg: '#e2e3e5', color: '#383d41', label: 'Inactive' },
-    };
+const STATUS_LABELS = {
+    pending:  'Pending Approval',
+    approved: 'Approved',
+    rejected: 'Rejected',
+    inactive: 'Inactive',
+};
 
-    const status = statusColors[vehicle.status] || statusColors.pending;
+const VehicleCard = ({ vehicle, onEdit, onDelete }) => {
+    const statusLabel = STATUS_LABELS[vehicle.status] ?? 'Pending Approval';
 
     return (
         <div className="vehicle-card">
@@ -19,12 +19,9 @@ const VehicleCard = ({ vehicle, onEdit, onDelete }) => {
                     <h3 className="vehicle-name">{vehicle.vehicle_name}</h3>
                     <p className="vehicle-number">{vehicle.vehicle_number}</p>
                 </div>
-                <div
-                    className="vehicle-status"
-                    style={{ background: status.bg, color: status.color }}
-                >
-                    {status.label}
-                </div>
+                <span className={`vehicle-status vehicle-status--${vehicle.status}`}>
+                    {statusLabel}
+                </span>
             </div>
 
             <div className="vehicle-card-body">

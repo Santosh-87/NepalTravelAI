@@ -1,0 +1,334 @@
+/* ============================================
+   ADMIN DASHBOARD PAGE
+   ============================================ */
+
+.adp {
+    --adp-font-display: 'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --adp-font-body:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --adp-primary:      #1a4d6f;
+    --adp-accent:       #d4a574;
+    --adp-blue:         #1d4ed8;
+    --adp-green:        #059669;
+    --adp-purple:       #7c3aed;
+    --adp-border:       #e2e8f0;
+
+    font-family: var(--adp-font-body);
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+/* ---- Heading ---- */
+.adp-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.adp-title {
+    font-family: var(--adp-font-display);
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+}
+
+.adp-subtitle {
+    font-size: 0.9rem;
+    color: #64748b;
+    margin: 0.25rem 0 0;
+}
+
+.adp-refresh-btn {
+    padding: 0.5rem 1.25rem;
+    border-radius: 8px;
+    border: 1px solid var(--adp-border);
+    background: #fff;
+    color: #374151;
+    font-family: var(--adp-font-body);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.adp-refresh-btn:hover { background: #f8fafc; }
+
+/* ---- Error / Loading ---- */
+.adp-error {
+    background: #fee2e2;
+    color: #b91c1c;
+    padding: 1rem 1.25rem;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.adp-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 4rem 0;
+    color: #64748b;
+}
+
+.adp-spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid #e2e8f0;
+    border-top-color: var(--adp-blue);
+    border-radius: 50%;
+    animation: adp-spin 0.8s linear infinite;
+}
+
+@keyframes adp-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ---- Stat Grid ---- */
+.adp-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
+}
+
+.adp-stat-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 1.375rem 1.5rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    border: 1px solid var(--adp-border);
+}
+
+.adp-stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.adp-stat-card--blue   .adp-stat-icon { background: #dbeafe; color: var(--adp-blue); }
+.adp-stat-card--green  .adp-stat-icon { background: #d1fae5; color: var(--adp-green); }
+.adp-stat-card--gold   .adp-stat-icon { background: #fef3c7; color: #b45309; }
+.adp-stat-card--purple .adp-stat-icon { background: #ede9fe; color: var(--adp-purple); }
+
+.adp-stat-body { display: flex; flex-direction: column; gap: 2px; }
+
+.adp-stat-value {
+    font-family: var(--adp-font-display);
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.2;
+}
+
+.adp-stat-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.adp-stat-sub {
+    font-size: 0.78rem;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+/* ---- Alerts ---- */
+.adp-alerts { display: flex; flex-direction: column; gap: 0.875rem; }
+
+.adp-section-title {
+    font-family: var(--adp-font-display);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 0.75rem;
+}
+
+.adp-alert-cards { display: flex; flex-direction: column; gap: 0.75rem; }
+
+.adp-alert-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.125rem 1.25rem;
+    border-radius: 12px;
+    text-decoration: none;
+    font-family: var(--adp-font-body);
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.adp-alert-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+.adp-alert-card--orange {
+    background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+    border: 1px solid #fed7aa;
+    color: #9a3412;
+}
+
+.adp-alert-card--blue {
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    border: 1px solid #bfdbfe;
+    color: #1e40af;
+}
+
+.adp-alert-card strong {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin-bottom: 2px;
+}
+
+.adp-alert-card p {
+    font-size: 0.8rem;
+    margin: 0;
+    opacity: 0.8;
+}
+
+.adp-alert-arrow { margin-left: auto; flex-shrink: 0; }
+
+/* ---- Booking chips ---- */
+.adp-booking-summary {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.adp-chip {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.125rem;
+    border-radius: 50px;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.adp-chip-count {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.chip--pending   { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
+.chip--confirmed { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.chip--completed { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+
+/* ---- Table Card ---- */
+.adp-table-card {
+    background: #fff;
+    border-radius: 14px;
+    border: 1px solid var(--adp-border);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+}
+
+.adp-table-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem 0;
+}
+
+.adp-view-all {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--adp-blue);
+    text-decoration: none;
+    transition: gap 0.15s;
+}
+
+.adp-view-all:hover { gap: 8px; }
+
+.adp-table-wrap { overflow-x: auto; padding: 1rem 0 0; }
+
+.adp-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.adp-table th {
+    padding: 0.75rem 1.5rem;
+    text-align: left;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #6b7280;
+    border-bottom: 1px solid var(--adp-border);
+    white-space: nowrap;
+}
+
+.adp-table td {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+}
+
+.adp-table tr:last-child td { border-bottom: none; }
+.adp-table tr:hover td { background: #f8fafc; }
+
+.adp-td-id { font-weight: 600; color: #64748b; font-size: 0.8rem; }
+.adp-td-name { font-weight: 600; color: #1e293b; }
+.adp-td-sub { font-size: 0.78rem; color: #64748b; margin-top: 2px; }
+.adp-td-price { font-weight: 700; color: #0f172a; }
+
+/* ---- Status badges ---- */
+.adp-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3rem 0.75rem;
+    border-radius: 50px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.status--pending   { background: #fff7ed; color: #c2410c; }
+.status--confirmed { background: #eff6ff; color: #1d4ed8; }
+.status--completed { background: #f0fdf4; color: #15803d; }
+.status--cancelled { background: #f9fafb; color: #6b7280; }
+.status--rejected  { background: #fef2f2; color: #b91c1c; }
+
+.adp-empty-table {
+    text-align: center;
+    padding: 2rem;
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 1200px) {
+    .adp-stat-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .adp-stat-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .adp-table th:nth-child(4),
+    .adp-table td:nth-child(4) { display: none; }
+}

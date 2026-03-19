@@ -1,171 +1,253 @@
-.booking-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  transition: box-shadow 0.3s ease;
+/* ============================================
+   VENDOR BOOKING CARD — admin-uniform design
+   ============================================ */
+.vendor-booking-card {
+    background: #fff;
+    border-radius: 14px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+    transition: box-shadow 0.2s, transform 0.2s;
 }
 
-.booking-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+.vendor-booking-card:hover {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
 }
 
+/* ---- Header ---- */
 .booking-card-header {
-  padding: 20px;
-  border-bottom: 1px solid #e9ecef;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
 }
 
-.booking-vehicle {
-  margin: 0 0 4px 0;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #212529;
+.booking-card-header h3 {
+    margin: 0 0 4px 0;
+    font-family: 'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #0f172a;
 }
 
 .booking-id {
-  margin: 0;
-  font-size: 0.875rem;
-  color: #6c757d;
+    margin: 0;
+    font-size: 0.8rem;
+    color: #64748b;
 }
 
+/* ---- Status pill — matches admin .adp-status ---- */
 .booking-status {
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 0.813rem;
-  font-weight: 500;
-  white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0.3rem 0.75rem;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
+.booking-status--pending   { background: #fff7ed; color: #c2410c; }
+.booking-status--confirmed { background: #eff6ff; color: #1d4ed8; }
+.booking-status--completed { background: #f0fdf4; color: #15803d; }
+.booking-status--rejected  { background: #fef2f2; color: #b91c1c; }
+.booking-status--cancelled { background: #f9fafb; color: #6b7280; }
+
+/* ---- Body ---- */
 .booking-card-body {
-  padding: 20px;
+    padding: 1.5rem;
 }
 
 .booking-info-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-  margin-bottom: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.25rem;
 }
 
-.booking-info-item {
-  display: flex;
-  gap: 12px;
+.info-section {
+    display: flex;
+    gap: 0.75rem;
 }
 
-.booking-info-item svg {
-  color: #667eea;
-  flex-shrink: 0;
-  margin-top: 2px;
+.info-section svg {
+    color: #0d9488;
+    flex-shrink: 0;
+    margin-top: 2px;
 }
 
 .info-label {
-  font-size: 0.813rem;
-  color: #6c757d;
-  margin-bottom: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #64748b;
+    margin-bottom: 3px;
 }
 
 .info-value {
-  font-size: 0.95rem;
-  color: #212529;
-  font-weight: 500;
-  margin-bottom: 2px;
+    font-size: 0.9rem;
+    color: #0f172a;
+    font-weight: 600;
+    margin-bottom: 2px;
 }
 
 .info-detail {
-  font-size: 0.875rem;
-  color: #6c757d;
+    font-size: 0.8rem;
+    color: #64748b;
 }
 
 .special-requests {
-  background: #f8f9fa;
-  padding: 12px 16px;
-  border-radius: 6px;
-  margin-bottom: 16px;
-  font-size: 0.9rem;
-  color: #495057;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 0.875rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.25rem;
+    font-size: 0.875rem;
+    color: #475569;
+    line-height: 1.5;
 }
 
-.special-requests strong {
-  color: #212529;
+.special-requests strong { color: #0f172a; }
+
+/* ---- Footer ---- */
+.booking-footer {
+    padding-top: 1.25rem;
+    border-top: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 1rem;
+    flex-wrap: wrap;
 }
 
-.booking-price {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  font-size: 1rem;
+.price-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #64748b;
+    display: block;
+    margin-bottom: 4px;
 }
 
 .price-amount {
-  font-size: 1.375rem;
-  font-weight: 700;
-  color: #667eea;
+    font-family: 'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #0d9488;
+    display: block;
+    margin-bottom: 2px;
 }
 
-.booking-card-actions {
-  padding: 16px 20px;
-  border-top: 1px solid #e9ecef;
-  display: flex;
-  gap: 12px;
+.price-detail {
+    font-size: 0.8rem;
+    color: #64748b;
+    display: block;
+}
+
+/* ---- Action buttons ---- */
+.booking-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
 }
 
 .btn-confirm,
 .btn-reject,
-.btn-cancel-confirmed {
-  flex: 1;
-  padding: 12px 16px;
-  border-radius: 6px;
-  font-weight: 500;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  transition: all 0.2s ease;
+.btn-complete,
+.btn-cancel-secondary {
+    padding: 0.6rem 1.125rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border: 1px solid;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    white-space: nowrap;
 }
 
 .btn-confirm {
-  background: #28a745;
-  color: white;
+    background: #059669;
+    color: #fff;
+    border-color: #059669;
 }
-
-.btn-confirm:hover {
-  background: #218838;
-}
+.btn-confirm:hover { background: #047857; border-color: #047857; }
 
 .btn-reject {
-  background: #fff;
-  color: #dc3545;
-  border: 1px solid #dc3545;
+    background: #fff;
+    color: #dc2626;
+    border-color: #fecaca;
+}
+.btn-reject:hover { background: #dc2626; color: #fff; border-color: #dc2626; }
+
+.btn-complete {
+    background: #1d4ed8;
+    color: #fff;
+    border-color: #1d4ed8;
+}
+.btn-complete:hover { background: #1e40af; border-color: #1e40af; }
+
+.btn-cancel-secondary {
+    background: #fff;
+    color: #64748b;
+    border-color: #e2e8f0;
+}
+.btn-cancel-secondary:hover { background: #f1f5f9; }
+
+/* ---- Final status messages ---- */
+.booking-final-status {
+    width: 100%;
 }
 
-.btn-reject:hover {
-  background: #dc3545;
-  color: white;
+.status-message {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
 }
 
-.btn-cancel-confirmed {
-  background: #fff;
-  color: #dc3545;
-  border: 1px solid #dc3545;
+.status-message.success {
+    background: #f0fdf4;
+    color: #15803d;
+    border: 1px solid #bbf7d0;
 }
 
-.btn-cancel-confirmed:hover {
-  background: #dc3545;
-  color: white;
+.status-message.error {
+    background: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
 }
 
+.status-message:not(.success):not(.error) {
+    background: #f9fafb;
+    color: #6b7280;
+    border: 1px solid #e5e7eb;
+}
+
+/* ---- Responsive ---- */
 @media (max-width: 768px) {
-  .booking-info-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
+    .booking-card-header { flex-direction: column; }
+    .booking-info-grid   { grid-template-columns: 1fr; }
+    .booking-footer      { flex-direction: column; align-items: flex-start; }
+    .booking-actions     { width: 100%; }
+
+    .btn-confirm,
+    .btn-reject,
+    .btn-complete,
+    .btn-cancel-secondary {
+        flex: 1;
+        justify-content: center;
+    }
 }

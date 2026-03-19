@@ -118,7 +118,7 @@ const Navigation = () => {
 
           {/* Desktop Nav Links */}
           <div className="nav-menu desktop-menu">
-            <Link to="/features" className="nav-link">Features</Link>
+            <Link to="/trips" className="nav-link">Trip Packages</Link>
             <Link to="/marketplace" className="nav-link">Vehicle Marketplace</Link>
             <Link to="/community" className="nav-link">Community</Link>
             <Link to="/about" className="nav-link">About</Link>
@@ -204,11 +204,11 @@ const Navigation = () => {
         {isMobileMenuOpen && (
           <div className="mobile-menu">
             <Link
-              to="/features"
+              to="/trips"
               className="mobile-nav-link"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              Features
+              Trip Packages
             </Link>
             <Link
               to="/marketplace"

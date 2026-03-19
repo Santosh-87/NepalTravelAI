@@ -21,7 +21,7 @@ class AuthService {
         if (!response.ok) {
             throw new Error(data.error || 'Registration failed');
         }
-        
+
         return data.user;
     }
 
@@ -71,9 +71,8 @@ class AuthService {
     async getProfile() {
         const token = this.getAccessToken();
 
-        // ✅ Guard: don't even attempt if not logged in
         if (!token) {
-            throw new Error('Not authenticated');
+            throw new Error('No authentication token');
         }
 
         const response = await fetch(`${API_URL}/profile/`, {
@@ -83,6 +82,11 @@ class AuthService {
         });
 
         if (!response.ok) {
+            // Token might be expired or invalid
+            if (response.status === 401) {
+                this.clearTokens();
+                throw new Error('Session expired');
+            }
             throw new Error('Failed to fetch profile');
         }
 

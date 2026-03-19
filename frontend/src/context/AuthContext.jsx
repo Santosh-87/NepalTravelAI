@@ -38,16 +38,21 @@ export const AuthProvider = ({ children }) => {
     };
 
     const loadUserProfile = async () => {
+        // Check if token exists first
+        if (!authService.isAuthenticated()) {
+            setUser(null);
+            setLoading(false);
+            return;
+        }
+
         try {
             const profileData = await authService.getProfile();
             setUser(profileData);
-            setProfile(profileData);
         } catch (error) {
-            console.error('Error loading profile:', error);
-            // Token likely expired or invalid — clear session
+            console.log('Profile load error (expected if not logged in):', error.message);
+            // Token might be expired or invalid, clear it
             authService.clearTokens();
             setUser(null);
-            setProfile(null);
         } finally {
             setLoading(false);
         }

@@ -1,124 +1,125 @@
-import React from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Car, Calendar, Plus, Menu, X, LogOut, User } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import {
+    LayoutDashboard, Car, Calendar, Plus,
+    LogOut, Menu, X, ChevronRight,
+} from 'lucide-react';
 import authService from '../../services/auth';
 import './VendorLayout.css';
 
+const NAV_ITEMS = [
+    { to: '/vendor/dashboard',   label: 'Dashboard',   Icon: LayoutDashboard },
+    { to: '/vendor/listings',    label: 'My Vehicles', Icon: Car },
+    { to: '/vendor/bookings',    label: 'Bookings',    Icon: Calendar },
+    { to: '/vendor/add-vehicle', label: 'Add Vehicle', Icon: Plus },
+];
+
 const VendorLayout = ({ children }) => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = React.useState(false);
-  const [user, setUser] = React.useState(null);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [user, setUser] = useState(null);
+    const navigate = useNavigate();
 
-  // Load user profile
-  React.useEffect(() => {
-    loadProfile();
-  }, []);
+    useEffect(() => {
+        authService.getProfile()
+            .then(setUser)
+            .catch(() => {});
+    }, []);
 
-  const loadProfile = async () => {
-    try {
-      const profileData = await authService.getProfile();
-      setUser(profileData);
-    } catch (error) {
-      console.error('Failed to load profile:', error);
-    }
-  };
+    const handleLogout = async () => {
+        await authService.logout();
+        navigate('/login');
+    };
 
-  const navItems = [
-    { path: '/vendor/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/vendor/listings', icon: Car, label: 'My Vehicles' },
-    { path: '/vendor/bookings', icon: Calendar, label: 'Bookings' },
-    { path: '/vendor/add-vehicle', icon: Plus, label: 'Add Vehicle' },
-  ];
+    return (
+        <div className="vendor-layout">
+            {/* Mobile overlay */}
+            {sidebarOpen && (
+                <div
+                    className="vendor-overlay"
+                    onClick={() => setSidebarOpen(false)}
+                />
+            )}
 
-  const isActive = (path) => location.pathname === path;
+            {/* Sidebar */}
+            <aside className={`vendor-sidebar ${sidebarOpen ? 'open' : ''}`}>
+                {/* Logo */}
+                <div className="vendor-sidebar-logo">
+                    <div className="vendor-logo-icon">NT</div>
+                    <div className="vendor-logo-text">
+                        <span className="vendor-logo-name">Nepal Travel AI</span>
+                        <span className="vendor-logo-badge">Vendor Portal</span>
+                    </div>
+                    <button
+                        className="vendor-sidebar-close"
+                        onClick={() => setSidebarOpen(false)}
+                        aria-label="Close sidebar"
+                    >
+                        <X size={18} />
+                    </button>
+                </div>
 
-  const handleLogout = async () => {
-    console.log('Logging out...');
-    await authService.logout();
-    setSidebarOpen(false);
-    navigate('/login');
-  };
+                {/* Nav */}
+                <nav className="vendor-nav">
+                    {NAV_ITEMS.map(({ to, label, Icon }) => (
+                        <NavLink
+                            key={to}
+                            to={to}
+                            className={({ isActive }) =>
+                                `vendor-nav-link ${isActive ? 'active' : ''}`
+                            }
+                            onClick={() => setSidebarOpen(false)}
+                        >
+                            <Icon size={19} />
+                            <span>{label}</span>
+                            <ChevronRight size={14} className="vendor-nav-arrow" />
+                        </NavLink>
+                    ))}
+                </nav>
 
-  const getInitial = () => {
-    if (user?.full_name) return user.full_name.charAt(0).toUpperCase();
-    if (user?.email) return user.email.charAt(0).toUpperCase();
-    return 'V';
-  };
+                {/* User info + logout */}
+                <div className="vendor-sidebar-footer">
+                    <div className="vendor-user-info">
+                        <div className="vendor-user-avatar">
+                            {user?.full_name?.[0]?.toUpperCase() ?? 'V'}
+                        </div>
+                        <div className="vendor-user-details">
+                            <span className="vendor-user-name">{user?.full_name ?? 'Vendor'}</span>
+                            <span className="vendor-user-role">Vendor</span>
+                        </div>
+                    </div>
+                    <button className="vendor-logout-btn" onClick={handleLogout}>
+                        <LogOut size={17} />
+                        <span>Logout</span>
+                    </button>
+                </div>
+            </aside>
 
-  return (
-    <div className="vendor-layout">
-      {/* Mobile Header */}
-      <div className="vendor-mobile-header">
-        <h2>Vendor Dashboard</h2>
-        <button
-          className="menu-toggle"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-        >
-          {sidebarOpen ? <X /> : <Menu />}
-        </button>
-      </div>
+            {/* Main */}
+            <div className="vendor-main">
+                {/* Top bar */}
+                <header className="vendor-topbar">
+                    <button
+                        className="vendor-menu-btn"
+                        onClick={() => setSidebarOpen(true)}
+                        aria-label="Open menu"
+                    >
+                        <Menu size={22} />
+                    </button>
+                    <div className="vendor-topbar-right">
+                        <span className="vendor-topbar-name">{user?.full_name ?? 'Vendor'}</span>
+                        <div className="vendor-topbar-avatar">
+                            {user?.full_name?.[0]?.toUpperCase() ?? 'V'}
+                        </div>
+                    </div>
+                </header>
 
-      {/* Sidebar */}
-      <aside className={`vendor-sidebar ${sidebarOpen ? 'open' : ''}`}>
-        <div className="sidebar-header">
-          <h2>Vendor Portal</h2>
-        </div>
-
-        <nav className="sidebar-nav">
-          {navItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`nav-item ${isActive(item.path) ? 'active' : ''}`}
-              onClick={() => setSidebarOpen(false)}
-            >
-              <item.icon size={20} />
-              <span>{item.label}</span>
-            </Link>
-          ))}
-        </nav>
-
-        {/* User Profile & Logout Section */}
-        <div className="sidebar-footer">
-          <div className="sidebar-user">
-            <div className="sidebar-avatar">{getInitial()}</div>
-            <div className="sidebar-user-info">
-              <div className="sidebar-user-name">
-                {user?.full_name || 'Vendor'}
-              </div>
-              <div className="sidebar-user-email">
-                {user?.email || ''}
-              </div>
+                {/* Page content */}
+                <main className="vendor-content">
+                    {children}
+                </main>
             </div>
-          </div>
-
-          <div className="sidebar-divider" />
-
-          <button
-            className="logout-button"
-            onClick={handleLogout}
-          >
-            <LogOut size={20} />
-            <span>Logout</span>
-          </button>
         </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="vendor-main">
-        {children}
-      </main>
-
-      {/* Overlay for mobile */}
-      {sidebarOpen && (
-        <div
-          className="sidebar-overlay"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-    </div>
-  );
+    );
 };
 
 export default VendorLayout;

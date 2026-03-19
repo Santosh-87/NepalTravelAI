@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import VendorLayout from '../../components/vendor/VendorLayout';
 import marketplaceService from '../../services/marketplace';
-import { ArrowLeft, Plus, X } from 'lucide-react';
+import { ArrowLeft, Plus, X, Upload, ImageIcon } from 'lucide-react';
 import './AddVehicle.css';
 
 const AddVehicle = () => {
@@ -19,10 +19,11 @@ const AddVehicle = () => {
     description: '',
     available_location: '',
     contact_number: '',
-    primary_image: '',
   });
-  
+
   const [features, setFeatures] = useState(['']);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
   
   const vehicleTypes = [
     { value: 'car', label: 'Car' },
@@ -38,6 +39,18 @@ const AddVehicle = () => {
       ...prev,
       [name]: value
     }));
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview('');
   };
   
   const handleFeatureChange = (index, value) => {
@@ -63,14 +76,15 @@ const AddVehicle = () => {
     try {
       // Filter out empty features
       const validFeatures = features.filter(f => f.trim() !== '');
-      
+
       const vehicleData = {
         ...formData,
         seating_capacity: parseInt(formData.seating_capacity),
         price_per_day: parseFloat(formData.price_per_day),
         features_list: validFeatures,
+        primary_image: imageFile,
       };
-      
+
       await marketplaceService.createVehicle(vehicleData);
       
       // Redirect to listings
@@ -257,17 +271,35 @@ const AddVehicle = () => {
             </div>
             
             <div className="form-group">
-              <label>Primary Image URL (optional)</label>
-              <input
-                type="url"
-                name="primary_image"
-                placeholder="https://example.com/image.jpg"
-                value={formData.primary_image}
-                onChange={handleChange}
-              />
-              <small className="form-hint">
-                Paste an image URL or leave blank for now
-              </small>
+              <label>Vehicle Image (optional)</label>
+              <div className="image-upload-area">
+                {imagePreview ? (
+                  <div className="image-preview-wrapper">
+                    <img src={imagePreview} alt="Preview" className="image-preview" />
+                    <button type="button" className="remove-image-btn" onClick={removeImage}>
+                      <X size={16} /> Remove
+                    </button>
+                  </div>
+                ) : (
+                  <label htmlFor="vehicle-image" className="image-drop-zone">
+                    <ImageIcon size={36} className="upload-icon" />
+                    <span className="upload-text">Click to upload an image</span>
+                    <span className="upload-hint">JPG, PNG, WEBP up to 5MB</span>
+                  </label>
+                )}
+                <input
+                  type="file"
+                  id="vehicle-image"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="file-input-hidden"
+                />
+                {imagePreview && (
+                  <label htmlFor="vehicle-image" className="change-image-btn">
+                    <Upload size={14} /> Change Image
+                  </label>
+                )}
+              </div>
             </div>
           </div>
           

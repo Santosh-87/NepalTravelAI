@@ -1,142 +1,167 @@
+/* ============================================
+   VEHICLE CARD — admin-uniform design tokens
+   ============================================ */
 .vehicle-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  transition: box-shadow 0.3s ease;
+    background: #fff;
+    border-radius: 14px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+    transition: box-shadow 0.2s, transform 0.2s;
 }
 
 .vehicle-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
 }
 
+/* ---- Header ---- */
 .vehicle-card-header {
-  padding: 20px;
-  border-bottom: 1px solid #e9ecef;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
 }
 
 .vehicle-name {
-  margin: 0 0 4px 0;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #212529;
+    margin: 0 0 4px 0;
+    font-family: 'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #0f172a;
 }
 
 .vehicle-number {
-  margin: 0;
-  font-size: 0.875rem;
-  color: #6c757d;
-  font-family: monospace;
+    margin: 0;
+    font-size: 0.8rem;
+    color: #64748b;
+    font-family: monospace;
 }
 
+/* ---- Status pill — matches admin .adp-status ---- */
 .vehicle-status {
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 0.813rem;
-  font-weight: 500;
-  white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3rem 0.75rem;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
+.vehicle-status--pending  { background: #fff7ed; color: #c2410c; }
+.vehicle-status--approved { background: #f0fdf4; color: #15803d; }
+.vehicle-status--rejected { background: #fef2f2; color: #b91c1c; }
+.vehicle-status--inactive { background: #f9fafb; color: #6b7280; }
+
+/* ---- Body ---- */
 .vehicle-card-body {
-  padding: 20px;
+    padding: 1.25rem 1.5rem;
 }
 
 .vehicle-info-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
 }
 
 .info-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: #495057;
-  font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #64748b;
+    font-size: 0.875rem;
 }
 
+.info-item svg { color: #94a3b8; }
+
 .vehicle-price {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #667eea;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0d9488;
 }
 
 .vehicle-description {
-  margin: 16px 0;
-  color: #495057;
-  line-height: 1.5;
-  font-size: 0.9rem;
+    margin: 0.875rem 0;
+    color: #475569;
+    line-height: 1.55;
+    font-size: 0.875rem;
 }
 
 .vehicle-features {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 0.75rem;
 }
 
 .feature-tag {
-  background: #f8f9fa;
-  color: #495057;
-  padding: 4px 10px;
-  border-radius: 4px;
-  font-size: 0.813rem;
+    background: #f1f5f9;
+    color: #475569;
+    padding: 3px 10px;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 500;
 }
 
 .admin-notes {
-  background: #fff3cd;
-  border: 1px solid #ffc107;
-  padding: 12px;
-  border-radius: 6px;
-  margin-top: 16px;
-  font-size: 0.875rem;
-  color: #856404;
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+    font-size: 0.825rem;
+    color: #9a3412;
+    line-height: 1.5;
 }
 
+/* ---- Actions ---- */
 .vehicle-card-actions {
-  padding: 16px 20px;
-  border-top: 1px solid #e9ecef;
-  display: flex;
-  gap: 12px;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #f1f5f9;
+    display: flex;
+    gap: 0.75rem;
 }
 
 .btn-edit,
 .btn-delete {
-  flex: 1;
-  padding: 10px 16px;
-  border-radius: 6px;
-  font-weight: 500;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  transition: all 0.2s ease;
+    flex: 1;
+    padding: 0.55rem 1rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border: 1px solid;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 
 .btn-edit {
-  background: #f8f9fa;
-  color: #495057;
-  border: 1px solid #dee2e6;
+    background: #f8fafc;
+    color: #374151;
+    border-color: #e2e8f0;
 }
 
 .btn-edit:hover {
-  background: #e9ecef;
+    background: #e2e8f0;
+    border-color: #cbd5e1;
 }
 
 .btn-delete {
-  background: #fff;
-  color: #dc3545;
-  border: 1px solid #dc3545;
+    background: #fff;
+    color: #dc2626;
+    border-color: #fecaca;
 }
 
 .btn-delete:hover {
-  background: #dc3545;
-  color: white;
+    background: #dc2626;
+    color: #fff;
+    border-color: #dc2626;
 }

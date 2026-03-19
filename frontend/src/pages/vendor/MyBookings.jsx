@@ -1,44 +1,39 @@
+import React, { useState, useEffect } from 'react';
 import VendorLayout from '../../components/vendor/VendorLayout';
 import BookingCard from '../../components/vendor/BookingCard';
 import marketplaceService from '../../services/marketplace';
-import { Filter } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import './MyBookings.css';
 
 const MyBookings = () => {
     const [bookings, setBookings] = useState([]);
-    const [filteredBookings, setFilteredBookings] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [statusFilter, setStatusFilter] = useState('all');
+    const [filter, setFilter] = useState('all');
+    const [error, setError] = useState('');
 
     useEffect(() => {
         loadBookings();
     }, []);
 
-    useEffect(() => {
-        filterBookings();
-    }, [bookings, statusFilter]);
-
     const loadBookings = async () => {
         try {
             setLoading(true);
+            setError('');
             const data = await marketplaceService.getMyBookings();
             setBookings(data);
         } catch (err) {
             console.error('Failed to load bookings:', err);
+            setError('Failed to load bookings');
         } finally {
             setLoading(false);
         }
     };
 
-    const filterBookings = () => {
-        if (statusFilter === 'all') {
-            setFilteredBookings(bookings);
-        } else {
-            setFilteredBookings(bookings.filter(b => b.status === statusFilter));
-        }
-    };
-
     const handleConfirm = async (id) => {
+        if (!window.confirm('Confirm this booking?')) {
+            return;
+        }
+
         try {
             await marketplaceService.confirmBooking(id);
 
@@ -47,12 +42,45 @@ const MyBookings = () => {
                 b.id === id ? { ...b, status: 'confirmed' } : b
             ));
         } catch (err) {
-            alert('Failed to confirm booking');
+            alert('Failed to confirm booking: ' + err.message);
+        }
+    };
+
+    const handleReject = async (id) => {
+        const reason = prompt('Reason for rejection (optional):');
+        if (reason === null) return; // User cancelled
+
+        try {
+            await marketplaceService.rejectBooking(id, reason);
+
+            // Update local state
+            setBookings(bookings.map(b =>
+                b.id === id ? { ...b, status: 'rejected' } : b
+            ));
+        } catch (err) {
+            alert('Failed to reject booking: ' + err.message);
+        }
+    };
+
+    const handleComplete = async (id) => {
+        if (!window.confirm('Mark this booking as completed?')) {
+            return;
+        }
+
+        try {
+            await marketplaceService.completeBooking(id);
+
+            // Update local state
+            setBookings(bookings.map(b =>
+                b.id === id ? { ...b, status: 'completed' } : b
+            ));
+        } catch (err) {
+            alert('Failed to complete booking: ' + err.message);
         }
     };
 
     const handleCancel = async (id) => {
-        if (!window.confirm('Are you sure you want to cancel this booking?')) {
+        if (!window.confirm('Cancel this booking?')) {
             return;
         }
 
@@ -64,54 +92,92 @@ const MyBookings = () => {
                 b.id === id ? { ...b, status: 'cancelled' } : b
             ));
         } catch (err) {
-            alert('Failed to cancel booking');
+            alert('Failed to cancel booking: ' + err.message);
         }
     };
 
-    if (loading) {
-        return (
-            <VendorLayout>
-                <div className="loading-state">Loading bookings...</div>
-            </VendorLayout>
-        );
-    }
+    const filteredBookings = filter === 'all'
+        ? bookings
+        : bookings.filter(b => b.status === filter);
 
     return (
         <VendorLayout>
-            <div className="bookings-page">
-                <div className="bookings-header">
+            <div className="vendor-bookings-page">
+                <div className="page-header">
                     <div>
-                        <h1>Bookings</h1>
-                        <p className="bookings-subtitle">
-                            {bookings.length} booking{bookings.length !== 1 ? 's' : ''} total
+                        <h1>Booking Requests</h1>
+                        <p className="page-subtitle">
+                            Manage your vehicle bookings
                         </p>
+                    </div>
+                    <div className="bookings-count">
+                        {bookings.length} total booking{bookings.length !== 1 ? 's' : ''}
                     </div>
                 </div>
 
-                {/* Filter */}
-                <div className="bookings-filter">
-                    <div className="filter-group">
-                        <Filter size={18} />
-                        <select
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                        >
-                            <option value="all">All Bookings</option>
-                            <option value="pending">Pending</option>
-                            <option value="confirmed">Confirmed</option>
-                            <option value="cancelled">Cancelled</option>
-                            <option value="completed">Completed</option>
-                        </select>
+                {error && (
+                    <div className="error-banner">
+                        <AlertCircle size={20} />
+                        {error}
                     </div>
+                )}
+
+                {/* Filter Tabs */}
+                <div className="booking-filters">
+                    <button
+                        className={filter === 'all' ? 'active' : ''}
+                        onClick={() => setFilter('all')}
+                    >
+                        All ({bookings.length})
+                    </button>
+                    <button
+                        className={filter === 'pending' ? 'active' : ''}
+                        onClick={() => setFilter('pending')}
+                    >
+                        Pending ({bookings.filter(b => b.status === 'pending').length})
+                    </button>
+                    <button
+                        className={filter === 'confirmed' ? 'active' : ''}
+                        onClick={() => setFilter('confirmed')}
+                    >
+                        Confirmed ({bookings.filter(b => b.status === 'confirmed').length})
+                    </button>
+                    <button
+                        className={filter === 'completed' ? 'active' : ''}
+                        onClick={() => setFilter('completed')}
+                    >
+                        Completed ({bookings.filter(b => b.status === 'completed').length})
+                    </button>
+                    <button
+                        className={filter === 'rejected' ? 'active' : ''}
+                        onClick={() => setFilter('rejected')}
+                    >
+                        Rejected ({bookings.filter(b => b.status === 'rejected').length})
+                    </button>
+                    <button
+                        className={filter === 'cancelled' ? 'active' : ''}
+                        onClick={() => setFilter('cancelled')}
+                    >
+                        Cancelled ({bookings.filter(b => b.status === 'cancelled').length})
+                    </button>
                 </div>
 
                 {/* Bookings List */}
-                {filteredBookings.length === 0 ? (
+                {loading ? (
+                    <div className="loading-state">
+                        <div className="loader"></div>
+                        <p>Loading bookings...</p>
+                    </div>
+                ) : filteredBookings.length === 0 ? (
                     <div className="empty-state">
                         {bookings.length === 0 ? (
-                            <p>No bookings yet. They'll appear here when tourists book your vehicles.</p>
+                            <>
+                                <div className="empty-icon">📅</div>
+                                <h3>No bookings yet</h3>
+                                <p>Bookings for your vehicles will appear here</p>
+                            </>
                         ) : (
-                            <p>No bookings match your filter</p>
+                            <p>No {filter} bookings</p>
                         )}
                     </div>
                 ) : (
@@ -121,6 +187,8 @@ const MyBookings = () => {
                                 key={booking.id}
                                 booking={booking}
                                 onConfirm={handleConfirm}
+                                onReject={handleReject}
+                                onComplete={handleComplete}
                                 onCancel={handleCancel}
                             />
                         ))}

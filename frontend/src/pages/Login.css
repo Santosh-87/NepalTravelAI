@@ -174,29 +174,67 @@
   font-size: 0.95rem;
 }
 
-/* Input Wrapper */
+/* Fixed Input Wrapper */
 .input-wrapper {
   position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
 }
 
 .input-icon {
   position: absolute;
-  left: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
+  left: 14px;
   color: var(--color-text-muted);
+  pointer-events: none;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  /* Ensure icon doesn't block input interaction */
   pointer-events: none;
 }
 
 .form-input {
   width: 100%;
-  padding: 0.875rem 1rem 0.875rem 3rem;
+  padding: 14px 16px 14px 46px; /* 46px left padding creates space for icon */
   border: 2px solid var(--color-border);
   background: var(--color-bg);
   font-family: var(--font-body);
   font-size: 0.95rem;
   color: var(--color-text);
   transition: all var(--transition-fast);
+  border-radius: 4px;
+  box-sizing: border-box; /* Ensure padding is included in width */
+  line-height: 1.5; /* Consistent line height */
+  /* Force text indentation */
+  text-indent: 0;
+  /* Ensure background doesn't cover icon */
+  background-clip: padding-box;
+}
+
+/* Specific styling for password input to accommodate toggle button */
+.form-input[type="password"],
+.form-input[type="text"] {
+  padding-right: 48px; /* Space for password toggle button */
+}
+
+/* Add a pseudo-element to create a clear background for the input */
+.form-input {
+  position: relative;
+  z-index: 1;
+}
+
+/* Ensure the input's background doesn't cover the icon */
+.input-wrapper {
+  background: transparent;
+}
+
+/* Force placeholder and text to start after the icon */
+.form-input {
+  padding-left: 46px !important; /* Force left padding */
 }
 
 .form-input:focus {
@@ -205,12 +243,40 @@
   background: var(--color-white);
 }
 
-.form-input:focus + .input-icon {
-  color: var(--color-primary);
-}
-
+/* Fixed placeholder styling - ensure it respects padding */
 .form-input::placeholder {
   color: var(--color-text-muted);
+  opacity: 1;
+  /* Force placeholder to respect padding */
+  position: relative;
+  left: 0;
+  /* Ensure placeholder text doesn't overflow */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* For browsers that might have issues, add a text-indent */
+@supports (text-indent: 46px) {
+  .form-input {
+    text-indent: 0; /* Reset text-indent, we're using padding */
+  }
+
+  .form-input::placeholder {
+    text-indent: 0;
+  }
+}
+
+/* Fix for Firefox which sometimes handles padding differently */
+@-moz-document url-prefix() {
+  .form-input {
+    padding-left: 46px !important;
+  }
+}
+
+/* Remove any conflicting styles */
+.form-input.has-toggle {
+  padding-right: 48px;
 }
 
 .form-input.input-error {
@@ -223,27 +289,43 @@
   cursor: not-allowed;
 }
 
-/* Password Toggle */
+/* Fixed Password Toggle */
 .password-toggle {
   position: absolute;
-  right: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
+  right: 12px;
   background: none;
   border: none;
   color: var(--color-text-muted);
   cursor: pointer;
-  padding: 0.5rem;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: color var(--transition-fast);
+  z-index: 2;
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  /* Ensure button doesn't block input */
+  pointer-events: auto;
 }
 
 .password-toggle:hover:not(:disabled) {
   color: var(--color-primary);
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .password-toggle:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Ensure icons are properly sized */
+.input-icon svg,
+.password-toggle svg {
+  width: 20px;
+  height: 20px;
+  display: block;
 }
 
 /* Error Message */
@@ -304,6 +386,7 @@
   background: var(--color-primary);
   color: var(--color-white);
   border: none;
+  border-radius: 4px;
   font-family: var(--font-body);
   font-weight: 600;
   font-size: 1.0625rem;
@@ -396,5 +479,14 @@
 
   .form-title {
     font-size: 1.75rem;
+  }
+
+  /* Mobile adjustments for inputs */
+  .form-input {
+    padding: 12px 16px 12px 46px;
+  }
+
+  .password-toggle {
+    right: 8px;
   }
 }

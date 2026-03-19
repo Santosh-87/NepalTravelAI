@@ -46,6 +46,9 @@ INSTALLED_APPS = [
     'chatbot',
     'marketplace',
     'authentication',
+    'dashboard',
+    'trips',
+    'community',
     'rest_framework',
     'corsheaders',
     
@@ -137,6 +140,10 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# Media files (uploaded images)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 # CORS Configuration
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
@@ -174,6 +181,8 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PARSER_CLASSES': [
         'rest_framework.parsers.JSONParser',
+        'rest_framework.parsers.MultiPartParser',
+        'rest_framework.parsers.FormParser',
     ],
 }
 

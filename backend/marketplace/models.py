@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.utils import timezone
+from decimal import Decimal
 
 class VehicleListing(models.Model):
     """
@@ -58,10 +59,12 @@ class VehicleListing(models.Model):
         help_text="AC, GPS, Music System (comma-separated)"
     )
     
-    # Images 
-    primary_image = models.URLField(
+    # Images
+    primary_image = models.ImageField(
+        upload_to='vehicles/',
         blank=True,
-        help_text="Image URL or upload path"
+        null=True,
+        help_text="Vehicle photo"
     )
     
     # Location
@@ -130,8 +133,14 @@ class Booking(models.Model):
         ('confirmed', 'Confirmed'),
         ('cancelled', 'Cancelled'),
         ('completed', 'Completed'),
+        ('rejected', 'Rejected'),
     ]
-    
+
+    TRIP_TYPE_CHOICES = [
+        ('within_valley', 'Within Valley'),
+        ('outside_valley', 'Outside Valley'),
+    ]
+
     # Who & What
     tourist = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -150,6 +159,11 @@ class Booking(models.Model):
     end_date = models.DateField()
     
     # Details
+    trip_type = models.CharField(
+        max_length=20,
+        choices=TRIP_TYPE_CHOICES,
+        default='outside_valley',
+    )
     pickup_location = models.CharField(max_length=255)
     dropoff_location = models.CharField(max_length=255)
     number_of_passengers = models.PositiveIntegerField()
@@ -169,11 +183,14 @@ class Booking(models.Model):
         choices=STATUS_CHOICES,
         default='pending'
     )
-    
+
+    admin_notes = models.TextField(blank=True)
+
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     confirmed_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
     
     class Meta:
         db_table = 'bookings'
@@ -189,10 +206,14 @@ class Booking(models.Model):
         return f"Booking #{self.id} - {self.tourist.email}"
     
     def calculate_total(self):
-        """Calculate total price"""
-        days = (self.end_date - self.start_date).days + 1
-        self.total_days = days
-        self.total_price = self.price_per_day * days
+        """Calculate total price based on trip type"""
+        if self.trip_type == 'within_valley':
+            self.total_days = 1
+            self.total_price = (self.price_per_day * Decimal('0.6')).quantize(Decimal('0.01'))
+        else:
+            days = (self.end_date - self.start_date).days + 1
+            self.total_days = days
+            self.total_price = self.price_per_day * days
         return self.total_price
     
     def confirm(self):
@@ -201,6 +222,22 @@ class Booking(models.Model):
         self.confirmed_at = timezone.now()
         self.save()
     
+    def complete(self):
+        """Mark booking as completed after trip"""
+        if self.status != 'confirmed':
+            raise ValueError("Only confirmed bookings can be completed")
+        self.status = 'completed'
+        self.completed_at = timezone.now()
+        self.save()
+    
+    def reject(self, reason=""):
+        """Reject a booking (vendor declines)"""
+        if self.status != 'pending':
+            raise ValueError("Only pending bookings can be rejected")
+        self.status = 'rejected'
+        self.admin_notes = reason
+        self.save()
+        
     def cancel(self):
         """Cancel booking"""
         self.status = 'cancelled'

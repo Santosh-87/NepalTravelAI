@@ -1,68 +1,99 @@
 import React from 'react';
-import { ArrowRight, MessageSquare } from 'lucide-react';
+import { ArrowRight, MessageSquare, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import './Hero.css';
 
 const Hero = () => {
   return (
-    <section className="hero">
-      <div className="hero-background">
-        <div className="hero-overlay"></div>
-      </div>
+    <section className="hs-root">
+      {/* Background layers */}
+      <div className="hs-bg-base" />
+      <div className="hs-bg-radial" />
+      <div className="hs-bg-glow" />
 
-      <div className="container hero-content">
-        <div className="hero-text">
-          <h1 className="hero-title">
-            Plan Your Nepal Journey
-            <span className="hero-title-accent"> with AI Guidance</span>
-          </h1>
+      <div className="hs-container">
+        <div className="hs-grid">
 
-          <p className="hero-description">
-            Get personalized travel recommendations, find NATTA-certified vehicles,
-            and explore Nepal with confidence. Your AI-powered travel assistant for the Himalayas.
-          </p>
+          {/* LEFT — Text column */}
+          <div className="hs-text-col">
 
-          <div className="hero-actions">
-            <Link to="/chat" className="btn btn-primary">
-              <MessageSquare size={20} />
-              <span>Start Planning</span>
-            </Link>
-            <Link to="/marketplace" className="btn btn-outline">
-              Browse Vehicles
-            </Link>
-          </div>
-
-          <div className="hero-trust">
-            <div className="trust-badge">
-              <span className="badge-icon">✓</span>
-              <span>NATTA Certified Vehicles</span>
+            <div className="hs-badge">
+              <span>✨ AI-Powered Travel Planning</span>
             </div>
-            <div className="trust-badge">
-              <span className="badge-icon">✓</span>
-              <span>Transparent Pricing</span>
-            </div>
-          </div>
-        </div>
 
-        <div className="hero-visual">
-          <div className="chat-preview">
-            <div className="chat-header">
-              <div className="chat-status">
-                <span className="status-dot"></span>
-                <span>AI Assistant</span>
+            <h1 className="hs-title">
+              Plan Your Nepal Journey
+              <span className="hs-title-gold">with Confidence</span>
+            </h1>
+
+            <p className="hs-desc">
+              Get personalized travel recommendations, discover NATTA-certified vehicles,
+              and explore Nepal's hidden gems with your AI-powered travel companion.
+            </p>
+
+            <div className="hs-actions">
+              <Link to="/chat" className="hs-btn-primary">
+                <MessageSquare size={20} />
+                <span>Start Planning</span>
+              </Link>
+              <Link to="/marketplace" className="hs-btn-outline">
+                <span>Browse Vehicles</span>
+                <ArrowRight size={18} />
+              </Link>
+            </div>
+
+            <div className="hs-trust-row">
+              <div className="hs-trust-item">
+                <CheckCircle size={18} />
+                <span>NATTA Certified</span>
+              </div>
+              <div className="hs-trust-item">
+                <CheckCircle size={18} />
+                <span>Transparent Pricing</span>
               </div>
             </div>
-            <div className="chat-body">
-              <div className="message user">
-                I need transport from Kathmandu to Pokhara for 4 people
+
+          </div>
+
+          {/* RIGHT — Chat preview column */}
+          <div className="hs-visual-col">
+            <div className="hs-chat-card">
+
+              <div className="hs-chat-topbar">
+                <div className="hs-chat-online">
+                  <span className="hs-dot-pulse" />
+                  <span>AI Assistant</span>
+                </div>
               </div>
-              <div className="message assistant">
-                I recommend an SUV for your group. The trip takes 6-7 hours.
-                NATTA rate: NPR 18,000 for round trip. Would you like to see
-                available vehicles?
+
+              <div className="hs-chat-messages">
+                <div className="hs-msg hs-msg-user">
+                  I need transport from Kathmandu to Pokhara for 4 people
+                </div>
+                <div className="hs-msg hs-msg-ai">
+                  I recommend an SUV for your group. The trip takes 6–7 hours.
+                  NATTA rate: NPR 18,000 for round trip. Would you like to see
+                  available vehicles?
+                </div>
+                <div className="hs-msg hs-msg-user">
+                  Yes, show me available SUVs
+                </div>
+                <div className="hs-msg hs-msg-ai">
+                  Here are 3 verified NATTA-certified SUVs available for your dates.
+                  All include a professional driver and fuel.
+                </div>
               </div>
+
+              <div className="hs-chat-input-bar">
+                <span className="hs-chat-placeholder">Ask about your trip...</span>
+                <button className="hs-chat-send" aria-label="Send">
+                  <ArrowRight size={16} />
+                </button>
+              </div>
+
             </div>
           </div>
+
         </div>
       </div>
     </section>

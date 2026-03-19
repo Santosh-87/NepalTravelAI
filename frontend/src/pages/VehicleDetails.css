@@ -1,0 +1,287 @@
+.vehicle-details-page {
+  padding: 40px 0 80px;
+  min-height: 70vh;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #667eea;
+  font-weight: 500;
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-bottom: 24px;
+  padding: 8px 0;
+}
+
+.back-link:hover {
+  color: #5568d3;
+}
+
+.vehicle-details-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 40px;
+}
+
+/* Main Content */
+.vehicle-main-content {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.vehicle-hero-image {
+  width: 100%;
+  height: 400px;
+  background: #e9ecef;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.vehicle-hero-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.vehicle-hero-image .placeholder {
+  font-size: 6rem;
+}
+
+.vehicle-header {
+  padding: 32px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.vehicle-header h1 {
+  margin: 0 0 8px 0;
+  font-size: 2rem;
+  color: #212529;
+  font-weight: 700;
+}
+
+.vehicle-number {
+  margin: 0;
+  color: #6c757d;
+  font-size: 1rem;
+  font-family: monospace;
+}
+
+.vehicle-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  padding: 32px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.stat {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.stat svg {
+  color: #667eea;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.stat-value {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #212529;
+  margin-bottom: 2px;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: #6c757d;
+}
+
+.vehicle-section {
+  padding: 32px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.vehicle-section:last-child {
+  border-bottom: none;
+}
+
+.vehicle-section h2 {
+  margin: 0 0 20px 0;
+  font-size: 1.375rem;
+  color: #212529;
+  font-weight: 600;
+}
+
+.vehicle-description {
+  color: #495057;
+  line-height: 1.7;
+  font-size: 1rem;
+  margin: 0;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #495057;
+}
+
+.feature-item svg {
+  color: #28a745;
+  flex-shrink: 0;
+}
+
+.vendor-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.vendor-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #667eea;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.vendor-name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #212529;
+  margin-bottom: 4px;
+}
+
+.vendor-email {
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+/* Sidebar Booking Card */
+.vehicle-sidebar {
+  height: fit-content;
+  position: sticky;
+  top: 20px;
+}
+
+.booking-card {
+  background: white;
+  border-radius: 12px;
+  padding: 32px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.price-display {
+  text-align: center;
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.price-amount {
+  display: block;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #667eea;
+  margin-bottom: 4px;
+}
+
+.price-period {
+  color: #6c757d;
+  font-size: 1rem;
+}
+
+.btn-book {
+  width: 100%;
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 16px 24px;
+  border-radius: 8px;
+  font-size: 1.125rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: background 0.2s ease;
+  margin-bottom: 24px;
+}
+
+.btn-book:hover {
+  background: #5568d3;
+}
+
+.booking-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.booking-info p {
+  margin: 0;
+  color: #28a745;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Responsive */
+@media (max-width: 968px) {
+  .vehicle-details-layout {
+    grid-template-columns: 1fr;
+  }
+  
+  .vehicle-sidebar {
+    position: static;
+    order: -1;
+  }
+  
+  .vehicle-stats {
+    grid-template-columns: 1fr;
+  }
+  
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.loading-page,
+.error-page {
+  min-height: 50vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.error-page h2 {
+  margin: 0 0 20px 0;
+  color: #495057;
+}

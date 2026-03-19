@@ -46,7 +46,10 @@ const LoginPage = () => {
       console.log('📋 Role:', user.role);
 
       // Redirect based on role
-      if (user.role === 'vendor') {
+      if (user.is_staff) {
+        console.log('🛡️ User is ADMIN → redirecting to /admin/dashboard');
+        navigate('/admin/dashboard');
+      } else if (user.role === 'vendor') {
         console.log('🚚 User is VENDOR');
         if (user.isVendorApproved === true) {
           console.log('✅ Vendor APPROVED → redirecting to /vendor/dashboard');

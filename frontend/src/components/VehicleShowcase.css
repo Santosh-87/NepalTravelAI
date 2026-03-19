@@ -1,119 +1,432 @@
 .vehicle-showcase {
-  padding: 80px 0;
-  background: #f8f9fa;
+  --color-primary: #1a4d6f;
+  --color-accent: #d4a574;
+  --color-white: #ffffff;
+  --color-bg-light: #faf8f5;
+  --color-text: #2a2a2a;
+  --color-text-muted: #6b7280;
+  --color-border: #e5e7eb;
+  --transition-fast: 150ms ease-out;
+  --transition-medium: 300ms ease-out;
+
+  padding: 100px 0;
+  background: var(--color-bg-light);
+  position: relative;
+  overflow: hidden;
 }
+
+.vehicle-showcase::after {
+  content: "";
+  position: absolute;
+  bottom: -200px;
+  left: -200px;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(
+    circle,
+    rgba(26, 77, 111, 0.05) 0%,
+    transparent 70%
+  );
+  border-radius: 50%;
+  z-index: 0;
+}
+
+.vehicle-container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* ============================================
+   SHOWCASE HEADER
+   ============================================ */
 
 .showcase-header {
   text-align: center;
-  margin-bottom: 60px;
+  margin-bottom: 5rem;
 }
 
 .showcase-title {
-  font-size: 2.5rem;
+  font-size: 2.75rem;
   font-weight: 700;
-  color: #212529;
-  margin-bottom: 16px;
+  color: var(--color-primary);
+  margin: 0 0 1rem;
+  font-family:
+    "Sora",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.showcase-title-underline {
+  width: 80px;
+  height: 4px;
+  background: linear-gradient(90deg, var(--color-primary) 0%, transparent 100%);
+  margin: 1rem auto 1.5rem;
+  border-radius: 2px;
+  animation: slideInUp 0.6s ease-out 0.1s both;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scaleX(0);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scaleX(1);
+  }
 }
 
 .showcase-subtitle {
   font-size: 1.125rem;
-  color: #6c757d;
+  color: var(--color-text-muted);
+  margin: 0;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.6;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  animation: fadeInUp 0.6s ease-out 0.2s both;
 }
+
+/* ============================================
+   VEHICLE GRID & CARDS
+   ============================================ */
 
 .vehicle-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 32px;
-  margin-bottom: 48px;
+  gap: 2rem;
+  margin-bottom: 3rem;
 }
 
 .vehicle-card {
-  background: white;
+  background: var(--color-white);
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid var(--color-border);
+  transition: all var(--transition-medium);
+  display: flex;
+  flex-direction: column;
+  animation: fadeInUp 0.6s ease-out both;
+}
+
+.vehicle-card-0 {
+  animation-delay: 0.2s;
+}
+
+.vehicle-card-1 {
+  animation-delay: 0.3s;
+}
+
+.vehicle-card-2 {
+  animation-delay: 0.4s;
+}
+
+.vehicle-card-3 {
+  animation-delay: 0.5s;
 }
 
 .vehicle-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  border-color: var(--color-accent);
+  box-shadow: 0 16px 48px rgba(26, 77, 111, 0.12);
+  transform: translateY(-8px);
 }
+
+/* ============================================
+   VEHICLE IMAGE
+   ============================================ */
 
 .vehicle-image-container {
   width: 100%;
-  height: 200px;
+  height: 220px;
   overflow: hidden;
-  background: #e9ecef;
+  background: linear-gradient(135deg, #f0f1f3 0%, #e5e7eb 100%);
+  position: relative;
 }
 
 .vehicle-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform var(--transition-medium);
 }
 
+.vehicle-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(212, 165, 116, 0) 0%,
+    rgba(26, 77, 111, 0.1) 100%
+  );
+  opacity: 0;
+  transition: opacity var(--transition-medium);
+}
+
+.vehicle-card:hover .vehicle-image {
+  transform: scale(1.05);
+}
+
+.vehicle-card:hover .vehicle-overlay {
+  opacity: 1;
+}
+
+/* ============================================
+   VEHICLE CONTENT
+   ============================================ */
+
 .vehicle-content {
-  padding: 24px;
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex: 1;
 }
 
 .vehicle-type {
   font-size: 1.375rem;
   font-weight: 600;
-  color: #212529;
-  margin-bottom: 12px;
+  color: var(--color-primary);
+  margin: 0;
+  font-family:
+    "Sora",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
 }
 
 .vehicle-capacity {
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: #667eea;
-  font-size: 0.9rem;
-  margin-bottom: 16px;
+  gap: 0.75rem;
+  color: var(--color-accent);
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+.vehicle-capacity svg {
+  flex-shrink: 0;
 }
 
 .vehicle-description {
   font-size: 1rem;
-  color: #495057;
-  margin-bottom: 8px;
+  color: var(--color-text);
+  margin: 0;
+  font-weight: 500;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
 }
 
 .vehicle-use-case {
-  font-size: 0.875rem;
-  color: #6c757d;
-  margin-bottom: 20px;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  margin: 0;
+  line-height: 1.5;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
 }
 
 .vehicle-link {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  color: #667eea;
+  gap: 0.75rem;
+  color: var(--color-accent);
   font-weight: 600;
   font-size: 0.95rem;
-  transition: gap 0.3s ease;
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  margin-top: 0.5rem;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
 }
 
 .vehicle-link:hover {
-  gap: 10px;
+  color: var(--color-primary);
+  gap: 1.25rem;
 }
+
+.vehicle-link svg {
+  transition: transform var(--transition-fast);
+}
+
+.vehicle-link:hover svg {
+  transform: translateX(4px);
+}
+
+/* ============================================
+   SHOWCASE CTA
+   ============================================ */
 
 .showcase-cta {
   text-align: center;
   font-size: 1.125rem;
-  color: #495057;
+  color: var(--color-text-muted);
+  padding: 2rem;
+  background: rgba(212, 165, 116, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(212, 165, 116, 0.1);
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+.showcase-cta p {
+  margin: 0;
 }
 
 .showcase-cta a {
-  color: #667eea;
+  color: var(--color-accent);
   font-weight: 600;
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.showcase-cta a:hover {
+  color: var(--color-primary);
   text-decoration: underline;
 }
 
-/* Responsive */
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 1024px) {
+  .vehicle-container {
+    padding: 0 1.5rem;
+  }
+
+  .showcase-title {
+    font-size: 2.25rem;
+  }
+
+  .vehicle-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+  }
+}
+
 @media (max-width: 768px) {
+  .vehicle-showcase {
+    padding: 80px 0;
+  }
+
+  .vehicle-container {
+    padding: 0 1.5rem;
+  }
+
+  .showcase-header {
+    margin-bottom: 3.5rem;
+  }
+
+  .showcase-title {
+    font-size: 2rem;
+  }
+
+  .showcase-subtitle {
+    font-size: 1rem;
+  }
+
+  .vehicle-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+
+  .vehicle-image-container {
+    height: 180px;
+  }
+
+  .vehicle-content {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .vehicle-showcase {
+    padding: 60px 0;
+  }
+
+  .vehicle-container {
+    padding: 0 1rem;
+  }
+
+  .showcase-title {
+    font-size: 1.75rem;
+  }
+
+  .showcase-subtitle {
+    font-size: 0.95rem;
+  }
+
   .vehicle-grid {
     grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .vehicle-image-container {
+    height: 200px;
+  }
+
+  .vehicle-content {
+    padding: 1.25rem;
+  }
+
+  .vehicle-type {
+    font-size: 1.25rem;
+  }
+
+  .vehicle-description {
+    font-size: 0.95rem;
+  }
+
+  .showcase-cta {
+    font-size: 1rem;
   }
 }

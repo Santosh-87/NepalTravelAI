@@ -1,0 +1,349 @@
+/* ============================================
+   ADMIN LAYOUT — design tokens
+   ============================================ */
+.admin-layout {
+    --al-sidebar-w:    260px;
+    --al-sidebar-bg:   #0f172a;
+    --al-sidebar-2:    #1e293b;
+    --al-active-bg:    #1d4ed8;
+    --al-accent:       #d4a574;
+    --al-text:         #e2e8f0;
+    --al-muted:        #94a3b8;
+    --al-border:       rgba(255, 255, 255, 0.07);
+    --al-main-bg:      #f1f5f9;
+    --al-topbar-bg:    #ffffff;
+    --al-topbar-h:     64px;
+    --al-font-display: 'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --al-font-body:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+    display: flex;
+    min-height: 100vh;
+    font-family: var(--al-font-body);
+}
+
+/* ============================================
+   SIDEBAR
+   ============================================ */
+.admin-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: var(--al-sidebar-w);
+    height: 100vh;
+    background: var(--al-sidebar-bg);
+    display: flex;
+    flex-direction: column;
+    z-index: 200;
+    transition: transform 0.28s ease;
+    overflow: hidden;
+}
+
+/* ---- Logo ---- */
+.admin-sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    padding: 1.375rem 1.25rem 1.25rem;
+    border-bottom: 1px solid var(--al-border);
+    flex-shrink: 0;
+}
+
+.admin-logo-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--al-accent) 0%, #c49563 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--al-font-display);
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.admin-logo-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+}
+
+.admin-logo-name {
+    font-family: var(--al-font-display);
+    font-size: 0.925rem;
+    font-weight: 700;
+    color: var(--al-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.admin-logo-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--al-accent);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.admin-sidebar-close {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--al-muted);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+    flex-shrink: 0;
+}
+
+.admin-sidebar-close:hover { color: var(--al-text); }
+
+/* ---- Nav ---- */
+.admin-nav {
+    flex: 1;
+    padding: 1rem 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow-y: auto;
+}
+
+.admin-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.7rem 0.875rem;
+    border-radius: 9px;
+    text-decoration: none;
+    color: var(--al-muted);
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: background 0.15s, color 0.15s;
+    position: relative;
+}
+
+.admin-nav-link:hover {
+    background: var(--al-sidebar-2);
+    color: var(--al-text);
+}
+
+.admin-nav-link.active {
+    background: var(--al-active-bg);
+    color: #fff;
+}
+
+.admin-nav-arrow {
+    margin-left: auto;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.admin-nav-link:hover .admin-nav-arrow,
+.admin-nav-link.active .admin-nav-arrow {
+    opacity: 1;
+}
+
+/* ---- Footer ---- */
+.admin-sidebar-footer {
+    padding: 1rem 0.75rem;
+    border-top: 1px solid var(--al-border);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.admin-user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.25rem;
+}
+
+.admin-user-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--al-active-bg) 0%, #2563eb 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.875rem;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.admin-user-details {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.admin-user-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--al-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.admin-user-role {
+    font-size: 0.73rem;
+    color: var(--al-accent);
+    font-weight: 500;
+}
+
+.admin-logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    width: 100%;
+    padding: 0.6rem 0.875rem;
+    border-radius: 9px;
+    border: none;
+    background: transparent;
+    color: var(--al-muted);
+    font-family: var(--al-font-body);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    text-align: left;
+}
+
+.admin-logout-btn:hover {
+    background: rgba(239, 68, 68, 0.12);
+    color: #f87171;
+}
+
+/* ============================================
+   MAIN AREA
+   ============================================ */
+.admin-main {
+    margin-left: var(--al-sidebar-w);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background: var(--al-main-bg);
+}
+
+/* ---- Top bar ---- */
+.admin-topbar {
+    height: var(--al-topbar-h);
+    background: var(--al-topbar-bg);
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.5rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    flex-shrink: 0;
+}
+
+.admin-menu-btn {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #374151;
+    padding: 6px;
+    border-radius: 8px;
+}
+
+.admin-menu-btn:hover { background: #f3f4f6; }
+
+.admin-topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-left: auto;
+}
+
+.admin-topbar-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.admin-topbar-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: #fff;
+}
+
+/* ---- Content ---- */
+.admin-content {
+    flex: 1;
+    padding: 2rem;
+    max-width: 1400px;
+    width: 100%;
+}
+
+/* ---- Mobile overlay ---- */
+.admin-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 199;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 1024px) {
+    .admin-sidebar {
+        transform: translateX(-100%);
+    }
+
+    .admin-sidebar.open {
+        transform: translateX(0);
+    }
+
+    .admin-sidebar-close {
+        display: flex;
+    }
+
+    .admin-main {
+        margin-left: 0;
+    }
+
+    .admin-menu-btn {
+        display: flex;
+    }
+
+    .admin-overlay {
+        display: block;
+    }
+}
+
+@media (max-width: 640px) {
+    .admin-content {
+        padding: 1.25rem 1rem;
+    }
+
+    .admin-topbar {
+        padding: 0 1rem;
+    }
+
+    .admin-topbar-name {
+        display: none;
+    }
+}

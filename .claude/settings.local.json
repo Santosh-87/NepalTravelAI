@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(venv/Scripts/python manage.py shell -c \"from marketplace.models import VehicleListing; vehicles = VehicleListing.objects.all\\(\\).values\\(''id'',''vehicle_name'',''status'',''is_available'',''vendor__email''\\); print\\(list\\(vehicles\\)\\)\")",
+      "Bash(find 'c:/Users/lamab/Dropbox/PC/Desktop/Islington Files/Year-3/fyp-development/frontend/src/pages/vendor' -name *.jsx)",
+      "Bash(venv/Scripts/python manage.py shell -c \"from marketplace.models import VehicleListing; v=VehicleListing.objects.get\\(id=5\\); v.is_available=True; v.save\\(\\); print\\(''Fixed:'', v.vehicle_name, ''is_available='', v.is_available\\)\")",
+      "Bash(venv/Scripts/python manage.py shell -c \"from marketplace.models import VehicleListing; qs=VehicleListing.objects.filter\\(status=''approved'', is_available=True\\); print\\(''Approved+available:'', list\\(qs.values\\(''id'',''vehicle_name'',''vendor__email''\\)\\)\\)\")",
+      "Bash(python manage.py migrate)",
+      "Bash(../venv/Scripts/python manage.py migrate)",
+      "Bash(\"c:/Users/lamab/Dropbox/PC/Desktop/Islington Files/Year-3/fyp-development/venv/Scripts/python.exe\" manage.py migrate)",
+      "Bash(cmd /c \"cd /d \"\"c:\\\\Users\\\\lamab\\\\Dropbox\\\\PC\\\\Desktop\\\\Islington Files\\\\Year-3\\\\fyp-development\\\\backend\"\" && \"\"c:\\\\Users\\\\lamab\\\\Dropbox\\\\PC\\\\Desktop\\\\Islington Files\\\\Year-3\\\\fyp-development\\\\venv\\\\Scripts\\\\python.exe\"\" manage.py migrate 2>&1\")",
+      "Bash(cmd /c \"cd /d \"\"c:\\\\Users\\\\lamab\\\\Dropbox\\\\PC\\\\Desktop\\\\Islington Files\\\\Year-3\\\\fyp-development\\\\backend\"\" && ..\\\\venv\\\\Scripts\\\\python.exe manage.py migrate\")",
+      "Bash(cmd /c \".\\\\venv\\\\Scripts\\\\python.exe backend\\\\manage.py migrate\")",
+      "Bash(powershell -Command \"Set-Location ''c:\\\\Users\\\\lamab\\\\Dropbox\\\\PC\\\\Desktop\\\\Islington Files\\\\Year-3\\\\fyp-development\\\\backend''; & ''..\\\\venv\\\\Scripts\\\\python.exe'' manage.py migrate 2>&1\")"
+    ]
+  }
+}
