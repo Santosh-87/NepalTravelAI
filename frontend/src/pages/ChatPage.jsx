@@ -1,8 +1,53 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Mountain, Sparkles } from 'lucide-react';
+import { Send, Mountain, Sparkles, Users, MapPin } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import axios from 'axios';
 import './ChatPage.css';
+
+const VehicleCards = ({ vehicles }) => {
+  if (!vehicles || vehicles.length === 0) return null;
+
+  const getImgSrc = (url) => {
+    if (!url) return null;
+    if (url.startsWith('http')) return url;
+    return `http://localhost:8000${url.startsWith('/') ? url : `/${url}`}`;
+  };
+
+  return (
+    <div className="chat-vehicle-cards">
+      <span className="chat-vehicle-label">Available on our marketplace:</span>
+      <div className="chat-vehicle-scroll">
+        {vehicles.map((v) => (
+          <Link to={`/vehicle/${v.id}`} key={v.id} className="chat-vehicle-card">
+            {v.primary_image ? (
+              <img
+                src={getImgSrc(v.primary_image)}
+                alt={v.vehicle_name}
+                className="chat-vehicle-img"
+                onError={(e) => { e.target.style.display = 'none'; }}
+              />
+            ) : (
+              <div className="chat-vehicle-img-placeholder">
+                <Mountain size={20} />
+              </div>
+            )}
+            <div className="chat-vehicle-info">
+              <strong className="chat-vehicle-name">{v.vehicle_name}</strong>
+              <span className="chat-vehicle-meta">
+                <Users size={12} /> {v.seating_capacity} seats
+                <MapPin size={12} style={{ marginLeft: 6 }} /> {v.available_location}
+              </span>
+              <span className="chat-vehicle-price">
+                NPR {Number(v.price_per_day).toLocaleString()}/day
+              </span>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 const SUGGESTIONS = [
   "Plan a 7-day Everest Base Camp trek",
@@ -68,6 +113,7 @@ const ChatPage = () => {
         timestamp: new Date(),
         sources: aiResult.sources,
         mode: aiResult.mode,
+        vehicles: aiResult.vehicles || [],
       }
     ]);
     setIsTyping(false);
@@ -153,6 +199,10 @@ const ChatPage = () => {
                 <div className="msg-bubble">
                   {msg.text}
                 </div>
+
+                {msg.sender === 'ai' && msg.vehicles && msg.vehicles.length > 0 && (
+                  <VehicleCards vehicles={msg.vehicles} />
+                )}
 
                 {msg.sender === 'ai' && msg.sources && msg.sources.length > 0 && (
                   <div className="msg-sources">

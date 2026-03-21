@@ -4,6 +4,7 @@ GET  /api/health/  — system status
 POST /api/chat/    — main chat endpoint
 """
 
+import re
 import time
 import sys
 from pathlib import Path
@@ -12,12 +13,12 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-# ── Make scripts/ importable ──────────────────────────────────────────────────
-SCRIPTS_DIR = Path(__file__).resolve().parent.parent / 'scripts'
-if str(SCRIPTS_DIR) not in sys.path:
-    sys.path.insert(0, str(SCRIPTS_DIR))
+# ── Make backend/ importable (for scripts/ package) ──────────────────────────
+BACKEND_DIR = Path(__file__).resolve().parent.parent
+if str(BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(BACKEND_DIR))
 
-from load_knowledge_base import KnowledgeLoader
+from scripts.load_knowledge_base import KnowledgeLoader
 from chatbot.ollama_client import OllamaClient
 
 # ── Initialise once at startup ────────────────────────────────────────────────
@@ -35,27 +36,52 @@ print("=" * 50 + "\n")
 
 # ── System prompts ────────────────────────────────────────────────────────────
 
-RAG_SYSTEM_PROMPT = """You are NepalTravel AI, a Nepal travel assistant. Answer using ONLY the provided context.
+RAG_SYSTEM_PROMPT = """You are NepalTravel AI, a Nepal travel assistant. Answer using ONLY the provided context. Be concise. Use bullet points.
 
-RULE 1 — TRANSPORT PRICES:
-The context contains FINAL pre-calculated vehicle prices. Read them directly — do NOT calculate or multiply anything.
-Find the line that says "FINAL vehicle prices" and read the Hiace or Car price from it.
-Format: Route name → Car: NPR X | Hiace: NPR Y | (before VAT)
-Then: If VAT needed: +13% → Total NPR Z
+RULE 1 — TRANSPORT PRICES (CRITICAL — read, never calculate):
+• The context contains FINAL pre-calculated vehicle prices after the words "FINAL vehicle prices".
+• Copy the price directly from context. NEVER add, multiply, or combine prices yourself.
+• Format your answer exactly like this:
+  Route: [name]
+  Car base: NPR [X]
+  [Vehicle]: NPR [Y] (from context)
+  +13% VAT: NPR [Z]
+  Total: NPR [final]
+• If the user asks for Hiace price, find "Hiace NPR ___" in the FINAL vehicle prices line and copy that number.
 
-RULE 2 — MULTI-SEGMENT TRANSPORT:
-List each segment on a separate line with its price from context.
-Sum all prices as TOTAL BEFORE VAT at the bottom.
-Add VAT once only at the very end.
-If a segment price is not in context, write "rate not available".
+RULE 2 — VEHICLE SELECTION BY PASSENGER COUNT:
+• 1-3 passengers → Car
+• 4-6 passengers → Van or Jeep (Jeep for hills)
+• 7-14 passengers → Hiace
+• 15-25 passengers → Coaster / Mini Bus
+• 25-35 passengers → Bus
+• If passengers exceed a single vehicle capacity, recommend multiple vehicles.
+  Example: 30 people → 1 Bus (25-35 pax), or 2-3 Hiace (7-14 pax each).
+• NEVER recommend a vehicle that is too small for the group size.
 
-RULE 3 — ENTRY FEES:
-List every nationality tier from context: Foreign | SAARC | Chinese | Indian | Nepalese.
-Never show only one tier.
+RULE 3 — ITINERARIES (keep short):
+• Use this exact format — one line per day, no paragraphs:
+  Day 1: [Origin] → [Destination] ([drive time]) - [2-3 activities max]
+  Day 2: [Place] - [2-3 activities max]
+• Maximum 1-2 short sentences per day. No long descriptions.
+• Only include destinations on the actual route. Do NOT add treks, passes, or detours unless the user explicitly asks.
+• A road trip between two cities is NOT a trek. Keep it simple.
+• End with vehicle recommendation and price if available in context.
 
-RULE 4 — GENERAL QUESTIONS:
-Write at least 3 sentences. Include practical detail, duration, difficulty, or best season from context.
-Never fabricate prices or facts not in the context."""
+RULE 4 — MULTI-SEGMENT TRANSPORT:
+• List each segment price from context on its own line.
+• Sum segments as TOTAL BEFORE VAT. Add 13% VAT once at the end.
+• If a segment price is not in context, write "rate not available".
+
+RULE 5 — ENTRY FEES:
+• List every nationality tier from context: Foreign | SAARC | Chinese | Indian | Nepalese.
+
+RULE 6 — GENERAL QUESTIONS:
+• 3-5 sentences max. Include practical details from context (duration, difficulty, best season).
+• Never fabricate prices or facts not in context.
+
+NEVER invent numbers. If the answer is not in the context, say "I don't have this information."
+"""
 
 FALLBACK_SYSTEM_PROMPT = """You are NepalTravel AI, a knowledgeable and friendly Nepal travel assistant.
 
@@ -68,6 +94,25 @@ Guidelines:
 - Be concise and practical
 - Do not fabricate specific prices or permit fees
 - If you are unsure, say so"""
+
+VEHICLE_RECOMMENDATION_PROMPT = """You are NepalTravel AI, a Nepal travel assistant. Answer using ONLY the provided context.
+
+The user wants to know which vehicle type suits their group. Your job:
+1. Read the number of passengers from the question.
+2. Match to the correct vehicle type from the context.
+3. If the group is too large for one vehicle, suggest multiple vehicles.
+
+Format:
+• Recommended vehicle: [type] ([X]-[Y] passengers)
+• Why: [one sentence]
+
+If multiple vehicles needed:
+• Option A: [N] x [vehicle] ([capacity] each)
+• Option B: 1 x [larger vehicle] ([capacity])
+
+Do NOT show route prices, VAT, NPR amounts, or pricing templates.
+Do NOT mention specific routes unless the user asked about one.
+Keep it to 3-5 lines maximum."""
 
 
 # ── Views ─────────────────────────────────────────────────────────────────────
@@ -121,14 +166,20 @@ class ChatView(APIView):
     VEHICLE_KEYWORDS = {
         'hiace', 'van', 'jeep', 'coaster', 'bus', 'minibus',
         'microbus', 'vehicle', 'car', 'transport', 'ride',
-        'driver', 'pickup', 'drop', 'transfer'
+        'driver', 'pickup', 'drop', 'transfer', 'rental', 'rent', 'hire',
     }
 
     # Itinerary/quotation words → multi-segment mode (more chunks passed)
     ITINERARY_KEYWORDS = {
         'itinerary', 'quotation', 'quote', 'trip', 'tour',
         'arrival', 'departure', 'overnight', 'nights', 'days',
-        'package', 'multi', 'full', 'complete'
+        'package', 'multi', 'full', 'complete', 'plan', 'schedule',
+    }
+
+    # Passenger-count patterns → force vehicle_types chunk into context
+    PASSENGER_KEYWORDS = {
+        'people', 'person', 'persons', 'passengers', 'pax',
+        'family', 'group', 'members', 'friends', 'seats',
     }
 
     def _is_transport_query(self, message: str) -> bool:
@@ -141,6 +192,117 @@ class ChatView(APIView):
         words = set(message.lower().split())
         return bool(words & self.ITINERARY_KEYWORDS)
 
+    # Passenger count → marketplace vehicle_type choices
+    # Knowledge base uses: car, van, jeep, hiace, coaster, bus
+    # Marketplace model uses: car, suv, hiace, coaster, bus
+    PASSENGER_TO_VEHICLE_TYPES = [
+        (1,  3,  ['car', 'suv']),
+        (4,  6,  ['suv', 'hiace']),
+        (7,  14, ['hiace']),
+        (15, 25, ['coaster']),
+        (26, 35, ['bus']),
+    ]
+
+    def _is_passenger_query(self, message: str) -> bool:
+        """Return True if the query mentions passenger count or group size."""
+        words = set(message.lower().split())
+        return bool(words & self.PASSENGER_KEYWORDS)
+
+    def _is_vehicle_recommendation_query(self, message: str) -> bool:
+        """
+        Pure vehicle recommendation: user asks which vehicle for N people,
+        but is NOT asking about a specific route or price.
+        """
+        if not self._is_passenger_query(message):
+            return False
+        lower = message.lower()
+        # If asking for a price on a specific route, it's a pricing query
+        if any(kw in lower for kw in ['how much', 'price', 'cost', 'rate', 'npr']):
+            return False
+        # If mentioning a route direction, it's a transport query
+        if ' to ' in lower or ' from ' in lower:
+            return False
+        return True
+
+    def _extract_passenger_count(self, message: str):
+        """Extract passenger count from message. Returns int or None."""
+        patterns = [
+            r'(\d+)\s*(?:people|person|persons|passengers|pax|members|friends|seats)',
+            r'(?:family|group)\s*(?:of)?\s*(\d+)',
+            r'(?:for|of)\s+(\d+)',
+        ]
+        for pattern in patterns:
+            match = re.search(pattern, message.lower())
+            if match:
+                return int(match.group(1))
+        return None
+
+    def _get_vehicle_types_for_passengers(self, count):
+        """Map passenger count to marketplace vehicle_type filter values."""
+        for pax_min, pax_max, types in self.PASSENGER_TO_VEHICLE_TYPES:
+            if pax_min <= count <= pax_max:
+                return types
+        if count > 35:
+            return ['bus']
+        return []
+
+    def _find_marketplace_vehicles(self, passenger_count=None, vehicle_types_list=None):
+        """
+        Query marketplace for available vehicles matching the recommendation.
+        Returns list of dicts with vehicle info for the frontend.
+        """
+        from marketplace.models import VehicleListing
+
+        qs = VehicleListing.objects.filter(status='approved', is_available=True)
+
+        if vehicle_types_list:
+            qs = qs.filter(vehicle_type__in=vehicle_types_list)
+
+        if passenger_count:
+            qs = qs.filter(seating_capacity__gte=passenger_count)
+
+        qs = qs.order_by('price_per_day')[:6]
+
+        vehicles = []
+        for v in qs:
+            img_url = None
+            if v.primary_image:
+                try:
+                    img_url = v.primary_image.url
+                except Exception:
+                    pass
+
+            vehicles.append({
+                'id':                v.id,
+                'vehicle_name':      v.vehicle_name,
+                'vehicle_type':      v.get_vehicle_type_display(),
+                'seating_capacity':  v.seating_capacity,
+                'price_per_day':     str(v.price_per_day),
+                'available_location': v.available_location,
+                'primary_image':     img_url,
+            })
+
+        return vehicles
+
+    @staticmethod
+    def _clean_response(text):
+        """Remove unfilled template placeholders from LLM output."""
+        # Replace "NPR [Z]", "NPR [final]", "NPR [X]", "NPR " (empty) patterns
+        text = re.sub(r'NPR\s*\[[\w\s]*\]', 'NPR (not available)', text)
+        # Remove lines that are just template remnants
+        lines = text.split('\n')
+        cleaned = []
+        for line in lines:
+            stripped = line.strip()
+            # Skip lines that are just "+13% VAT: NPR (not available)" or "Total: NPR (not available)"
+            if stripped in ('', '+13% VAT: NPR (not available)', 'Total: NPR (not available)'):
+                continue
+            # Skip lines with empty NPR values like "Car base: NPR "
+            if re.match(r'^.*:\s*NPR\s*$', stripped):
+                continue
+            cleaned.append(line)
+        return '\n'.join(cleaned).strip()
+
     def post(self, request):
         start = time.time()
 
@@ -152,18 +314,46 @@ class ChatView(APIView):
             )
 
         try:
-            # ── Step 1: Search ChromaDB ───────────────────────────────────
-            # Use more results for itinerary queries so all segments
-            # have a chance to be retrieved
-            is_transport  = self._is_transport_query(message)
-            is_itinerary  = self._is_itinerary_query(message)
+            # ── Step 1: Classify query ────────────────────────────────────
+            is_transport      = self._is_transport_query(message)
+            is_itinerary      = self._is_itinerary_query(message)
+            is_passenger      = self._is_passenger_query(message)
+            is_recommendation = self._is_vehicle_recommendation_query(message)
+            pax_count         = self._extract_passenger_count(message) if is_passenger else None
 
-            if is_transport and is_itinerary:
-                n_results = 15   # multi-segment — need many route chunks
+            # Determine query_type for dynamic token allocation
+            if is_itinerary:
+                query_type = 'itinerary'
             elif is_transport:
-                n_results = 8    # single route query
+                query_type = 'transport'
             else:
-                n_results = 8    # content query
+                query_type = 'default'
+
+            # ── Step 2: Direct-fetch vehicle_types chunk for passenger queries
+            # Bypasses semantic search — always available when needed
+            vehicle_types_chunk = None
+            if is_passenger:
+                try:
+                    vt_result = _knowledge_base.collection.get(
+                        ids=["transport_vehicle_overview"]
+                    )
+                    if vt_result and vt_result['documents']:
+                        vehicle_types_chunk = {
+                            'doc':       vt_result['documents'][0],
+                            'meta':      vt_result['metadatas'][0],
+                            'relevance': 1.0,
+                        }
+                        print(f"  [DIRECT-FETCH] vehicle_types chunk loaded for passenger query")
+                except Exception as e:
+                    print(f"  [WARN] Could not fetch vehicle_types chunk: {e}")
+
+            # ── Step 3: Search ChromaDB ───────────────────────────────────
+            if is_transport and is_itinerary:
+                n_results = 15
+            elif is_transport:
+                n_results = 8
+            else:
+                n_results = 8
 
             results = _knowledge_base.search(message, n_results=n_results)
 
@@ -171,17 +361,24 @@ class ChatView(APIView):
             metas     = results['metadatas']
             distances = results['distances']
 
-            # ── Step 2: Decide mode
+            # ── Step 4: Decide RAG vs fallback ────────────────────────────
             top_relevance = (1 - distances[0]) if distances else 0.0
             use_rag       = top_relevance >= self.THRESHOLD
+
+            # Override: if we have the vehicle_types chunk, force RAG mode
+            # so passenger queries never fall to generic fallback
+            if not use_rag and vehicle_types_chunk:
+                use_rag = True
+                print(f"  [OVERRIDE] Forcing RAG — vehicle_types chunk available")
 
             context = ""
             sources = []
 
             if use_rag:
-                preferred         = []   # practical, treks, destinations
-                transport_routes  = []   # data_type = transport_route
-                transport_policy  = []   # data_type = pricing_policy or vehicle_types
+                preferred         = []
+                transport_routes  = []
+                transport_policy  = []
+                vehicle_types     = []
 
                 for i in range(len(docs)):
                     cat       = metas[i].get('category', '')
@@ -195,29 +392,50 @@ class ChatView(APIView):
                         preferred.append(entry)
                     elif data_type == 'transport_route':
                         transport_routes.append(entry)
+                    elif data_type == 'vehicle_types':
+                        vehicle_types.append(entry)
                     else:
-                        # pricing_policy and vehicle_types
                         transport_policy.append(entry)
 
-                if is_transport and is_itinerary:
-                    # Multi-segment itinerary — pass up to 5 route chunks
- 
+                # ── Step 4b: Rerank by query type ─────────────────────────
+                if is_recommendation:
+                    # Pure vehicle recommendation — vehicle_types chunk only,
+                    # no route chunks (they confuse the model into pricing mode)
+                    ranked = []
+                    max_chunks = 1
+                    print(f"  [RERANK] vehicle-recommendation | pax={pax_count}")
+
+                elif is_transport and is_itinerary:
                     ranked = transport_routes[:5] + transport_policy[:2] + preferred[:1]
-                    print(f"  [RERANK] itinerary-mode | routes={len(transport_routes)} policy={len(transport_policy)} content={len(preferred)}")
+                    max_chunks = 5
+                    print(f"  [RERANK] itinerary+transport | routes={len(transport_routes)} policy={len(transport_policy)} content={len(preferred)}")
 
                 elif is_transport:
-                    # Top 3 routes so correct destination chunk is always included
-                    # (ChromaDB may rank correct chunk 2nd or 3rd due to embedding similarity)
                     ranked = transport_routes[:3] + transport_policy[:1]
+                    max_chunks = 3
                     print(f"  [RERANK] transport-first | routes={len(transport_routes)} policy={len(transport_policy)} content={len(preferred)}")
 
+                elif is_itinerary:
+                    ranked = preferred[:3] + transport_routes[:2]
+                    max_chunks = 4
+                    print(f"  [RERANK] itinerary-content | content={len(preferred)} routes={len(transport_routes)}")
+
                 else:
-                    # Content first, transport fills remaining slots
                     ranked = preferred + transport_routes + transport_policy
+                    max_chunks = 3
                     print(f"  [RERANK] content-first | content={len(preferred)} transport={len(transport_routes)}")
 
-                # Cap context at 3 chunks maximum to avoid overloading LLM
-                for entry in ranked[:3]:
+                # Inject vehicle_types chunk for any passenger query
+                # Uses the direct-fetched chunk (guaranteed available)
+                if is_passenger and vehicle_types_chunk:
+                    vt_doc = vehicle_types_chunk['doc']
+                    if not any(e['doc'] == vt_doc for e in ranked):
+                        ranked.insert(0, vehicle_types_chunk)
+                        max_chunks += 1
+                        print(f"  [INJECT] vehicle_types chunk added for passenger query")
+
+                # Build context string
+                for entry in ranked[:max_chunks]:
                     context += entry['doc'] + "\n\n"
                     sources.append({
                         'title':     entry['meta'].get('title', 'Unknown'),
@@ -225,30 +443,55 @@ class ChatView(APIView):
                         'relevance': entry['relevance'],
                     })
 
-            # Step 4: Build prompt
+                # ── Debug: log what context is being sent to LLM ──────────
+                print(f"  [CONTEXT] {len(ranked[:max_chunks])} chunks, ~{len(context)} chars")
+                for idx, entry in enumerate(ranked[:max_chunks]):
+                    print(f"    chunk {idx+1}: [{entry['meta'].get('data_type','md')}] "
+                          f"{entry['meta'].get('title','?')[:40]} "
+                          f"(rel={entry['relevance']:.3f})")
+
+            # ── Step 5: Build prompt ──────────────────────────────────────
             if use_rag:
                 prompt = (
                     f"CONTEXT:\n{context}\n"
                     f"QUESTION: {message}\n\n"
                     f"ANSWER:"
                 )
-                system = RAG_SYSTEM_PROMPT
-                mode   = "rag"
+                # Use dedicated prompt for pure vehicle recommendations
+                if is_recommendation:
+                    system = VEHICLE_RECOMMENDATION_PROMPT
+                else:
+                    system = RAG_SYSTEM_PROMPT
+                mode = "rag"
             else:
                 prompt = message
                 system = FALLBACK_SYSTEM_PROMPT
                 mode   = "fallback"
 
-            print(f"[{mode.upper()}] relevance={top_relevance:.3f} | {message[:60]}")
+            print(f"[{mode.upper()}] relevance={top_relevance:.3f} | query_type={query_type} "
+                  f"| recommend={is_recommendation} | {message[:60]}")
 
-            # Generate response 
-            answer = _ollama.generate(prompt, system)
+            # ── Step 6: Generate response ─────────────────────────────────
+            answer = _ollama.generate(prompt, system, query_type=query_type)
+            answer = self._clean_response(answer)
+
+            # ── Step 7: Marketplace vehicle lookup ────────────────────────
+            marketplace_vehicles = []
+            if is_passenger and pax_count:
+                vtype_filters = self._get_vehicle_types_for_passengers(pax_count)
+                marketplace_vehicles = self._find_marketplace_vehicles(
+                    passenger_count=pax_count,
+                    vehicle_types_list=vtype_filters,
+                )
+                print(f"  [MARKETPLACE] {len(marketplace_vehicles)} vehicles for {pax_count} pax "
+                      f"(types={vtype_filters})")
 
             return Response({
                 'response':        answer,
                 'sources':         sources,
                 'mode':            mode,
                 'processing_time': round(time.time() - start, 2),
+                'vehicles':        marketplace_vehicles,
             })
 
         except Exception as e:
