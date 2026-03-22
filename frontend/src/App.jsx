@@ -39,36 +39,59 @@ const AdminRoute = ({ children }) => {
     return children;
 };
 
+// Guard: logged-in users should not access login/signup again.
+const GuestRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) return null;
+  if (!user) return children;
+
+  if (user.is_staff) return <Navigate to="/admin/dashboard" replace />;
+  if (user.role === 'vendor') {
+    return <Navigate to={user.is_vendor_approved ? '/vendor/dashboard' : '/vendor/pending'} replace />;
+  }
+  if (user.role === 'tourist') return <Navigate to="/tourist/dashboard" replace />;
+
+  return <Navigate to="/" replace />;
+};
+
 function App() {
   return (
     <Router>
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<HomePage />} />
-        <Route path="/signup" element={<SignUpPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/get-started" element={<SignUpPage />} />
-        <Route path="/chat" element={<ChatPage />} />
-        <Route path="/vendor/dashboard" element={<VendorDashboard />} />
-        <Route path="/vendor/add-vehicle" element={<AddVehicle />} />
-        <Route path="/vendor/edit-vehicle/:id" element={<EditVehicle />} />
-        <Route path="/vendor/listings" element={<MyListings />} />
-        <Route path="/vendor/bookings" element={<VendorBookings />} />
+        <Route path="/signup" element={<GuestRoute><SignUpPage /></GuestRoute>} />
+        <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
+        <Route path="/get-started" element={<GuestRoute><SignUpPage /></GuestRoute>} />
         <Route path="/trips" element={<TripTemplates />} />
         <Route path="/trips/:slug" element={<TripTemplateDetail />} />
         <Route path="/community" element={<Community />} />
         <Route path="/community/:id" element={<PostDetail />} />
         <Route path="/marketplace" element={<Marketplace />} />
         <Route path="/vehicle/:id" element={<VehicleDetails />} />
-        <Route path="/my-bookings" element={<MyBookings />} />
-        <Route path="/tourist/dashboard" element={<TouristDashboard />} />
+
         {/* Protected Routes - Tourist Only */}
         <Route
           path="/chat"
           element={
             <ProtectedRoute allowedRoles={['tourist']}>
               <ChatPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/my-bookings"
+          element={
+            <ProtectedRoute allowedRoles={['tourist']}>
               <MyBookings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tourist/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={['tourist']}>
               <TouristDashboard />
             </ProtectedRoute>
           }
@@ -81,7 +104,6 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['vendor']}>
               <VendorPending />
-              <VendorBookings />
             </ProtectedRoute>
           }
         />
@@ -91,6 +113,38 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['vendor']}>
               <VendorDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/vendor/add-vehicle"
+          element={
+            <ProtectedRoute allowedRoles={['vendor']}>
+              <AddVehicle />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/vendor/edit-vehicle/:id"
+          element={
+            <ProtectedRoute allowedRoles={['vendor']}>
+              <EditVehicle />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/vendor/listings"
+          element={
+            <ProtectedRoute allowedRoles={['vendor']}>
+              <MyListings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/vendor/bookings"
+          element={
+            <ProtectedRoute allowedRoles={['vendor']}>
+              <VendorBookings />
             </ProtectedRoute>
           }
         />

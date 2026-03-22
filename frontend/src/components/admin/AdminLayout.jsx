@@ -4,7 +4,7 @@ import {
     LayoutDashboard, Users, Car, CalendarCheck, MessageSquare,
     LogOut, Menu, X, ChevronRight,
 } from 'lucide-react';
-import authService from '../../services/auth';
+import { useAuth } from '../../context/AuthContext';
 import './AdminLayout.css';
 
 const NAV_ITEMS = [
@@ -18,10 +18,11 @@ const NAV_ITEMS = [
 const AdminLayout = ({ children, user }) => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const navigate = useNavigate();
+    const { signOut } = useAuth();
 
     const handleLogout = async () => {
-        await authService.logout();
-        navigate('/login');
+        await signOut();
+        navigate('/login', { replace: true });
     };
 
     return (

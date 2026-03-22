@@ -49,15 +49,15 @@ RULE 1 — TRANSPORT PRICES (CRITICAL — read, never calculate):
   Total: NPR [final]
 • If the user asks for Hiace price, find "Hiace NPR ___" in the FINAL vehicle prices line and copy that number.
 
-RULE 2 — VEHICLE SELECTION BY PASSENGER COUNT:
+RULE 2 — VEHICLE SELECTION BY PASSENGER COUNT (use ONLY these exact ranges):
 • 1-3 passengers → Car
 • 4-6 passengers → Van or Jeep (Jeep for hills)
 • 7-14 passengers → Hiace
 • 15-25 passengers → Coaster / Mini Bus
 • 25-35 passengers → Bus
-• If passengers exceed a single vehicle capacity, recommend multiple vehicles.
-  Example: 30 people → 1 Bus (25-35 pax), or 2-3 Hiace (7-14 pax each).
-• NEVER recommend a vehicle that is too small for the group size.
+• 27 people = 1 Bus. 19 people = 1 Coaster. Do NOT suggest multiple vehicles when one fits.
+• Only suggest multiple vehicles if passengers exceed 35.
+• NEVER change or invent capacity numbers. Use the exact ranges above.
 
 RULE 3 — ITINERARIES (keep short):
 • Use this exact format — one line per day, no paragraphs:
@@ -95,20 +95,49 @@ Guidelines:
 - Do not fabricate specific prices or permit fees
 - If you are unsure, say so"""
 
-VEHICLE_RECOMMENDATION_PROMPT = """You are NepalTravel AI, a Nepal travel assistant. Answer using ONLY the provided context.
+ITINERARY_SYSTEM_PROMPT = """You are NepalTravel AI, a Nepal travel assistant. Plan a day-by-day itinerary using ONLY the provided context.
 
-The user wants to know which vehicle type suits their group. Your job:
+FORMAT — use this exact structure, one line per day:
+  Day 1: [Origin] → [Destination] ([drive time]) - [2-3 activities]
+  Day 2: [Place] - [2-3 activities]
+  Day 3: [Place] → [Next place] ([drive time]) - [2-3 activities]
+
+RULES:
+1. Maximum 1-2 short sentences per day. No long paragraphs.
+2. Only include destinations on the actual route. Do NOT add detours, side trips, or treks unless the user explicitly asked.
+3. A road trip between two cities is NOT a trek. Keep it simple and practical.
+4. Include practical details from context: driving time, altitude, key sights.
+5. At the END of the itinerary, add one line for transport:
+   "Recommended vehicle: [type] — approximately NPR [price] + 13% VAT" (only if price is in context).
+6. If the context does not have enough information for a full itinerary, plan what you can and say "I don't have detailed day-by-day information for this route."
+7. NEVER fabricate place names, distances, or prices not found in the context.
+8. Keep the total response short — no more than 10-12 lines."""
+
+VEHICLE_RECOMMENDATION_PROMPT = """You are NepalTravel AI, a Nepal travel assistant.
+
+VEHICLE CAPACITY TABLE (use ONLY these exact ranges — do NOT change the numbers):
+• Car: 1-3 passengers
+• Van: 4-6 passengers
+• Jeep: 4-6 passengers (for hills/off-road)
+• Hiace: 7-14 passengers
+• Coaster / Mini Bus: 15-25 passengers
+• Bus: 25-35 passengers
+
+RULES:
 1. Read the number of passengers from the question.
-2. Match to the correct vehicle type from the context.
-3. If the group is too large for one vehicle, suggest multiple vehicles.
+2. Find the vehicle whose range contains that number using the table above.
+3. If passengers exceed 35, suggest multiple vehicles (e.g. 2 x Bus).
+4. NEVER invent capacity numbers. ONLY use the exact ranges from the table above.
+5. A Bus holds 25-35 passengers. 27 people fits in 1 Bus.
+6. A Coaster holds 15-25 passengers. 19 people fits in 1 Coaster.
 
 Format:
 • Recommended vehicle: [type] ([X]-[Y] passengers)
 • Why: [one sentence]
 
 If multiple vehicles needed:
-• Option A: [N] x [vehicle] ([capacity] each)
-• Option B: 1 x [larger vehicle] ([capacity])
+• Option A: [N] x [vehicle] ([X]-[Y] passengers each)
+• Option B: 1 x [larger vehicle] ([X]-[Y] passengers)
 
 Do NOT show route prices, VAT, NPR amounts, or pricing templates.
 Do NOT mention specific routes unless the user asked about one.
@@ -205,7 +234,11 @@ class ChatView(APIView):
 
     def _is_passenger_query(self, message: str) -> bool:
         """Return True if the query mentions passenger count or group size."""
-        words = set(message.lower().split())
+        lower = message.lower()
+        # Regex check handles cases like "19people" (no space)
+        if re.search(r'\d+\s*(?:' + '|'.join(self.PASSENGER_KEYWORDS) + r')', lower):
+            return True
+        words = set(lower.split())
         return bool(words & self.PASSENGER_KEYWORDS)
 
     def _is_vehicle_recommendation_query(self, message: str) -> bool:
@@ -416,7 +449,9 @@ class ChatView(APIView):
                     print(f"  [RERANK] transport-first | routes={len(transport_routes)} policy={len(transport_policy)} content={len(preferred)}")
 
                 elif is_itinerary:
-                    ranked = preferred[:3] + transport_routes[:2]
+                    # Prioritise destination content; limit route chunks to 1
+                    # to avoid pricing data overwhelming the itinerary format
+                    ranked = preferred[:4] + transport_routes[:1]
                     max_chunks = 4
                     print(f"  [RERANK] itinerary-content | content={len(preferred)} routes={len(transport_routes)}")
 
@@ -457,9 +492,11 @@ class ChatView(APIView):
                     f"QUESTION: {message}\n\n"
                     f"ANSWER:"
                 )
-                # Use dedicated prompt for pure vehicle recommendations
+                # Use dedicated prompts to prevent small models mixing formats
                 if is_recommendation:
                     system = VEHICLE_RECOMMENDATION_PROMPT
+                elif is_itinerary and not is_transport:
+                    system = ITINERARY_SYSTEM_PROMPT
                 else:
                     system = RAG_SYSTEM_PROMPT
                 mode = "rag"

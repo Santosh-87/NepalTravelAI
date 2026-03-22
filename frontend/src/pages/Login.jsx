@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Mountain, Mail, Lock, Loader2 } from 'lucide-react';
-import authService from '../services/auth';
+import { useAuth } from '../context/AuthContext';
 import './Login.css';
 
 const LoginPage = () => {
@@ -11,6 +11,7 @@ const LoginPage = () => {
   const [errors, setErrors] = useState({});
 
   const navigate = useNavigate();
+  const { signIn } = useAuth();
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -38,8 +39,8 @@ const LoginPage = () => {
     try {
       console.log('🔐 Starting login...');
 
-      // Attempt to log in the user
-      const user = await authService.login(formData.email, formData.password);
+      // Attempt to log in the user and update shared auth state
+      const user = await signIn(formData.email, formData.password);
 
       console.log('✅ Auth successful');
       console.log('📋 User:', user);
@@ -47,28 +48,27 @@ const LoginPage = () => {
 
       // Redirect based on role
       if (user.is_staff) {
-        console.log('🛡️ User is ADMIN → redirecting to /admin/dashboard');
-        navigate('/admin/dashboard');
+        console.log('User is ADMIN → redirecting to /admin/dashboard');
+        navigate('/admin/dashboard', { replace: true });
       } else if (user.role === 'vendor') {
-        console.log('🚚 User is VENDOR');
-        if (user.isVendorApproved === true) {
-          console.log('✅ Vendor APPROVED → redirecting to /vendor/dashboard');
-          navigate('/vendor/dashboard');
+        console.log('User is VENDOR');
+        if (user.is_vendor_approved === true) {
+          console.log('Vendor APPROVED → redirecting to /vendor/dashboard');
+          navigate('/vendor/dashboard', { replace: true });
         } else {
-          console.log('⏳ Vendor NOT approved → redirecting to /vendor/pending');
-          navigate('/vendor/pending');
+          console.log('Vendor NOT approved → redirecting to /vendor/pending');
+          navigate('/vendor/pending', { replace: true });
         }
       } else if (user.role === 'tourist') {
-        console.log('🧭 User is TOURIST → redirecting to homepage');
-        navigate('/');
+        console.log('User is TOURIST → redirecting to homepage');
+        navigate('/tourist/dashboard', { replace: true });
       } else {
-        console.log('❓ Unknown role:', user.role, '→ redirecting to homepage');
-        navigate('/');
+        console.log('Unknown role:', user.role, '→ redirecting to homepage');
+        navigate('/', { replace: true });
       }
 
     } catch (error) {
-      console.error('❌ Login error:', error);
-      setIsLoading(false);
+      console.error('Login error:', error);
 
       if (error.message?.toLowerCase().includes('invalid') || error.message?.toLowerCase().includes('credentials') || error.message?.toLowerCase().includes('password')) {
         setErrors({ general: 'Wrong email or password. Please try again.' });
@@ -77,6 +77,8 @@ const LoginPage = () => {
       } else {
         setErrors({ general: error.message || 'Something went wrong. Please try again.' });
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 

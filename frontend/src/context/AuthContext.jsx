@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import authService from '../services/auth';
 
 const AuthContext = createContext({});
@@ -16,11 +16,30 @@ export const AuthProvider = ({ children }) => {
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        initAuth();
+    const loadUserProfile = useCallback(async () => {
+        // Check if token exists first
+        if (!authService.isAuthenticated()) {
+            setUser(null);
+            setLoading(false);
+            return;
+        }
+
+        try {
+            const profileData = await authService.getProfile();
+            setUser(profileData);
+            setProfile(profileData);
+        } catch (error) {
+            console.log('Profile load error (expected if not logged in):', error.message);
+            // Token might be expired or invalid, clear it
+            authService.clearTokens();
+            setUser(null);
+            setProfile(null);
+        } finally {
+            setLoading(false);
+        }
     }, []);
 
-    const initAuth = async () => {
+    const initAuth = useCallback(async () => {
         try {
             // If no token exists, skip profile fetch
             if (!authService.isAuthenticated()) {
@@ -35,27 +54,17 @@ export const AuthProvider = ({ children }) => {
             authService.clearTokens();
             setLoading(false);
         }
-    };
+    }, [loadUserProfile]);
 
-    const loadUserProfile = async () => {
-        // Check if token exists first
-        if (!authService.isAuthenticated()) {
-            setUser(null);
-            setLoading(false);
-            return;
-        }
+    useEffect(() => {
+        initAuth();
+    }, [initAuth]);
 
-        try {
-            const profileData = await authService.getProfile();
-            setUser(profileData);
-        } catch (error) {
-            console.log('Profile load error (expected if not logged in):', error.message);
-            // Token might be expired or invalid, clear it
-            authService.clearTokens();
-            setUser(null);
-        } finally {
-            setLoading(false);
-        }
+    const signIn = async (email, password) => {
+        const loggedInUser = await authService.login(email, password);
+        setUser(loggedInUser);
+        setProfile(loggedInUser);
+        return loggedInUser;
     };
 
     const signOut = async () => {
@@ -68,6 +77,8 @@ export const AuthProvider = ({ children }) => {
         user,
         profile,
         loading,
+        isAuthenticated: !!user,
+        signIn,
         signOut,
         // A method to refresh profile data (e.g. after role approval) without reloading the page
         refreshProfile: loadUserProfile,

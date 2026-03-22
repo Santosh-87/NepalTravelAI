@@ -2,10 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Menu, X, Mountain, LogOut, User, ChevronDown, Settings } from 'lucide-react';
 import authService from '../services/auth';
+import { useAuth } from '../context/AuthContext';
 import './Navigation.css';
 
 const Navigation = () => {
   const navigate = useNavigate();
+  const { signOut } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -58,14 +60,14 @@ const Navigation = () => {
   const handleLogout = async () => {
     console.log('Logging out...');
 
-    await authService.logout();
+    await signOut();
 
     setUser(null);
     setIsProfileOpen(false);
     setIsMobileMenuOpen(false);
 
-    console.log('Redirecting to homepage...');
-    navigate('/');
+    console.log('Redirecting to login...');
+    navigate('/login', { replace: true });
   };
 
   // Get user initial for avatar

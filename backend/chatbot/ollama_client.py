@@ -44,7 +44,7 @@ class OllamaClient:
             "options": {
                 "num_predict":    num_predict,
                 "temperature":    0.1,
-                "num_ctx":        2048,     # was 1024 — too small for RAG context
+                "num_ctx":        2048,     
                 "num_thread":     4,
                 "repeat_penalty": 1.1,
             }

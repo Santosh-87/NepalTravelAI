@@ -5,6 +5,7 @@ import {
     LogOut, Menu, X, ChevronRight,
 } from 'lucide-react';
 import authService from '../../services/auth';
+import { useAuth } from '../../context/AuthContext';
 import './VendorLayout.css';
 
 const NAV_ITEMS = [
@@ -18,6 +19,7 @@ const VendorLayout = ({ children }) => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [user, setUser] = useState(null);
     const navigate = useNavigate();
+    const { signOut } = useAuth();
 
     useEffect(() => {
         authService.getProfile()
@@ -26,8 +28,8 @@ const VendorLayout = ({ children }) => {
     }, []);
 
     const handleLogout = async () => {
-        await authService.logout();
-        navigate('/login');
+        await signOut();
+        navigate('/login', { replace: true });
     };
 
     return (
