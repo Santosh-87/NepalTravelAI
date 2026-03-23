@@ -179,6 +179,59 @@ class MarketplaceService {
     return await response.json();
   }
 
+  // --- Price Negotiation ---
+
+  async vendorRespondToOffer(bookingId, { action, counter_price, reason }) {
+    const body = { action };
+    if (counter_price) body.counter_price = counter_price;
+    if (reason) body.reason = reason;
+
+    const response = await fetch(`${API_URL}/bookings/${bookingId}/vendor-respond/`, {
+      method: 'POST',
+      headers: this.getAuthHeader(),
+      body: JSON.stringify(body),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to respond to offer');
+    }
+    return await response.json();
+  }
+
+  async customerRespondToCounter(bookingId, { action }) {
+    const response = await fetch(`${API_URL}/bookings/${bookingId}/customer-respond/`, {
+      method: 'POST',
+      headers: this.getAuthHeader(),
+      body: JSON.stringify({ action }),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to respond to counter');
+    }
+    return await response.json();
+  }
+
+  // --- Ratings ---
+
+  async rateBooking(bookingId, ratingData) {
+    const response = await fetch(`${API_URL}/bookings/${bookingId}/rate/`, {
+      method: 'POST',
+      headers: this.getAuthHeader(),
+      body: JSON.stringify(ratingData),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to submit rating');
+    }
+    return await response.json();
+  }
+
+  async getVehicleRatings(vehicleId) {
+    const response = await fetch(`${API_URL}/vehicles/${vehicleId}/ratings/`);
+    if (!response.ok) throw new Error('Failed to fetch ratings');
+    return await response.json();
+  }
+
   // Get single vehicle details (public)
   async getVehicleDetails(id) {
     const response = await fetch(`${API_URL}/vehicles/${id}/`);

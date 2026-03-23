@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
+import RatingModal from '../components/RatingModal';
 import marketplaceService from '../services/marketplace';
-import { Calendar, MapPin, User, Phone, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
+import { Calendar, MapPin, User, Phone, CheckCircle, XCircle, Clock, AlertCircle, Star, DollarSign } from 'lucide-react';
 import './MyBookings.css';
 
 const MyBookings = () => {
@@ -47,11 +48,44 @@ const MyBookings = () => {
         }
     };
 
-    const filteredBookings = filter === 'all'
-        ? bookings
-        : bookings.filter(b => b.status === filter);
+    const handleAcceptCounter = async (id) => {
+        if (!window.confirm('Accept the vendor\'s counter-offer?')) return;
+        try {
+            const updated = await marketplaceService.customerRespondToCounter(id, { action: 'accept' });
+            setBookings(bookings.map(b => b.id === id ? updated : b));
+        } catch (err) {
+            alert('Failed to accept counter: ' + err.message);
+        }
+    };
+
+    const handleRejectCounter = async (id) => {
+        if (!window.confirm('Reject the counter-offer? This will cancel the booking.')) return;
+        try {
+            const updated = await marketplaceService.customerRespondToCounter(id, { action: 'reject' });
+            setBookings(bookings.map(b => b.id === id ? updated : b));
+        } catch (err) {
+            alert('Failed to reject counter: ' + err.message);
+        }
+    };
+
+    const handleRated = (bookingId) => {
+        setBookings(bookings.map(b =>
+            b.id === bookingId ? { ...b, has_rating: true } : b
+        ));
+        setSuccessMessage('Thank you for your review!');
+        setTimeout(() => setSuccessMessage(''), 5000);
+    };
 
     const countByStatus = (s) => bookings.filter(b => b.status === s).length;
+    const negotiatingCount = bookings.filter(b =>
+        ['pending_vendor_approval', 'pending_customer_approval'].includes(b.status)
+    ).length;
+
+    const filteredBookings = filter === 'all'
+        ? bookings
+        : filter === 'negotiating'
+            ? bookings.filter(b => ['pending_vendor_approval', 'pending_customer_approval'].includes(b.status))
+            : bookings.filter(b => b.status === filter);
 
     if (loading) {
         return (
@@ -103,11 +137,12 @@ const MyBookings = () => {
                 {/* Filter Tabs */}
                 <div className="booking-filters" role="tablist">
                     {[
-                        { key: 'all',       label: 'All',       count: bookings.length },
-                        { key: 'pending',   label: 'Pending',   count: countByStatus('pending') },
-                        { key: 'confirmed', label: 'Confirmed', count: countByStatus('confirmed') },
-                        { key: 'completed', label: 'Completed', count: countByStatus('completed') },
-                        { key: 'cancelled', label: 'Cancelled', count: countByStatus('cancelled') },
+                        { key: 'all',         label: 'All',         count: bookings.length },
+                        { key: 'pending',     label: 'Pending',     count: countByStatus('pending') },
+                        { key: 'negotiating', label: 'Negotiating', count: negotiatingCount },
+                        { key: 'confirmed',   label: 'Confirmed',   count: countByStatus('confirmed') },
+                        { key: 'completed',   label: 'Completed',   count: countByStatus('completed') },
+                        { key: 'cancelled',   label: 'Cancelled',   count: countByStatus('cancelled') },
                     ].map(tab => (
                         <button
                             key={tab.key}
@@ -149,6 +184,9 @@ const MyBookings = () => {
                                 key={booking.id}
                                 booking={booking}
                                 onCancel={handleCancel}
+                                onAcceptCounter={handleAcceptCounter}
+                                onRejectCounter={handleRejectCounter}
+                                onRated={handleRated}
                             />
                         ))}
                     </div>
@@ -163,11 +201,21 @@ const MyBookings = () => {
 /* ============================================================
    BookingCard Component
    ============================================================ */
-const BookingCard = ({ booking, onCancel }) => {
+const BookingCard = ({ booking, onCancel, onAcceptCounter, onRejectCounter, onRated }) => {
+    const [showRatingModal, setShowRatingModal] = useState(false);
+
     const statusConfig = {
         pending: {
             Icon: Clock,
             label: 'Pending Confirmation',
+        },
+        pending_vendor_approval: {
+            Icon: DollarSign,
+            label: 'Awaiting Vendor Response',
+        },
+        pending_customer_approval: {
+            Icon: AlertCircle,
+            label: 'Vendor Counter-Offer',
         },
         confirmed: {
             Icon: CheckCircle,
@@ -181,6 +229,10 @@ const BookingCard = ({ booking, onCancel }) => {
             Icon: CheckCircle,
             label: 'Completed',
         },
+        rejected: {
+            Icon: XCircle,
+            label: 'Rejected',
+        },
     };
 
     const { Icon, label } = statusConfig[booking.status] || statusConfig.pending;
@@ -191,6 +243,10 @@ const BookingCard = ({ booking, onCancel }) => {
             day: 'numeric',
             year: 'numeric',
         });
+
+    const hasNegotiation = booking.negotiation_status && booking.negotiation_status !== 'none';
+    const finalPrice = booking.final_price_per_day ? Number(booking.final_price_per_day) : null;
+    const originalPrice = booking.original_price_per_day ? Number(booking.original_price_per_day) : null;
 
     return (
         <article className={`booking-card booking-card--${booking.status}`}>
@@ -263,6 +319,65 @@ const BookingCard = ({ booking, onCancel }) => {
                     </div>
                 )}
 
+                {/* Negotiation Info */}
+                {hasNegotiation && (
+                    <div className="negotiation-info">
+                        {booking.negotiation_status === 'customer_offered' && (
+                            <div className="negotiation-banner negotiation-banner--waiting">
+                                <DollarSign size={16} />
+                                <div>
+                                    <strong>Your Offer: NPR {Number(booking.customer_offered_price).toLocaleString()}/day</strong>
+                                    <span className="negotiation-detail">
+                                        {booking.trip_type === 'within_valley' ? 'Valley' : 'OV'} rate: NPR {originalPrice?.toLocaleString()}/day — Waiting for vendor response
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+
+                        {booking.negotiation_status === 'vendor_countered' && (
+                            <div className="negotiation-banner negotiation-banner--action">
+                                <DollarSign size={16} />
+                                <div className="negotiation-counter-content">
+                                    <div>
+                                        <strong>Vendor Counter-Offer: NPR {Number(booking.vendor_counter_price).toLocaleString()}/day</strong>
+                                        <span className="negotiation-detail">
+                                            Your offer was NPR {Number(booking.customer_offered_price).toLocaleString()}/day · Trip rate: NPR {originalPrice?.toLocaleString()}/day
+                                        </span>
+                                    </div>
+                                    <div className="negotiation-actions">
+                                        <button
+                                            className="btn-accept-counter"
+                                            onClick={() => onAcceptCounter(booking.id)}
+                                        >
+                                            <CheckCircle size={14} />
+                                            Accept (NPR {Number(booking.vendor_counter_price).toLocaleString()})
+                                        </button>
+                                        <button
+                                            className="btn-reject-counter"
+                                            onClick={() => onRejectCounter(booking.id)}
+                                        >
+                                            <XCircle size={14} />
+                                            Reject & Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {booking.negotiation_status === 'accepted' && finalPrice && (
+                            <div className="negotiation-banner negotiation-banner--accepted">
+                                <CheckCircle size={16} />
+                                <div>
+                                    <strong>Price Agreed: NPR {finalPrice.toLocaleString()}/day</strong>
+                                    <span className="negotiation-detail">
+                                        Trip rate: <span className="price-strikethrough">NPR {originalPrice?.toLocaleString()}/day</span> — Saved {Math.round(((originalPrice - finalPrice) / originalPrice) * 100)}%
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 {/* Footer */}
                 <div className="booking-footer">
                     <div className="booking-price">
@@ -270,21 +385,51 @@ const BookingCard = ({ booking, onCancel }) => {
                         <span className="price-amount">
                             NPR {Number(booking?.total_price || 0).toLocaleString()}
                         </span>
+                        {hasNegotiation && booking.negotiation_status === 'accepted' && (
+                            <span className="price-negotiated-tag">Negotiated</span>
+                        )}
                         <span className="price-trip-type">
                             {booking?.trip_type === 'within_valley' ? '🏙️ Within Valley' : '🛣️ Outside Valley'}
                         </span>
                     </div>
 
-                    {booking?.status === 'pending' && (
-                        <button
-                            className="btn-cancel"
-                            onClick={() => onCancel(booking.id)}
-                        >
-                            Cancel Booking
-                        </button>
-                    )}
+                    <div className="booking-card-actions">
+                        {(booking?.status === 'pending' || booking?.status === 'pending_vendor_approval') && (
+                            <button
+                                className="btn-cancel"
+                                onClick={() => onCancel(booking.id)}
+                            >
+                                Cancel Booking
+                            </button>
+                        )}
+
+                        {booking?.status === 'completed' && !booking?.has_rating && (
+                            <button
+                                className="btn-rate"
+                                onClick={() => setShowRatingModal(true)}
+                            >
+                                <Star size={16} />
+                                Rate Trip
+                            </button>
+                        )}
+
+                        {booking?.status === 'completed' && booking?.has_rating && (
+                            <span className="rating-submitted-tag">
+                                <Star size={14} fill="#f59e0b" stroke="#f59e0b" />
+                                Reviewed
+                            </span>
+                        )}
+                    </div>
                 </div>
             </div>
+
+            {showRatingModal && (
+                <RatingModal
+                    booking={booking}
+                    onClose={() => setShowRatingModal(false)}
+                    onRated={onRated}
+                />
+            )}
         </article>
     );
 };

@@ -6,7 +6,7 @@ import marketplaceService from '../services/marketplace';
 import BookingModal from '../pages/BookingModal';
 import authService from '../services/auth';
 import {
-    Users, MapPin, Phone, ArrowLeft, Calendar, CheckCircle
+    Users, MapPin, Phone, ArrowLeft, Calendar, CheckCircle, Star
 } from 'lucide-react';
 import './VehicleDetails.css';
 
@@ -16,12 +16,71 @@ const getImgSrc = (url) => {
     return `http://localhost:8000${url.startsWith('/') ? url : `/${url}`}`;
 };
 
+const StarDisplay = ({ rating, size = 16 }) => {
+    const stars = [];
+    const fullStars = Math.floor(rating);
+    const hasHalf = rating - fullStars >= 0.5;
+    for (let i = 0; i < 5; i++) {
+        if (i < fullStars) {
+            stars.push(<Star key={i} size={size} fill="#f59e0b" stroke="#f59e0b" />);
+        } else if (i === fullStars && hasHalf) {
+            stars.push(<Star key={i} size={size} fill="#f59e0b" stroke="#f59e0b" style={{ clipPath: 'inset(0 50% 0 0)' }} />);
+        } else {
+            stars.push(<Star key={i} size={size} fill="none" stroke="#d1d5db" />);
+        }
+    }
+    return <div className="star-display">{stars}</div>;
+};
+
+const ReviewCard = ({ rating }) => {
+    const formatDate = (dateString) =>
+        new Date(dateString).toLocaleDateString('en-US', {
+            month: 'short', day: 'numeric', year: 'numeric'
+        });
+
+    return (
+        <div className="review-card">
+            <div className="review-header">
+                <div className="review-author">
+                    <div className="review-avatar">
+                        {rating.tourist_name?.charAt(0).toUpperCase() || 'T'}
+                    </div>
+                    <div>
+                        <div className="review-name">{rating.tourist_name}</div>
+                        <div className="review-date">{formatDate(rating.created_at)}</div>
+                    </div>
+                </div>
+                <StarDisplay rating={rating.overall_rating} size={16} />
+            </div>
+
+            {(rating.vehicle_condition_rating || rating.punctuality_rating || rating.driver_behavior_rating) && (
+                <div className="review-sub-ratings">
+                    {rating.vehicle_condition_rating && (
+                        <span className="sub-rating">Vehicle: {rating.vehicle_condition_rating}/5</span>
+                    )}
+                    {rating.punctuality_rating && (
+                        <span className="sub-rating">Punctuality: {rating.punctuality_rating}/5</span>
+                    )}
+                    {rating.driver_behavior_rating && (
+                        <span className="sub-rating">Driver: {rating.driver_behavior_rating}/5</span>
+                    )}
+                </div>
+            )}
+
+            {rating.review_text && (
+                <p className="review-text">{rating.review_text}</p>
+            )}
+        </div>
+    );
+};
+
 const VehicleDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [vehicle, setVehicle] = useState(null);
     const [loading, setLoading] = useState(true);
     const [showBookingModal, setShowBookingModal] = useState(false);
+    const [ratingsData, setRatingsData] = useState({ ratings: [], average_rating: 0, rating_count: 0 });
 
     useEffect(() => {
         loadVehicle();
@@ -30,8 +89,12 @@ const VehicleDetails = () => {
     const loadVehicle = async () => {
         try {
             setLoading(true);
-            const data = await marketplaceService.getVehicleDetails(id);
-            setVehicle(data);
+            const [vehicleData, ratingsResponse] = await Promise.all([
+                marketplaceService.getVehicleDetails(id),
+                marketplaceService.getVehicleRatings(id).catch(() => ({ ratings: [], average_rating: 0, rating_count: 0 })),
+            ]);
+            setVehicle(vehicleData);
+            setRatingsData(ratingsResponse);
         } catch (err) {
             console.error('Failed to load vehicle:', err);
         } finally {
@@ -165,6 +228,35 @@ const VehicleDetails = () => {
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Reviews & Ratings Section */}
+                            <div className="vehicle-section">
+                                <h2>Reviews & Ratings</h2>
+
+                                {ratingsData.rating_count > 0 ? (
+                                    <>
+                                        <div className="rating-summary">
+                                            <div className="rating-score">
+                                                {ratingsData.average_rating.toFixed(1)}
+                                            </div>
+                                            <div className="rating-summary-right">
+                                                <StarDisplay rating={ratingsData.average_rating} size={20} />
+                                                <span className="rating-count-text">
+                                                    {ratingsData.rating_count} review{ratingsData.rating_count !== 1 ? 's' : ''}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div className="reviews-list">
+                                            {ratingsData.ratings.map(rating => (
+                                                <ReviewCard key={rating.id} rating={rating} />
+                                            ))}
+                                        </div>
+                                    </>
+                                ) : (
+                                    <p className="no-reviews">No reviews yet for this vehicle.</p>
+                                )}
+                            </div>
                         </div>
 
                         {/* Right Column - Booking Card */}
@@ -174,8 +266,23 @@ const VehicleDetails = () => {
                                     <span className="price-amount">
                                         NPR {vehicle.price_per_day.toLocaleString()}
                                     </span>
-                                    <span className="price-period">per day</span>
+                                    <span className="price-period">per day (Within Valley)</span>
+                                    <span className="price-ov-note">
+                                        Outside Valley: NPR {Math.round(Number(vehicle.price_per_day) * 1.15).toLocaleString()}/day
+                                    </span>
                                 </div>
+
+                                {ratingsData.rating_count > 0 && (
+                                    <div className="sidebar-rating">
+                                        <Star size={16} fill="#f59e0b" stroke="#f59e0b" />
+                                        <span className="sidebar-rating-score">
+                                            {ratingsData.average_rating.toFixed(1)}
+                                        </span>
+                                        <span className="sidebar-rating-count">
+                                            ({ratingsData.rating_count} review{ratingsData.rating_count !== 1 ? 's' : ''})
+                                        </span>
+                                    </div>
+                                )}
 
                                 <button className="btn-book" onClick={handleBookNow}>
                                     <Calendar size={20} />
@@ -185,6 +292,7 @@ const VehicleDetails = () => {
                                 <div className="booking-info">
                                     <p>✓ NATTA Certified Vehicle</p>
                                     <p>✓ Transparent Pricing</p>
+                                    <p>✓ Price Negotiation Available</p>
                                     <p>✓ Direct Contact with Vendor</p>
                                 </div>
                             </div>

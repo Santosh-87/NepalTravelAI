@@ -1,7 +1,10 @@
 from rest_framework import serializers
-from .models import VehicleListing, Booking
+from .models import VehicleListing, Booking, Rating
 from django.contrib.auth import get_user_model
+from django.utils import timezone
+from django.db.models import Avg
 from decimal import Decimal
+from datetime import timedelta
 
 User = get_user_model()
 
@@ -35,10 +38,12 @@ class VehicleListingSerializer(serializers.ModelSerializer):
             'is_available',
             'status',
             'admin_notes',
+            'average_rating',
+            'rating_count',
             'created_at',
             'updated_at',
         ]
-        read_only_fields = ['vendor', 'status', 'admin_notes', 'created_at', 'updated_at']
+        read_only_fields = ['vendor', 'status', 'admin_notes', 'average_rating', 'rating_count', 'created_at', 'updated_at']
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -82,7 +87,8 @@ class BookingSerializer(serializers.ModelSerializer):
     tourist_email = serializers.EmailField(source='tourist.email', read_only=True)
     vehicle_name = serializers.CharField(source='vehicle_listing.vehicle_name', read_only=True)
     vendor_name = serializers.CharField(source='vehicle_listing.vendor.full_name', read_only=True)
-    
+    has_rating = serializers.SerializerMethodField()
+
     class Meta:
         model = Booking
         fields = [
@@ -102,6 +108,14 @@ class BookingSerializer(serializers.ModelSerializer):
             'total_days',
             'price_per_day',
             'total_price',
+            'original_price_per_day',
+            'customer_offered_price',
+            'vendor_counter_price',
+            'final_price_per_day',
+            'negotiation_status',
+            'negotiation_expires_at',
+            'price_negotiated',
+            'has_rating',
             'contact_number',
             'special_requests',
             'status',
@@ -110,7 +124,15 @@ class BookingSerializer(serializers.ModelSerializer):
             'admin_notes',
             'completed_at',
         ]
-        read_only_fields = ['tourist', 'price_per_day', 'total_days', 'total_price', 'admin_notes', 'completed_at', 'created_at', 'updated_at']
+        read_only_fields = [
+            'tourist', 'price_per_day', 'total_days', 'total_price',
+            'original_price_per_day', 'vendor_counter_price', 'final_price_per_day',
+            'negotiation_status', 'negotiation_expires_at', 'price_negotiated',
+            'has_rating', 'admin_notes', 'completed_at', 'created_at', 'updated_at',
+        ]
+
+    def get_has_rating(self, obj):
+        return hasattr(obj, 'rating')
     
     def validate(self, attrs):
         """Custom validation"""
@@ -175,27 +197,94 @@ class BookingSerializer(serializers.ModelSerializer):
 
         validated_data['tourist'] = request.user
 
-        # Get vehicle and lock in price
+        # Get vehicle and calculate effective rate based on trip type
+        # Listed price_per_day = Inside Valley (IV) price
+        # Outside Valley (OV) = IV + 15%
         vehicle = validated_data['vehicle_listing']
-        validated_data['price_per_day'] = vehicle.price_per_day
-
         trip_type = validated_data.get('trip_type', 'outside_valley')
         start_date = validated_data['start_date']
         end_date = validated_data['end_date']
 
         if trip_type == 'within_valley':
-            # Flat local rate: 60% of daily price, always 1 day
+            effective_rate = vehicle.price_per_day  # Listed = IV price
+        else:
+            effective_rate = (vehicle.price_per_day * Decimal('1.15')).quantize(Decimal('0.01'))  # OV = IV + 15%
+
+        validated_data['price_per_day'] = effective_rate
+        validated_data['original_price_per_day'] = effective_rate
+
+        if trip_type == 'within_valley':
             validated_data['total_days'] = 1
-            validated_data['total_price'] = (
-                validated_data['price_per_day'] * Decimal('0.6')
-            ).quantize(Decimal('0.01'))
+            validated_data['total_price'] = effective_rate
             # Normalise end_date to match start_date for within-valley trips
             validated_data['end_date'] = start_date
         else:
             # Outside valley: per-day rate; same-day (start==end) counts as 1 day
             days = (end_date - start_date).days + 1
             validated_data['total_days'] = days
-            validated_data['total_price'] = validated_data['price_per_day'] * days
+            validated_data['total_price'] = effective_rate * days
+
+        # Handle price negotiation (counter-offer on the effective rate)
+        customer_offered_price = validated_data.get('customer_offered_price')
+        if customer_offered_price is not None:
+            min_offer = effective_rate * Decimal('0.85')
+            max_offer = effective_rate * Decimal('0.99')
+            if customer_offered_price < min_offer or customer_offered_price > max_offer:
+                raise serializers.ValidationError({
+                    'customer_offered_price': f'Offer must be between {min_offer:.0f} and {max_offer:.0f} NPR (up to 15% off the trip rate)'
+                })
+            validated_data['status'] = 'pending_vendor_approval'
+            validated_data['negotiation_status'] = 'customer_offered'
+            validated_data['negotiation_expires_at'] = timezone.now() + timedelta(hours=48)
+        else:
+            validated_data['negotiation_status'] = 'none'
 
         booking = Booking.objects.create(**validated_data)
         return booking
+
+
+class VendorNegotiationResponseSerializer(serializers.Serializer):
+    action = serializers.ChoiceField(choices=['accept', 'reject', 'counter'])
+    counter_price = serializers.DecimalField(
+        max_digits=10, decimal_places=2, required=False
+    )
+    reason = serializers.CharField(max_length=500, required=False, allow_blank=True)
+
+    def validate(self, attrs):
+        if attrs['action'] == 'counter' and not attrs.get('counter_price'):
+            raise serializers.ValidationError({
+                'counter_price': 'Counter price is required when countering.'
+            })
+        return attrs
+
+
+class CustomerNegotiationResponseSerializer(serializers.Serializer):
+    action = serializers.ChoiceField(choices=['accept', 'reject'])
+
+
+class RatingSerializer(serializers.ModelSerializer):
+    tourist_name = serializers.CharField(source='tourist.full_name', read_only=True)
+
+    class Meta:
+        model = Rating
+        fields = [
+            'id', 'booking', 'tourist', 'tourist_name', 'vendor', 'vehicle_listing',
+            'overall_rating', 'vehicle_condition_rating', 'punctuality_rating',
+            'driver_behavior_rating', 'review_text', 'created_at',
+        ]
+        read_only_fields = ['id', 'booking', 'tourist', 'vendor', 'vehicle_listing', 'created_at']
+
+    def validate_overall_rating(self, value):
+        if value < 1 or value > 5:
+            raise serializers.ValidationError('Rating must be between 1 and 5.')
+        return value
+
+    def create(self, validated_data):
+        rating = super().create(validated_data)
+        # Update denormalized rating fields on VehicleListing
+        vehicle = rating.vehicle_listing
+        ratings_qs = vehicle.ratings.all()
+        vehicle.rating_count = ratings_qs.count()
+        vehicle.average_rating = ratings_qs.aggregate(avg=Avg('overall_rating'))['avg'] or 0
+        vehicle.save(update_fields=['average_rating', 'rating_count'])
+        return rating

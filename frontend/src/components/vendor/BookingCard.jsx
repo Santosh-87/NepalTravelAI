@@ -1,15 +1,21 @@
-import { Calendar, MapPin, User, Phone, CheckCircle, XCircle, Clock, Award } from 'lucide-react';
+import { useState } from 'react';
+import { Calendar, MapPin, User, Phone, CheckCircle, XCircle, Clock, Award, DollarSign } from 'lucide-react';
 import './BookingCard.css';
 
 const STATUS_CONFIG = {
-    pending:   { Icon: Clock,        label: 'Pending Approval' },
-    confirmed: { Icon: CheckCircle,  label: 'Confirmed'        },
-    rejected:  { Icon: XCircle,      label: 'Rejected'         },
-    cancelled: { Icon: XCircle,      label: 'Cancelled'        },
-    completed: { Icon: Award,        label: 'Completed'        },
+    pending:                    { Icon: Clock,       label: 'Pending Approval' },
+    pending_vendor_approval:    { Icon: DollarSign,  label: 'Price Offer Received' },
+    pending_customer_approval:  { Icon: Clock,       label: 'Counter Sent — Waiting' },
+    confirmed:                  { Icon: CheckCircle, label: 'Confirmed' },
+    rejected:                   { Icon: XCircle,     label: 'Rejected' },
+    cancelled:                  { Icon: XCircle,     label: 'Cancelled' },
+    completed:                  { Icon: Award,       label: 'Completed' },
 };
 
-const BookingCard = ({ booking, onConfirm, onReject, onComplete, onCancel }) => {
+const BookingCard = ({ booking, onConfirm, onReject, onComplete, onCancel, onAcceptOffer, onRejectOffer, onCounterOffer }) => {
+    const [counterPrice, setCounterPrice] = useState('');
+    const [showCounterInput, setShowCounterInput] = useState(false);
+
     const status = STATUS_CONFIG[booking.status] ?? STATUS_CONFIG.pending;
     const StatusIcon = status.Icon;
 
@@ -20,6 +26,23 @@ const BookingCard = ({ booking, onConfirm, onReject, onComplete, onCancel }) => 
             day: 'numeric',
             year: 'numeric'
         });
+    };
+
+    const hasNegotiation = booking.negotiation_status && booking.negotiation_status !== 'none';
+    const originalPrice = booking.original_price_per_day ? Number(booking.original_price_per_day) : null;
+    const customerOffer = booking.customer_offered_price ? Number(booking.customer_offered_price) : null;
+    const vendorCounter = booking.vendor_counter_price ? Number(booking.vendor_counter_price) : null;
+    const finalPrice = booking.final_price_per_day ? Number(booking.final_price_per_day) : null;
+
+    const handleSendCounter = () => {
+        const price = parseFloat(counterPrice);
+        if (!price || price <= customerOffer || price > originalPrice) {
+            alert(`Counter must be between NPR ${customerOffer?.toLocaleString()} and NPR ${originalPrice?.toLocaleString()}`);
+            return;
+        }
+        onCounterOffer(booking.id, price);
+        setShowCounterInput(false);
+        setCounterPrice('');
     };
 
     return (
@@ -86,14 +109,107 @@ const BookingCard = ({ booking, onConfirm, onReject, onComplete, onCancel }) => 
                     </div>
                 )}
 
+                {/* Negotiation Section */}
+                {booking.status === 'pending_vendor_approval' && customerOffer && (
+                    <div className="vendor-negotiation-box">
+                        <div className="vendor-negotiation-header">
+                            <DollarSign size={18} />
+                            <span>Customer Price Offer</span>
+                        </div>
+                        <div className="vendor-negotiation-prices">
+                            <div className="vnp-item">
+                                <span className="vnp-label">{booking.trip_type === 'within_valley' ? 'Valley Rate' : 'Outside Valley Rate'}</span>
+                                <span className="vnp-value">NPR {originalPrice?.toLocaleString()}/day</span>
+                            </div>
+                            <div className="vnp-item vnp-item--offer">
+                                <span className="vnp-label">Customer Offers</span>
+                                <span className="vnp-value">NPR {customerOffer.toLocaleString()}/day</span>
+                            </div>
+                            <div className="vnp-item vnp-item--diff">
+                                <span className="vnp-label">Difference</span>
+                                <span className="vnp-value">-{Math.round(((originalPrice - customerOffer) / originalPrice) * 100)}%</span>
+                            </div>
+                        </div>
+
+                        <div className="vendor-negotiation-actions">
+                            <button className="btn-confirm" onClick={() => onAcceptOffer(booking.id)}>
+                                <CheckCircle size={16} />
+                                Accept Offer
+                            </button>
+                            <button
+                                className="btn-counter"
+                                onClick={() => setShowCounterInput(!showCounterInput)}
+                            >
+                                <DollarSign size={16} />
+                                Counter
+                            </button>
+                            <button className="btn-reject" onClick={() => onRejectOffer(booking.id)}>
+                                <XCircle size={16} />
+                                Reject
+                            </button>
+                        </div>
+
+                        {showCounterInput && (
+                            <div className="vendor-counter-input">
+                                <div className="counter-input-row">
+                                    <span>NPR</span>
+                                    <input
+                                        type="number"
+                                        value={counterPrice}
+                                        onChange={(e) => setCounterPrice(e.target.value)}
+                                        placeholder={`${customerOffer + 1} - ${originalPrice}`}
+                                        min={customerOffer + 1}
+                                        max={originalPrice}
+                                    />
+                                    <span>/day</span>
+                                </div>
+                                <p className="counter-hint">
+                                    Must be between NPR {(customerOffer + 1).toLocaleString()} and NPR {originalPrice?.toLocaleString()}
+                                </p>
+                                <button className="btn-send-counter" onClick={handleSendCounter}>
+                                    Send Counter-Offer
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {booking.status === 'pending_customer_approval' && (
+                    <div className="vendor-negotiation-box vendor-negotiation-box--waiting">
+                        <div className="vendor-negotiation-header">
+                            <Clock size={18} />
+                            <span>Waiting for Customer Response</span>
+                        </div>
+                        <div className="vendor-negotiation-prices">
+                            <div className="vnp-item">
+                                <span className="vnp-label">Your Counter</span>
+                                <span className="vnp-value">NPR {vendorCounter?.toLocaleString()}/day</span>
+                            </div>
+                            <div className="vnp-item">
+                                <span className="vnp-label">Customer's Offer</span>
+                                <span className="vnp-value">NPR {customerOffer?.toLocaleString()}/day</span>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {hasNegotiation && booking.negotiation_status === 'accepted' && finalPrice && (
+                    <div className="vendor-negotiation-box vendor-negotiation-box--accepted">
+                        <div className="vendor-negotiation-header">
+                            <CheckCircle size={18} />
+                            <span>Price Agreed: NPR {finalPrice.toLocaleString()}/day</span>
+                        </div>
+                    </div>
+                )}
+
                 <div className="booking-footer">
                     <div className="booking-price">
                         <span className="price-label">Total Amount</span>
                         <span className="price-amount">NPR {Number(booking.total_price).toLocaleString()}</span>
                         <span className="price-detail">
                             {booking.trip_type === 'within_valley'
-                                ? '🏙️ Within Valley flat rate'
-                                : `NPR ${Number(booking.price_per_day).toLocaleString()}/day × ${booking.total_days} day${booking.total_days > 1 ? 's' : ''}`
+                                ? '🏙️ Within Valley'
+                                : `🛣️ NPR ${Number(finalPrice || booking.price_per_day).toLocaleString()}/day × ${booking.total_days} day${booking.total_days > 1 ? 's' : ''}`
                             }
                         </span>
                     </div>

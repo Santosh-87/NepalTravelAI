@@ -3,8 +3,13 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.shortcuts import get_object_or_404
-from .models import VehicleListing, Booking
-from .serializers import VehicleListingSerializer, BookingSerializer
+from django.utils import timezone
+from .models import VehicleListing, Booking, Rating
+from .serializers import (
+    VehicleListingSerializer, BookingSerializer,
+    VendorNegotiationResponseSerializer, CustomerNegotiationResponseSerializer,
+    RatingSerializer,
+)
 
 class VehicleListingViewSet(viewsets.ModelViewSet):
     """
@@ -84,6 +89,18 @@ class VehicleListingViewSet(viewsets.ModelViewSet):
             raise PermissionError("You can only delete your own listings")
         instance.delete()
 
+    @action(detail=True, methods=['get'], permission_classes=[AllowAny])
+    def ratings(self, request, pk=None):
+        """Public endpoint to get all ratings for a vehicle"""
+        vehicle = self.get_object()
+        ratings_qs = vehicle.ratings.select_related('tourist').order_by('-created_at')
+        serializer = RatingSerializer(ratings_qs, many=True)
+        return Response({
+            'average_rating': float(vehicle.average_rating),
+            'rating_count': vehicle.rating_count,
+            'ratings': serializer.data,
+        })
+
 
 class BookingViewSet(viewsets.ModelViewSet):
     """
@@ -95,11 +112,17 @@ class BookingViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         user = self.request.user
-        
+
+        # Lazy expiration: auto-cancel expired negotiations
+        Booking.objects.filter(
+            negotiation_expires_at__lt=timezone.now(),
+            status__in=['pending_vendor_approval', 'pending_customer_approval'],
+        ).update(status='cancelled', negotiation_status='rejected')
+
         if user.role == 'vendor':
-            return Booking.objects.filter(vehicle_listing__vendor=user)
+            return Booking.objects.filter(vehicle_listing__vendor=user).select_related('vehicle_listing__vendor', 'tourist')
         else:
-            return Booking.objects.filter(tourist=user)
+            return Booking.objects.filter(tourist=user).select_related('vehicle_listing__vendor', 'tourist')
     
     def get_serializer_context(self):
         """Pass request to serializer context"""
@@ -221,7 +244,7 @@ class BookingViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
         
-        if booking.status != 'pending':
+        if booking.status not in ('pending', 'pending_vendor_approval'):
             return Response(
                 {'error': 'Only pending bookings can be rejected'},
                 status=status.HTTP_400_BAD_REQUEST
@@ -237,3 +260,111 @@ class BookingViewSet(viewsets.ModelViewSet):
             'reason': reason,
             'booking': serializer.data
         })
+
+    # --- Price Negotiation Endpoints ---
+
+    @action(detail=True, methods=['post'], url_path='vendor-respond')
+    def vendor_respond(self, request, pk=None):
+        """Vendor responds to customer's price offer: accept, reject, or counter"""
+        booking = self.get_object()
+
+        if booking.vehicle_listing.vendor != request.user:
+            return Response(
+                {'error': 'Only the vehicle owner can respond to offers'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        if booking.status != 'pending_vendor_approval':
+            return Response(
+                {'error': 'This booking is not awaiting vendor approval'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer = VendorNegotiationResponseSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        action_type = serializer.validated_data['action']
+
+        if action_type == 'accept':
+            booking.accept_customer_offer()
+        elif action_type == 'reject':
+            reason = serializer.validated_data.get('reason', '')
+            booking.reject(reason)
+        elif action_type == 'counter':
+            counter_price = serializer.validated_data['counter_price']
+            if counter_price <= booking.customer_offered_price:
+                return Response(
+                    {'error': 'Counter must be higher than customer offer'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            if counter_price > booking.original_price_per_day:
+                return Response(
+                    {'error': 'Counter cannot exceed original price'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            booking.vendor_counter_offer(counter_price)
+
+        return Response(BookingSerializer(booking, context={'request': request}).data)
+
+    @action(detail=True, methods=['post'], url_path='customer-respond')
+    def customer_respond(self, request, pk=None):
+        """Customer responds to vendor's counter-offer: accept or reject"""
+        booking = self.get_object()
+
+        if booking.tourist != request.user:
+            return Response(
+                {'error': 'Only the booking tourist can respond'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        if booking.status != 'pending_customer_approval':
+            return Response(
+                {'error': 'This booking is not awaiting your approval'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer = CustomerNegotiationResponseSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        action_type = serializer.validated_data['action']
+
+        if action_type == 'accept':
+            booking.customer_accept_counter()
+        elif action_type == 'reject':
+            booking.customer_reject_counter()
+
+        return Response(BookingSerializer(booking, context={'request': request}).data)
+
+    # --- Rating Endpoint ---
+
+    @action(detail=True, methods=['post'])
+    def rate(self, request, pk=None):
+        """Customer rates a completed booking"""
+        booking = self.get_object()
+
+        if booking.tourist != request.user:
+            return Response(
+                {'error': 'Only the booking tourist can rate'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        if booking.status != 'completed':
+            return Response(
+                {'error': 'Only completed bookings can be rated'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if hasattr(booking, 'rating'):
+            return Response(
+                {'error': 'This booking has already been rated'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer = RatingSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save(
+            booking=booking,
+            tourist=request.user,
+            vendor=booking.vehicle_listing.vendor,
+            vehicle_listing=booking.vehicle_listing,
+        )
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)

@@ -47,6 +47,8 @@ class AdminBookingSerializer(serializers.ModelSerializer):
             'vehicle_listing', 'vehicle_name', 'vendor_name', 'vendor_email',
             'start_date', 'end_date', 'pickup_location', 'dropoff_location',
             'number_of_passengers', 'total_days', 'price_per_day', 'total_price',
+            'original_price_per_day', 'customer_offered_price', 'vendor_counter_price',
+            'final_price_per_day', 'negotiation_status', 'price_negotiated',
             'contact_number', 'special_requests', 'status', 'admin_notes',
             'created_at', 'updated_at', 'confirmed_at', 'completed_at',
         ]

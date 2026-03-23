@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import marketplaceService from '../services/marketplace';
-import { X, Calendar, MapPin, Users, Phone, AlertCircle, ArrowRight } from 'lucide-react';
+import { X, Calendar, MapPin, Users, Phone, AlertCircle, ArrowRight, Tag, Minus, Plus } from 'lucide-react';
 import './BookingModal.css';
 
 const VALLEY_LOCATIONS = [
@@ -40,14 +40,19 @@ const OUTSIDE_DESTINATIONS = [
 
 const ALL_LOCATIONS = [...VALLEY_LOCATIONS, ...OUTSIDE_DESTINATIONS];
 
-const LOCAL_RATE_FACTOR = 0.6;
+const OV_MARKUP = 1.15; // Outside Valley = Inside Valley price + 15%
+const PRICE_STEP = 100; // +/- increment for fare picker (NPR)
 
 const BookingModal = ({ vehicle, onClose }) => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [step, setStep] = useState(1); // 1: Trip Type, 2: Details, 3: Confirm
+    const [step, setStep] = useState(1); // 1: Trip Type, 2: Details, 3: Price, 4: Confirm
     const [tripType, setTripType] = useState('');
+
+    // Negotiation state
+    const [wantToNegotiate, setWantToNegotiate] = useState(false);
+    const [offeredPrice, setOfferedPrice] = useState('');
 
     const [formData, setFormData] = useState({
         start_date: '',
@@ -61,7 +66,10 @@ const BookingModal = ({ vehicle, onClose }) => {
 
     const today = new Date().toISOString().split('T')[0];
     const isValley = tripType === 'within_valley';
-    const basePrice = Number(vehicle.price_per_day);
+    const basePrice = Number(vehicle.price_per_day); // Listed price = Inside Valley price
+    const effectivePrice = isValley ? basePrice : Math.round(basePrice * OV_MARKUP); // OV = IV + 15%
+    const minOffer = Math.ceil(effectivePrice * 0.85);
+    const maxOffer = Math.floor(effectivePrice * 0.99);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -75,9 +83,10 @@ const BookingModal = ({ vehicle, onClose }) => {
         return diff >= 0 ? Math.round(diff) + 1 : 0;
     };
 
-    const calcTotal = () => {
-        if (isValley) return Math.round(basePrice * LOCAL_RATE_FACTOR);
-        return calcDays() * basePrice;
+    const calcTotal = (priceOverride) => {
+        const price = priceOverride || effectivePrice;
+        if (isValley) return price; // IV: listed price for 1 day
+        return calcDays() * price;  // OV: effective rate × days
     };
 
     const selectTripType = (type) => {
@@ -87,6 +96,8 @@ const BookingModal = ({ vehicle, onClose }) => {
             pickup_location: '', dropoff_location: '',
             number_of_passengers: '', contact_number: '', special_requests: '',
         });
+        setWantToNegotiate(false);
+        setOfferedPrice('');
         setError('');
         setStep(2);
     };
@@ -120,15 +131,30 @@ const BookingModal = ({ vehicle, onClose }) => {
         return true;
     };
 
-    const handleNext = () => {
+    const handleDetailsNext = () => {
         if (validateForm()) setStep(3);
+    };
+
+    const handlePriceNext = () => {
+        if (wantToNegotiate) {
+            const price = parseFloat(offeredPrice);
+            if (!offeredPrice || isNaN(price)) {
+                setError('Please enter your offer price'); return;
+            }
+            if (price < minOffer || price > maxOffer) {
+                setError(`Offer must be between NPR ${minOffer.toLocaleString()} and NPR ${maxOffer.toLocaleString()} (up to 15% off the trip rate)`);
+                return;
+            }
+        }
+        setError('');
+        setStep(4);
     };
 
     const handleSubmit = async () => {
         setLoading(true);
         setError('');
         try {
-            await marketplaceService.createBooking({
+            const bookingData = {
                 vehicle_listing: vehicle.id,
                 trip_type: tripType,
                 start_date: formData.start_date,
@@ -138,9 +164,19 @@ const BookingModal = ({ vehicle, onClose }) => {
                 number_of_passengers: parseInt(formData.number_of_passengers),
                 contact_number: formData.contact_number,
                 special_requests: formData.special_requests,
-            });
+            };
+
+            if (wantToNegotiate && offeredPrice) {
+                bookingData.customer_offered_price = parseFloat(offeredPrice);
+            }
+
+            await marketplaceService.createBooking(bookingData);
             onClose();
-            navigate('/my-bookings', { state: { message: 'Booking request sent successfully!' } });
+
+            const msg = wantToNegotiate
+                ? 'Booking request sent with your price offer! The vendor will review it.'
+                : 'Booking request sent successfully!';
+            navigate('/my-bookings', { state: { message: msg } });
         } catch (err) {
             setError(err.message || 'Failed to create booking');
         } finally {
@@ -151,7 +187,28 @@ const BookingModal = ({ vehicle, onClose }) => {
     const fmtDate = (d) =>
         d ? new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '–';
 
-    const stepLabels = ['Trip Type', 'Details', 'Confirm'];
+    const stepLabels = ['Trip Type', 'Details', 'Price', 'Confirm'];
+
+    const savings = wantToNegotiate && offeredPrice
+        ? effectivePrice - parseFloat(offeredPrice)
+        : 0;
+    const savingsPercent = savings > 0
+        ? Math.round((savings / effectivePrice) * 100)
+        : 0;
+
+    // Step indicator component (reused in all steps)
+    const StepIndicator = () => (
+        <div className="step-indicator">
+            {stepLabels.map((_, i) => (
+                <React.Fragment key={i}>
+                    <div className={`step-dot ${step > i + 1 ? 'step-dot--done' : step === i + 1 ? 'step-dot--active' : ''}`}>
+                        {step > i + 1 ? '✓' : i + 1}
+                    </div>
+                    {i < stepLabels.length - 1 && <div className={`step-line ${step > i + 1 ? 'step-line--done' : ''}`} />}
+                </React.Fragment>
+            ))}
+        </div>
+    );
 
     // ─────────────────────────────────────────────────────────────
     // STEP 1 — Trip Type Selection
@@ -164,16 +221,7 @@ const BookingModal = ({ vehicle, onClose }) => {
                     <button className="modal-close" onClick={onClose}><X size={24} /></button>
                 </div>
 
-                <div className="step-indicator">
-                    {stepLabels.map((_, i) => (
-                        <React.Fragment key={i}>
-                            <div className={`step-dot ${step > i + 1 ? 'step-dot--done' : step === i + 1 ? 'step-dot--active' : ''}`}>
-                                {step > i + 1 ? '✓' : i + 1}
-                            </div>
-                            {i < stepLabels.length - 1 && <div className={`step-line ${step > i + 1 ? 'step-line--done' : ''}`} />}
-                        </React.Fragment>
-                    ))}
-                </div>
+                <StepIndicator />
 
                 <div className="modal-body">
                     <p className="trip-select-heading">Where are you travelling?</p>
@@ -184,8 +232,8 @@ const BookingModal = ({ vehicle, onClose }) => {
                                 <div className="ttc-title">Within Valley</div>
                                 <div className="ttc-desc">Short local trips within Kathmandu, Patan & Bhaktapur</div>
                                 <div className="ttc-rate-box">
-                                    <span className="ttc-rate-label">Flat local rate</span>
-                                    <strong className="ttc-rate-value">NPR {Math.round(basePrice * LOCAL_RATE_FACTOR).toLocaleString()}</strong>
+                                    <span className="ttc-rate-label">Flat rate</span>
+                                    <strong className="ttc-rate-value">NPR {basePrice.toLocaleString()}</strong>
                                 </div>
                             </div>
                             <ArrowRight size={20} className="ttc-arrow" />
@@ -197,8 +245,8 @@ const BookingModal = ({ vehicle, onClose }) => {
                                 <div className="ttc-title">Outside Valley</div>
                                 <div className="ttc-desc">Intercity & long-distance travel — Pokhara, Chitwan, and beyond</div>
                                 <div className="ttc-rate-box">
-                                    <span className="ttc-rate-label">Per-day rate</span>
-                                    <strong className="ttc-rate-value">NPR {basePrice.toLocaleString()}<span className="ttc-per-day">/day</span></strong>
+                                    <span className="ttc-rate-label">Per-day rate (+15%)</span>
+                                    <strong className="ttc-rate-value">NPR {Math.round(basePrice * OV_MARKUP).toLocaleString()}<span className="ttc-per-day">/day</span></strong>
                                 </div>
                             </div>
                             <ArrowRight size={20} className="ttc-arrow" />
@@ -229,16 +277,7 @@ const BookingModal = ({ vehicle, onClose }) => {
                     <button className="modal-close" onClick={onClose}><X size={24} /></button>
                 </div>
 
-                <div className="step-indicator">
-                    {stepLabels.map((_, i) => (
-                        <React.Fragment key={i}>
-                            <div className={`step-dot ${step > i + 1 ? 'step-dot--done' : step === i + 1 ? 'step-dot--active' : ''}`}>
-                                {step > i + 1 ? '✓' : i + 1}
-                            </div>
-                            {i < stepLabels.length - 1 && <div className={`step-line ${step > i + 1 ? 'step-line--done' : ''}`} />}
-                        </React.Fragment>
-                    ))}
-                </div>
+                <StepIndicator />
 
                 {error && (
                     <div className="error-banner">
@@ -376,8 +415,8 @@ const BookingModal = ({ vehicle, onClose }) => {
                                 <span className="fare-label">Estimated Fare</span>
                                 <span className="fare-calc-text">
                                     {isValley
-                                        ? 'Flat local rate'
-                                        : `NPR ${basePrice.toLocaleString()} × ${calcDays()} day${calcDays() !== 1 ? 's' : ''}`
+                                        ? 'Within Valley flat rate'
+                                        : `NPR ${effectivePrice.toLocaleString()} × ${calcDays()} day${calcDays() !== 1 ? 's' : ''}`
                                     }
                                 </span>
                             </div>
@@ -388,8 +427,8 @@ const BookingModal = ({ vehicle, onClose }) => {
 
                 <div className="modal-footer">
                     <button className="btn-secondary" onClick={() => setStep(1)}>Back</button>
-                    <button className="btn-primary" onClick={handleNext}>
-                        Review Booking <ArrowRight size={16} style={{ marginLeft: 4 }} />
+                    <button className="btn-primary" onClick={handleDetailsNext}>
+                        Next: Pricing <ArrowRight size={16} />
                     </button>
                 </div>
             </div>
@@ -397,7 +436,130 @@ const BookingModal = ({ vehicle, onClose }) => {
     );
 
     // ─────────────────────────────────────────────────────────────
-    // STEP 3 — Confirmation
+    // STEP 3 — Price Negotiation (Optional)
+    // ─────────────────────────────────────────────────────────────
+    if (step === 3) return (
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal-content" onClick={e => e.stopPropagation()}>
+                <div className="modal-header">
+                    <div className="header-with-badge">
+                        <h2>Pricing</h2>
+                        <span className={`trip-badge trip-badge--${tripType}`}>
+                            {isValley ? '🏙️ Within Valley' : '🛣️ Outside Valley'}
+                        </span>
+                    </div>
+                    <button className="modal-close" onClick={onClose}><X size={24} /></button>
+                </div>
+
+                <StepIndicator />
+
+                {error && (
+                    <div className="error-banner">
+                        <AlertCircle size={18} />
+                        {error}
+                    </div>
+                )}
+
+                <div className="modal-body">
+                    {/* Current effective price for this trip type */}
+                    <div className="negotiate-current-price">
+                        <Tag size={18} />
+                        <div>
+                            <div className="negotiate-price-label">
+                                {isValley ? 'Within Valley Rate' : 'Outside Valley Rate (+15%)'}
+                            </div>
+                            <div className="negotiate-price-value">NPR {effectivePrice.toLocaleString()}<span className="negotiate-per-day">/day</span></div>
+                        </div>
+                    </div>
+
+                    {/* Toggle: book at listed price or negotiate */}
+                    <div className="negotiate-toggle">
+                        <button
+                            className={`negotiate-option ${!wantToNegotiate ? 'negotiate-option--active' : ''}`}
+                            onClick={() => { setWantToNegotiate(false); setOfferedPrice(''); setError(''); }}
+                        >
+                            Book at Listed Price
+                        </button>
+                        <button
+                            className={`negotiate-option ${wantToNegotiate ? 'negotiate-option--active' : ''}`}
+                            onClick={() => { setWantToNegotiate(true); setOfferedPrice(String(maxOffer)); setError(''); }}
+                        >
+                            Make an Offer
+                        </button>
+                    </div>
+
+                    {wantToNegotiate && (
+                        <div className="negotiate-offer-section">
+                            <div className="fare-picker">
+                                <button
+                                    className="fare-picker-btn"
+                                    onClick={() => {
+                                        const cur = parseInt(offeredPrice) || maxOffer;
+                                        setOfferedPrice(String(Math.max(minOffer, cur - PRICE_STEP)));
+                                    }}
+                                    disabled={parseInt(offeredPrice) <= minOffer}
+                                >
+                                    <Minus size={20} />
+                                </button>
+                                <div className="fare-picker-display">
+                                    <div className="fare-picker-amount">
+                                        NPR {(parseInt(offeredPrice) || maxOffer).toLocaleString()}
+                                    </div>
+                                    <div className="fare-picker-label">Your offer per day</div>
+                                </div>
+                                <button
+                                    className="fare-picker-btn"
+                                    onClick={() => {
+                                        const cur = parseInt(offeredPrice) || maxOffer;
+                                        setOfferedPrice(String(Math.min(maxOffer, cur + PRICE_STEP)));
+                                    }}
+                                    disabled={parseInt(offeredPrice) >= maxOffer}
+                                >
+                                    <Plus size={20} />
+                                </button>
+                            </div>
+                            <div className="fare-picker-hint">
+                                {isValley ? 'Valley' : 'Outside Valley'} rate: NPR {effectivePrice.toLocaleString()}/day
+                            </div>
+
+                            <div className="negotiate-info">
+                                <AlertCircle size={15} />
+                                <p>The vendor can accept, reject, or counter your offer. You'll have one chance to respond to any counter-offer.</p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Total preview */}
+                    <div className="fare-preview" style={{ marginTop: '1rem' }}>
+                        <div className="fare-left">
+                            <span className="fare-label">
+                                {wantToNegotiate && offeredPrice ? 'Estimated Total (at your offer)' : 'Estimated Total'}
+                            </span>
+                            <span className="fare-calc-text">
+                                {isValley
+                                    ? 'Within Valley flat rate'
+                                    : `NPR ${(wantToNegotiate && offeredPrice ? parseFloat(offeredPrice) : effectivePrice).toLocaleString()} × ${calcDays()} day${calcDays() !== 1 ? 's' : ''}`
+                                }
+                            </span>
+                        </div>
+                        <strong className="fare-total">
+                            NPR {calcTotal(wantToNegotiate && offeredPrice ? parseFloat(offeredPrice) : null).toLocaleString()}
+                        </strong>
+                    </div>
+                </div>
+
+                <div className="modal-footer">
+                    <button className="btn-secondary" onClick={() => setStep(2)}>Back</button>
+                    <button className="btn-primary" onClick={handlePriceNext}>
+                        Review Booking <ArrowRight size={16} />
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+
+    // ─────────────────────────────────────────────────────────────
+    // STEP 4 — Confirmation
     // ─────────────────────────────────────────────────────────────
     return (
         <div className="modal-overlay" onClick={onClose}>
@@ -407,16 +569,7 @@ const BookingModal = ({ vehicle, onClose }) => {
                     <button className="modal-close" onClick={onClose}><X size={24} /></button>
                 </div>
 
-                <div className="step-indicator">
-                    {stepLabels.map((_, i) => (
-                        <React.Fragment key={i}>
-                            <div className={`step-dot ${step > i + 1 ? 'step-dot--done' : step === i + 1 ? 'step-dot--active' : ''}`}>
-                                {step > i + 1 ? '✓' : i + 1}
-                            </div>
-                            {i < stepLabels.length - 1 && <div className={`step-line ${step > i + 1 ? 'step-line--done' : ''}`} />}
-                        </React.Fragment>
-                    ))}
-                </div>
+                <StepIndicator />
 
                 {error && (
                     <div className="error-banner">
@@ -500,19 +653,19 @@ const BookingModal = ({ vehicle, onClose }) => {
                         {isValley ? (
                             <>
                                 <div className="cp-row">
-                                    <span>Daily rate</span>
-                                    <span>NPR {basePrice.toLocaleString()}</span>
+                                    <span>Within Valley rate</span>
+                                    <span>NPR {effectivePrice.toLocaleString()}</span>
                                 </div>
-                                <div className="cp-row cp-discount">
-                                    <span>Within Valley discount (40% off)</span>
-                                    <span>− NPR {Math.round(basePrice * 0.4).toLocaleString()}</span>
+                                <div className="cp-row">
+                                    <span>Duration</span>
+                                    <span>1 local trip</span>
                                 </div>
                             </>
                         ) : (
                             <>
                                 <div className="cp-row">
-                                    <span>Daily rate</span>
-                                    <span>NPR {basePrice.toLocaleString()}</span>
+                                    <span>Outside Valley rate (+15%)</span>
+                                    <span>NPR {effectivePrice.toLocaleString()}/day</span>
                                 </div>
                                 <div className="cp-row">
                                     <span>Number of days</span>
@@ -520,10 +673,25 @@ const BookingModal = ({ vehicle, onClose }) => {
                                 </div>
                             </>
                         )}
+
+                        {wantToNegotiate && offeredPrice && (
+                            <div className="cp-row cp-negotiate">
+                                <span>Your Offer Price</span>
+                                <span>NPR {parseFloat(offeredPrice).toLocaleString()}/day ({savingsPercent}% off)</span>
+                            </div>
+                        )}
+
                         <div className="cp-total">
-                            <span>Total Estimate</span>
+                            <span>{wantToNegotiate ? 'Total at Listed Price' : 'Total Estimate'}</span>
                             <strong>NPR {calcTotal().toLocaleString()}</strong>
                         </div>
+
+                        {wantToNegotiate && offeredPrice && (
+                            <div className="cp-total cp-total--offer">
+                                <span>Total at Your Offer</span>
+                                <strong className="cp-offer-price">NPR {calcTotal(parseFloat(offeredPrice)).toLocaleString()}</strong>
+                            </div>
+                        )}
                     </div>
 
                     {formData.special_requests && (
@@ -534,14 +702,18 @@ const BookingModal = ({ vehicle, onClose }) => {
 
                     <div className="booking-notice">
                         <AlertCircle size={16} />
-                        <p>The vendor will review and confirm your booking. You'll be contacted at <strong>{formData.contact_number}</strong>.</p>
+                        {wantToNegotiate ? (
+                            <p>Your price offer of <strong>NPR {parseFloat(offeredPrice).toLocaleString()}/day</strong> will be sent to the vendor for review. They can accept, reject, or counter-offer. You'll be contacted at <strong>{formData.contact_number}</strong>.</p>
+                        ) : (
+                            <p>The vendor will review and confirm your booking. You'll be contacted at <strong>{formData.contact_number}</strong>.</p>
+                        )}
                     </div>
                 </div>
 
                 <div className="modal-footer">
-                    <button className="btn-secondary" onClick={() => setStep(2)}>Back</button>
+                    <button className="btn-secondary" onClick={() => setStep(3)}>Back</button>
                     <button className="btn-confirm" onClick={handleSubmit} disabled={loading}>
-                        {loading ? 'Submitting...' : '✓ Confirm Booking'}
+                        {loading ? 'Submitting...' : wantToNegotiate ? '✓ Submit Offer' : '✓ Confirm Booking'}
                     </button>
                 </div>
             </div>

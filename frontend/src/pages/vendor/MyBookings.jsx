@@ -30,14 +30,9 @@ const MyBookings = () => {
     };
 
     const handleConfirm = async (id) => {
-        if (!window.confirm('Confirm this booking?')) {
-            return;
-        }
-
+        if (!window.confirm('Confirm this booking?')) return;
         try {
             await marketplaceService.confirmBooking(id);
-
-            // Update local state
             setBookings(bookings.map(b =>
                 b.id === id ? { ...b, status: 'confirmed' } : b
             ));
@@ -48,12 +43,9 @@ const MyBookings = () => {
 
     const handleReject = async (id) => {
         const reason = prompt('Reason for rejection (optional):');
-        if (reason === null) return; // User cancelled
-
+        if (reason === null) return;
         try {
             await marketplaceService.rejectBooking(id, reason);
-
-            // Update local state
             setBookings(bookings.map(b =>
                 b.id === id ? { ...b, status: 'rejected' } : b
             ));
@@ -63,14 +55,9 @@ const MyBookings = () => {
     };
 
     const handleComplete = async (id) => {
-        if (!window.confirm('Mark this booking as completed?')) {
-            return;
-        }
-
+        if (!window.confirm('Mark this booking as completed?')) return;
         try {
             await marketplaceService.completeBooking(id);
-
-            // Update local state
             setBookings(bookings.map(b =>
                 b.id === id ? { ...b, status: 'completed' } : b
             ));
@@ -80,14 +67,9 @@ const MyBookings = () => {
     };
 
     const handleCancel = async (id) => {
-        if (!window.confirm('Cancel this booking?')) {
-            return;
-        }
-
+        if (!window.confirm('Cancel this booking?')) return;
         try {
             await marketplaceService.cancelBooking(id);
-
-            // Update local state
             setBookings(bookings.map(b =>
                 b.id === id ? { ...b, status: 'cancelled' } : b
             ));
@@ -96,9 +78,45 @@ const MyBookings = () => {
         }
     };
 
+    // --- Price Negotiation Handlers ---
+
+    const handleAcceptOffer = async (id) => {
+        if (!window.confirm('Accept customer\'s price offer?')) return;
+        try {
+            const updated = await marketplaceService.vendorRespondToOffer(id, { action: 'accept' });
+            setBookings(bookings.map(b => b.id === id ? updated : b));
+        } catch (err) {
+            alert('Failed to accept offer: ' + err.message);
+        }
+    };
+
+    const handleRejectOffer = async (id) => {
+        const reason = prompt('Reason for rejecting the offer (optional):');
+        if (reason === null) return;
+        try {
+            const updated = await marketplaceService.vendorRespondToOffer(id, { action: 'reject', reason });
+            setBookings(bookings.map(b => b.id === id ? updated : b));
+        } catch (err) {
+            alert('Failed to reject offer: ' + err.message);
+        }
+    };
+
+    const handleCounterOffer = async (id, counterPrice) => {
+        try {
+            const updated = await marketplaceService.vendorRespondToOffer(id, { action: 'counter', counter_price: counterPrice });
+            setBookings(bookings.map(b => b.id === id ? updated : b));
+        } catch (err) {
+            alert('Failed to send counter: ' + err.message);
+        }
+    };
+
     const filteredBookings = filter === 'all'
         ? bookings
-        : bookings.filter(b => b.status === filter);
+        : filter === 'offers'
+            ? bookings.filter(b => b.status === 'pending_vendor_approval')
+            : bookings.filter(b => b.status === filter);
+
+    const offersCount = bookings.filter(b => b.status === 'pending_vendor_approval').length;
 
     return (
         <VendorLayout>
@@ -136,6 +154,14 @@ const MyBookings = () => {
                     >
                         Pending ({bookings.filter(b => b.status === 'pending').length})
                     </button>
+                    {offersCount > 0 && (
+                        <button
+                            className={`filter-offers ${filter === 'offers' ? 'active' : ''}`}
+                            onClick={() => setFilter('offers')}
+                        >
+                            Offers ({offersCount})
+                        </button>
+                    )}
                     <button
                         className={filter === 'confirmed' ? 'active' : ''}
                         onClick={() => setFilter('confirmed')}
@@ -190,6 +216,9 @@ const MyBookings = () => {
                                 onReject={handleReject}
                                 onComplete={handleComplete}
                                 onCancel={handleCancel}
+                                onAcceptOffer={handleAcceptOffer}
+                                onRejectOffer={handleRejectOffer}
+                                onCounterOffer={handleCounterOffer}
                             />
                         ))}
                     </div>

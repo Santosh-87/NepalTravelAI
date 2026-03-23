@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
 import marketplaceService from '../services/marketplace';
-import { Search, Filter, Users, MapPin, ChevronRight, X } from 'lucide-react';
+import { Search, Filter, Users, MapPin, ChevronRight, X, Star } from 'lucide-react';
 import './Marketplace.css';
 
 const Marketplace = () => {
@@ -292,6 +292,13 @@ const VehicleMarketplaceCard = ({ vehicle }) => {
                 )}
 
                 <div className="vehicle-card-footer">
+                    {vehicle.rating_count > 0 && (
+                        <div className="vehicle-rating-badge">
+                            <Star size={14} fill="#f59e0b" stroke="#f59e0b" />
+                            <span className="vehicle-rating-score">{Number(vehicle.average_rating).toFixed(1)}</span>
+                            <span className="vehicle-rating-count">({vehicle.rating_count})</span>
+                        </div>
+                    )}
                     <div className="vehicle-price">
                         <span className="price-label">From</span>
                         <span className="price-amount">NPR {vehicle.price_per_day?.toLocaleString()}</span>

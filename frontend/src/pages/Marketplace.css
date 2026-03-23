@@ -503,6 +503,26 @@
   color: var(--mp-accent-dark);
 }
 
+/* --- Rating Badge --- */
+
+.vehicle-rating-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85rem;
+  margin-right: auto;
+}
+
+.vehicle-rating-score {
+  font-weight: 700;
+  color: var(--mp-text);
+}
+
+.vehicle-rating-count {
+  color: var(--mp-muted);
+  font-size: 0.8rem;
+}
+
 /* ============================================
    LOADING & EMPTY STATES
    ============================================ */

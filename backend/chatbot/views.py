@@ -4,6 +4,7 @@ GET  /api/health/  — system status
 POST /api/chat/    — main chat endpoint
 """
 
+import math
 import re
 import time
 import sys
@@ -55,9 +56,8 @@ RULE 2 — VEHICLE SELECTION BY PASSENGER COUNT (use ONLY these exact ranges):
 • 7-14 passengers → Hiace
 • 15-25 passengers → Coaster / Mini Bus
 • 25-35 passengers → Bus
-• 27 people = 1 Bus. 19 people = 1 Coaster. Do NOT suggest multiple vehicles when one fits.
-• Only suggest multiple vehicles if passengers exceed 35.
-• NEVER change or invent capacity numbers. Use the exact ranges above.
+• Use one vehicle when passenger count fits a single range. Multiple vehicles only if count exceeds 35.
+• NEVER invent capacity numbers. Use the exact ranges above.
 
 RULE 3 — ITINERARIES (keep short):
 • Use this exact format — one line per day, no paragraphs:
@@ -115,33 +115,19 @@ RULES:
 
 VEHICLE_RECOMMENDATION_PROMPT = """You are NepalTravel AI, a Nepal travel assistant.
 
-VEHICLE CAPACITY TABLE (use ONLY these exact ranges — do NOT change the numbers):
-• Car: 1-3 passengers
-• Van: 4-6 passengers
-• Jeep: 4-6 passengers (for hills/off-road)
-• Hiace: 7-14 passengers
-• Coaster / Mini Bus: 15-25 passengers
-• Bus: 25-35 passengers
+Help the user choose the right vehicle for their group in Nepal.
 
-RULES:
-1. Read the number of passengers from the question.
-2. Find the vehicle whose range contains that number using the table above.
-3. If passengers exceed 35, suggest multiple vehicles (e.g. 2 x Bus).
-4. NEVER invent capacity numbers. ONLY use the exact ranges from the table above.
-5. A Bus holds 25-35 passengers. 27 people fits in 1 Bus.
-6. A Coaster holds 15-25 passengers. 19 people fits in 1 Coaster.
+If the user has NOT specified a passenger count:
+• Ask: "How many passengers will be travelling?"
+• Do not guess or recommend a specific vehicle without knowing the group size.
 
-Format:
-• Recommended vehicle: [type] ([X]-[Y] passengers)
-• Why: [one sentence]
+If you know the passenger count from the context or question:
+• Recommend the appropriate vehicle in this format:
+  - Recommended vehicle: [type]
+  - Why: [one sentence]
 
-If multiple vehicles needed:
-• Option A: [N] x [vehicle] ([X]-[Y] passengers each)
-• Option B: 1 x [larger vehicle] ([X]-[Y] passengers)
-
-Do NOT show route prices, VAT, NPR amounts, or pricing templates.
-Do NOT mention specific routes unless the user asked about one.
-Keep it to 3-5 lines maximum."""
+Do NOT show prices, VAT, NPR amounts, or route details unless asked.
+Keep the response to 2-3 lines."""
 
 
 # ── Views ─────────────────────────────────────────────────────────────────────
@@ -228,8 +214,8 @@ class ChatView(APIView):
         (1,  3,  ['car', 'suv']),
         (4,  6,  ['suv', 'hiace']),
         (7,  14, ['hiace']),
-        (15, 25, ['coaster']),
-        (26, 35, ['bus']),
+        (15, 24, ['coaster']),
+        (25, 35, ['coaster', 'bus']),
     ]
 
     def _is_passenger_query(self, message: str) -> bool:
@@ -278,6 +264,39 @@ class ChatView(APIView):
         if count > 35:
             return ['bus']
         return []
+
+    # Deterministic vehicle recommendation table — bypasses LLM for accuracy
+    VEHICLE_RECOMMENDATION_TABLE = [
+        (1,  3,  'Car',                '1-3'),
+        (4,  6,  'Van',                '4-6'),
+        (7,  14, 'Hiace',              '7-14'),
+        (15, 24, 'Coaster / Mini Bus', '15-25'),
+        (25, 35, 'Bus',                '25-35'),
+    ]
+
+    def _generate_vehicle_recommendation(self, pax_count):
+        """
+        Generate a deterministic vehicle recommendation string.
+        Bypasses the LLM to avoid numerical reasoning errors in small models.
+        Returns formatted recommendation text.
+        """
+        for pax_min, pax_max, vehicle_name, range_str in self.VEHICLE_RECOMMENDATION_TABLE:
+            if pax_min <= pax_count <= pax_max:
+                return (
+                    f"• Recommended vehicle: {vehicle_name} ({range_str} passengers)\n"
+                    f"• Why: The number of passengers ({pax_count}) falls within the "
+                    f"capacity range of a {vehicle_name}."
+                )
+
+        if pax_count > 35:
+            num_buses = math.ceil(pax_count / 35)
+            return (
+                f"• Recommended: {num_buses} x Bus (25-35 passengers each)\n"
+                f"• Why: {pax_count} passengers exceed the capacity of a single bus "
+                f"(max 35), so {num_buses} buses are needed."
+            )
+
+        return None
 
     def _find_marketplace_vehicles(self, passenger_count=None, vehicle_types_list=None):
         """
@@ -509,8 +528,19 @@ class ChatView(APIView):
                   f"| recommend={is_recommendation} | {message[:60]}")
 
             # ── Step 6: Generate response ─────────────────────────────────
-            answer = _ollama.generate(prompt, system, query_type=query_type)
-            answer = self._clean_response(answer)
+            # For pure vehicle recommendations, use deterministic lookup
+            # instead of LLM to avoid numerical reasoning errors in small models
+            if is_recommendation and pax_count:
+                answer = self._generate_vehicle_recommendation(pax_count)
+                if answer:
+                    print(f"  [DETERMINISTIC] vehicle recommendation for {pax_count} pax (LLM bypassed)")
+                else:
+                    # Fallback to LLM if somehow no match (shouldn't happen)
+                    answer = _ollama.generate(prompt, system, query_type=query_type)
+                    answer = self._clean_response(answer)
+            else:
+                answer = _ollama.generate(prompt, system, query_type=query_type)
+                answer = self._clean_response(answer)
 
             # ── Step 7: Marketplace vehicle lookup ────────────────────────
             marketplace_vehicles = []
