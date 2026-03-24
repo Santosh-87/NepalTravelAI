@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Eye, EyeOff, Filter } from 'lucide-react';
 import AdminLayout from '../../components/admin/AdminLayout';
 import adminService from '../../services/admin';
@@ -13,6 +13,7 @@ const AdminCommunity = () => {
     const [categoryFilter, setCategoryFilter] = useState('');
     const [toast, setToast] = useState('');
     const [actionLoading, setActionLoading] = useState(null);
+    const [expanded, setExpanded] = useState(null);
 
     useEffect(() => {
         loadPosts();
@@ -127,40 +128,75 @@ const AdminCommunity = () => {
                                     <th>Status</th>
                                     <th>Date</th>
                                     <th>Actions</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {posts.map(post => (
-                                    <tr key={post.id} className={!post.is_active ? 'ac-row-inactive' : ''}>
-                                        <td className="ac-title-cell">
-                                            {post.title.length > 50 ? post.title.substring(0, 50) + '...' : post.title}
-                                        </td>
-                                        <td>
-                                            <div className="ac-author">{post.author_name}</div>
-                                            <div className="ac-email">{post.author_email}</div>
-                                        </td>
-                                        <td>
-                                            <span className="ac-category-badge">{getCategoryLabel(post.category)}</span>
-                                        </td>
-                                        <td>{post.likes_count}</td>
-                                        <td>{post.comments_count}</td>
-                                        <td>
-                                            <span className={`ac-status ${post.is_active ? 'ac-active' : 'ac-inactive'}`}>
-                                                {post.is_active ? 'Active' : 'Hidden'}
-                                            </span>
-                                        </td>
-                                        <td>{formatDate(post.created_at)}</td>
-                                        <td>
-                                            <button
-                                                className={`ac-action-btn ${post.is_active ? 'ac-hide-btn' : 'ac-show-btn'}`}
-                                                onClick={() => togglePostActive(post)}
-                                                disabled={actionLoading === post.id}
+                                {posts.map(post => {
+                                    const isOpen = expanded === post.id;
+                                    return (
+                                        <React.Fragment key={post.id}>
+                                            <tr
+                                                className={`ac-row ${!post.is_active ? 'ac-row-inactive' : ''}`}
+                                                onClick={() => setExpanded(isOpen ? null : post.id)}
                                             >
-                                                {post.is_active ? <><EyeOff size={14} /> Hide</> : <><Eye size={14} /> Show</>}
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
+                                                <td className="ac-title-cell">
+                                                    {post.title.length > 50 ? post.title.substring(0, 50) + '...' : post.title}
+                                                </td>
+                                                <td>
+                                                    <div className="ac-author">{post.author_name}</div>
+                                                    <div className="ac-email">{post.author_email}</div>
+                                                </td>
+                                                <td>
+                                                    <span className="ac-category-badge">{getCategoryLabel(post.category)}</span>
+                                                </td>
+                                                <td>{post.likes_count}</td>
+                                                <td>{post.comments_count}</td>
+                                                <td>
+                                                    <span className={`ac-status ${post.is_active ? 'ac-active' : 'ac-inactive'}`}>
+                                                        {post.is_active ? 'Active' : 'Hidden'}
+                                                    </span>
+                                                </td>
+                                                <td>{formatDate(post.created_at)}</td>
+                                                <td>
+                                                    <button
+                                                        className={`ac-action-btn ${post.is_active ? 'ac-hide-btn' : 'ac-show-btn'}`}
+                                                        onClick={(e) => { e.stopPropagation(); togglePostActive(post); }}
+                                                        disabled={actionLoading === post.id}
+                                                    >
+                                                        {post.is_active ? <><EyeOff size={14} /> Hide</> : <><Eye size={14} /> Show</>}
+                                                    </button>
+                                                </td>
+                                                <td>
+                                                    <button className={`ac-expand-btn ${isOpen ? 'open' : ''}`}>
+                                                        ›
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            {isOpen && (
+                                                <tr className="ac-detail-row">
+                                                    <td colSpan={9}>
+                                                        <div className="ac-detail">
+                                                            <div className="ac-detail-heading">Post Content</div>
+                                                            <div className="ac-post-content">
+                                                                {post.content || 'No content available.'}
+                                                            </div>
+                                                            <div className="ac-detail-actions">
+                                                                <button
+                                                                    className={`ac-action-btn ${post.is_active ? 'ac-hide-btn' : 'ac-show-btn'}`}
+                                                                    onClick={(e) => { e.stopPropagation(); togglePostActive(post); }}
+                                                                    disabled={actionLoading === post.id}
+                                                                >
+                                                                    {post.is_active ? <><EyeOff size={14} /> Hide</> : <><Eye size={14} /> Show</>}
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </React.Fragment>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>

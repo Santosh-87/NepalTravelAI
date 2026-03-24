@@ -140,7 +140,7 @@ class AdminVehiclesView(APIView):
                 Q(vehicle_number__icontains=search)
             )
 
-        serializer = AdminVehicleSerializer(queryset, many=True)
+        serializer = AdminVehicleSerializer(queryset, many=True, context={'request': request})
         return Response(serializer.data)
 
 
@@ -221,6 +221,7 @@ class AdminCommunityPostsView(APIView):
         data = [{
             'id': p.id,
             'title': p.title,
+            'content': p.content,
             'author_name': p.author.full_name,
             'author_email': p.author.email,
             'category': p.category,
