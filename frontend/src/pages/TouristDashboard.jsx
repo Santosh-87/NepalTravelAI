@@ -4,8 +4,37 @@ import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
 import marketplaceService from '../services/marketplace';
 import authService from '../services/auth';
-import { Calendar, Car, CheckCircle, Clock, ArrowRight } from 'lucide-react';
+import {
+    Calendar,
+    Car,
+    CheckCircle,
+    Clock,
+    ArrowRight,
+    MessageSquare,
+    MapPin,
+} from 'lucide-react';
 import './TouristDashboard.css';
+
+const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+};
+
+const STATUS_STYLES = {
+    pending: 'td-booking-status--pending',
+    confirmed: 'td-booking-status--confirmed',
+    completed: 'td-booking-status--completed',
+    cancelled: 'td-booking-status--cancelled',
+};
+
+const STATS_CONFIG = [
+    { key: 'total', icon: Calendar, label: 'Total Bookings', color: 'var(--td-stat-total)' },
+    { key: 'pending', icon: Clock, label: 'Pending', color: 'var(--td-stat-pending)', filter: 'pending' },
+    { key: 'confirmed', icon: CheckCircle, label: 'Confirmed', color: 'var(--td-stat-confirmed)', filter: 'confirmed' },
+    { key: 'completed', icon: Car, label: 'Completed', color: 'var(--td-stat-completed)', filter: 'completed' },
+];
 
 const TouristDashboard = () => {
     const [bookings, setBookings] = useState([]);
@@ -20,55 +49,35 @@ const TouristDashboard = () => {
         try {
             setLoading(true);
             const [bookingsData, userData] = await Promise.all([
-                marketplaceService.getMyBookingsAsTourist(),
-                authService.getProfile()
+                marketplaceService.getMyBookings(),
+                authService.getProfile(),
             ]);
-
             setBookings(bookingsData);
             setUser(userData);
         } catch (err) {
-            console.error('Failed to load data:', err);
+            console.error('Failed to load dashboard data:', err);
         } finally {
             setLoading(false);
         }
     };
 
-    const stats = [
-        {
-            icon: Calendar,
-            label: 'Total Bookings',
-            value: bookings.length,
-            color: '#667eea'
-        },
-        {
-            icon: Clock,
-            label: 'Pending',
-            value: bookings.filter(b => b.status === 'pending').length,
-            color: '#ffc107'
-        },
-        {
-            icon: CheckCircle,
-            label: 'Confirmed',
-            value: bookings.filter(b => b.status === 'confirmed').length,
-            color: '#28a745'
-        },
-        {
-            icon: Car,
-            label: 'Completed',
-            value: bookings.filter(b => b.status === 'completed').length,
-            color: '#17a2b8'
-        }
-    ];
+    const getStatValue = (stat) => {
+        if (stat.key === 'total') return bookings.length;
+        return bookings.filter((b) => b.status === stat.filter).length;
+    };
 
     const recentBookings = bookings.slice(0, 3);
+    const firstName = user?.full_name?.split(' ')[0] || 'Traveler';
 
     if (loading) {
         return (
             <>
                 <Navigation />
-                <div className="loading-page">
-                    <div className="loader"></div>
-                    <p>Loading dashboard...</p>
+                <div className="tourist-dashboard">
+                    <div className="td-loading">
+                        <div className="td-spinner" />
+                        <p>Loading your dashboard...</p>
+                    </div>
                 </div>
                 <Footer />
             </>
@@ -81,85 +90,127 @@ const TouristDashboard = () => {
 
             <div className="tourist-dashboard">
                 <div className="container">
-                    {/* Welcome Section */}
-                    <div className="dashboard-welcome">
-                        <div>
-                            <h1>Welcome back, {user?.full_name?.split(' ')[0] || 'Traveler'}!</h1>
+                    {/* Welcome Banner */}
+                    <div className="td-welcome">
+                        <div className="td-welcome-text">
+                            <div className="td-welcome-greeting">{getGreeting()}</div>
+                            <h1>Welcome back, {firstName}!</h1>
                             <p>Plan your next adventure in Nepal</p>
                         </div>
-                        <Link to="/marketplace" className="btn-primary">
-                            <Car size={20} />
+                        <Link to="/marketplace" className="td-welcome-cta">
+                            <Car size={18} />
                             Browse Vehicles
                         </Link>
                     </div>
 
-                    {/* Stats Grid */}
-                    <div className="stats-grid">
-                        {stats.map((stat, index) => (
-                            <div key={index} className="stat-card">
-                                <div
-                                    className="stat-icon"
-                                    style={{ background: `${stat.color}15`, color: stat.color }}
-                                >
-                                    <stat.icon size={24} />
+                    {/* Stats */}
+                    <div className="td-stats">
+                        {STATS_CONFIG.map((stat) => {
+                            const Icon = stat.icon;
+                            return (
+                                <div key={stat.key} className="td-stat-card">
+                                    <div
+                                        className="td-stat-icon"
+                                        style={{
+                                            background: `color-mix(in srgb, ${stat.color} 12%, transparent)`,
+                                            color: stat.color,
+                                        }}
+                                    >
+                                        <Icon size={22} />
+                                    </div>
+                                    <div>
+                                        <div className="td-stat-value">{getStatValue(stat)}</div>
+                                        <div className="td-stat-label">{stat.label}</div>
+                                    </div>
                                 </div>
-                                <div className="stat-content">
-                                    <div className="stat-value">{stat.value}</div>
-                                    <div className="stat-label">{stat.label}</div>
-                                </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
 
-                    {/* Recent Bookings */}
-                    <div className="dashboard-section">
-                        <div className="section-header">
-                            <h2>Recent Bookings</h2>
-                            <Link to="/my-bookings" className="view-all">
-                                View All
-                                <ArrowRight size={16} />
-                            </Link>
+                    {/* Content: Bookings + Quick Actions */}
+                    <div className="td-content-grid">
+                        {/* Recent Bookings */}
+                        <div className="td-section">
+                            <div className="td-section-header">
+                                <h2>Recent Bookings</h2>
+                                {bookings.length > 0 && (
+                                    <Link to="/my-bookings" className="td-view-all">
+                                        View All
+                                        <ArrowRight size={14} />
+                                    </Link>
+                                )}
+                            </div>
+
+                            {recentBookings.length === 0 ? (
+                                <div className="td-empty">
+                                    <div className="td-empty-icon">
+                                        <Calendar size={28} />
+                                    </div>
+                                    <h3>No bookings yet</h3>
+                                    <p>Start your journey by booking a vehicle</p>
+                                    <Link to="/marketplace" className="td-empty-cta">
+                                        <Car size={16} />
+                                        Browse Vehicles
+                                    </Link>
+                                </div>
+                            ) : (
+                                <div className="td-bookings-list">
+                                    {recentBookings.map((booking) => (
+                                        <BookingPreviewCard
+                                            key={booking.id}
+                                            booking={booking}
+                                        />
+                                    ))}
+                                </div>
+                            )}
                         </div>
 
-                        {recentBookings.length === 0 ? (
-                            <div className="empty-bookings">
-                                <div className="empty-icon">🚗</div>
-                                <h3>No bookings yet</h3>
-                                <p>Start your journey by booking a vehicle</p>
-                                <Link to="/marketplace" className="btn-primary">
-                                    Browse Vehicles
+                        {/* Quick Actions Sidebar */}
+                        <div className="td-section">
+                            <div className="td-section-header">
+                                <h2>Quick Actions</h2>
+                            </div>
+                            <div className="td-actions-list">
+                                <Link to="/marketplace" className="td-action-card">
+                                    <div className="td-action-icon">
+                                        <Car size={20} />
+                                    </div>
+                                    <div className="td-action-text">
+                                        <h3>Browse Vehicles</h3>
+                                        <p>Find your perfect ride</p>
+                                    </div>
+                                </Link>
+
+                                <Link to="/my-bookings" className="td-action-card">
+                                    <div className="td-action-icon">
+                                        <Calendar size={20} />
+                                    </div>
+                                    <div className="td-action-text">
+                                        <h3>My Bookings</h3>
+                                        <p>View booking history</p>
+                                    </div>
+                                </Link>
+
+                                <Link to="/trips" className="td-action-card">
+                                    <div className="td-action-icon">
+                                        <MapPin size={20} />
+                                    </div>
+                                    <div className="td-action-text">
+                                        <h3>Trip Templates</h3>
+                                        <p>Pre-planned itineraries</p>
+                                    </div>
+                                </Link>
+
+                                <Link to="/chat" className="td-action-card">
+                                    <div className="td-action-icon">
+                                        <MessageSquare size={20} />
+                                    </div>
+                                    <div className="td-action-text">
+                                        <h3>AI Assistant</h3>
+                                        <p>Get travel recommendations</p>
+                                    </div>
                                 </Link>
                             </div>
-                        ) : (
-                            <div className="bookings-preview">
-                                {recentBookings.map(booking => (
-                                    <BookingPreviewCard key={booking.id} booking={booking} />
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Quick Actions */}
-                    <div className="quick-actions">
-                        <h2>Quick Actions</h2>
-                        <div className="actions-grid">
-                            <Link to="/marketplace" className="action-card">
-                                <Car size={32} />
-                                <h3>Browse Vehicles</h3>
-                                <p>Find your perfect ride</p>
-                            </Link>
-
-                            <Link to="/my-bookings" className="action-card">
-                                <Calendar size={32} />
-                                <h3>My Bookings</h3>
-                                <p>View booking history</p>
-                            </Link>
-
-                            <Link to="/chat" className="action-card">
-                                <div style={{ fontSize: '32px' }}>🤖</div>
-                                <h3>AI Assistant</h3>
-                                <p>Get travel recommendations</p>
-                            </Link>
                         </div>
                     </div>
                 </div>
@@ -170,36 +221,30 @@ const TouristDashboard = () => {
     );
 };
 
-// Booking Preview Card
 const BookingPreviewCard = ({ booking }) => {
-    const statusColors = {
-        pending: { bg: '#fff3cd', color: '#856404' },
-        confirmed: { bg: '#d4edda', color: '#155724' },
-        cancelled: { bg: '#f8d7da', color: '#721c24' },
-        completed: { bg: '#d1ecf1', color: '#0c5460' },
-    };
-
-    const status = statusColors[booking.status] || statusColors.pending;
+    const statusClass = STATUS_STYLES[booking.status] || STATUS_STYLES.pending;
 
     return (
-        <div className="booking-preview-card">
-            <div className="preview-header">
-                <h4>{booking.vehicle_name}</h4>
-                <span
-                    className="preview-status"
-                    style={{ background: status.bg, color: status.color }}
-                >
+        <Link to="/my-bookings" className="td-booking-card">
+            <div className="td-booking-top">
+                <h4 className="td-booking-vehicle">{booking.vehicle_name}</h4>
+                <span className={`td-booking-status ${statusClass}`}>
                     {booking.status}
                 </span>
             </div>
-            <div className="preview-details">
-                <span>{new Date(booking.start_date).toLocaleDateString()}</span>
-                <span>•</span>
-                <span>{booking.total_days} day{booking.total_days > 1 ? 's' : ''}</span>
-                <span>•</span>
-                <span>NPR {booking.total_price.toLocaleString()}</span>
+            <div className="td-booking-meta">
+                <span>
+                    <Calendar size={13} />
+                    {new Date(booking.start_date).toLocaleDateString()}
+                </span>
+                <span className="td-separator" />
+                <span>
+                    {booking.total_days} day{booking.total_days > 1 ? 's' : ''}
+                </span>
+                <span className="td-separator" />
+                <span>NPR {booking.total_price?.toLocaleString()}</span>
             </div>
-        </div>
+        </Link>
     );
 };
 
