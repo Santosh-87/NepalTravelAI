@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Mountain, Sparkles, Users, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import Navigation from '../components/Navigation';
+import Navigation from '../../components/shared/Navigation';
 import axios from 'axios';
 import './ChatPage.css';
 

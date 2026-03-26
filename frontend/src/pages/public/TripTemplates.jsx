@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import Navigation from '../components/Navigation';
-import Footer from '../components/Footer';
-import tripsService from '../services/trips';
+import Navigation from '../../components/shared/Navigation';
+import Footer from '../../components/shared/Footer';
+import tripsService from '../../services/trips';
 import { Mountain, Calendar, TrendingUp, DollarSign, ChevronRight, Filter, X, Sun } from 'lucide-react';
 import './TripTemplates.css';
 

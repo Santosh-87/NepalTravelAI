@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { User, Store, Eye, EyeOff, Check, Mountain, ArrowLeft, Loader2 } from 'lucide-react';
-import Navigation from '../components/Navigation';
-import authService from '../services/auth';
+import Navigation from '../../components/shared/Navigation';
+import authService from '../../services/auth';
 import './SignUp.css';
 
 const SignUpPage = () => {

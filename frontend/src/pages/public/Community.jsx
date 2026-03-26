@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import Navigation from '../components/Navigation';
-import Footer from '../components/Footer';
-import RedditTrending from '../components/RedditTrending';
-import communityService from '../services/community';
-import { useAuth } from '../context/AuthContext';
+import Navigation from '../../components/shared/Navigation';
+import Footer from '../../components/shared/Footer';
+import RedditTrending from '../../components/tourist/RedditTrending';
+import communityService from '../../services/community';
+import { useAuth } from '../../context/AuthContext';
 import {
     Heart, MessageCircle, MapPin, Clock, Plus, Search, X, Image, Send, Users
 } from 'lucide-react';

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import Navigation from '../components/Navigation';
-import Footer from '../components/Footer';
-import marketplaceService from '../services/marketplace';
+import Navigation from '../../components/shared/Navigation';
+import Footer from '../../components/shared/Footer';
+import marketplaceService from '../../services/marketplace';
 import { Search, Filter, Users, MapPin, ChevronRight, X, Star } from 'lucide-react';
 import './Marketplace.css';
 

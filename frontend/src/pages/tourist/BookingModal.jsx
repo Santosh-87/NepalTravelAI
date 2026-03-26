@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import marketplaceService from '../services/marketplace';
+import marketplaceService from '../../services/marketplace';
 import { X, Calendar, MapPin, Users, Phone, AlertCircle, ArrowRight, Tag, Minus, Plus } from 'lucide-react';
 import './BookingModal.css';
 

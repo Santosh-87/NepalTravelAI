@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Clock, Mail, CheckCircle } from 'lucide-react';
-import Navigation from '../components/Navigation';
+import Navigation from '../../components/shared/Navigation';
 
 const VendorPending = () => {
     return (

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Star, AlertCircle } from 'lucide-react';
-import marketplaceService from '../services/marketplace';
+import marketplaceService from '../../services/marketplace';
 import './RatingModal.css';
 
 const StarPicker = ({ value, onChange, size = 24 }) => {

@@ -1,26 +1,31 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import ProtectedRoute from './components/ProtectedRoute';
+import ProtectedRoute from './components/shared/ProtectedRoute';
 import { useAuth } from './context/AuthContext';
 
-import HomePage from './pages/HomePage';
-import ChatPage from './pages/ChatPage';
-import SignUpPage from './pages/SignUp';
-import LoginPage from './pages/Login';
-import VendorPending from './pages/VendorPending';
+// Public pages
+import HomePage from './pages/public/HomePage';
+import SignUpPage from './pages/public/SignUp';
+import LoginPage from './pages/public/Login';
+import Marketplace from './pages/public/Marketplace';
+import VehicleDetails from './pages/public/VehicleDetails';
+import TripTemplates from './pages/public/TripTemplates';
+import TripTemplateDetail from './pages/public/TripTemplateDetail';
+import Community from './pages/public/Community';
+import PostDetail from './pages/public/PostDetail';
+
+// Tourist pages
+import TouristDashboard from './pages/tourist/TouristDashboard';
+import MyBookings from './pages/tourist/MyBookings';
+import ChatPage from './pages/tourist/ChatPage';
+
+// Vendor pages
+import VendorPending from './pages/vendor/VendorPending';
 import VendorDashboard from './pages/vendor/VendorDashboard';
 import AddVehicle from './pages/vendor/AddVehicle';
 import MyListings from './pages/vendor/MyListings';
 import EditVehicle from './pages/vendor/EditVehicle';
 import VendorBookings from './pages/vendor/MyBookings';
-import Marketplace from './pages/Marketplace';
-import VehicleDetails from './pages/VehicleDetails';
-import MyBookings from './pages/MyBookings';
-import TouristDashboard from './pages/TouristDashboard';
-import TripTemplates from './pages/TripTemplates';
-import TripTemplateDetail from './pages/TripTemplateDetail';
-import Community from './pages/Community';
-import PostDetail from './pages/PostDetail';
 
 // Admin pages
 import AdminDashboard from './pages/admin/AdminDashboard';

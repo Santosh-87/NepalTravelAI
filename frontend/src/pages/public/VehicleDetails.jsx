@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import Navigation from '../components/Navigation';
-import Footer from '../components/Footer';
-import marketplaceService from '../services/marketplace';
-import BookingModal from '../pages/BookingModal';
-import authService from '../services/auth';
+import Navigation from '../../components/shared/Navigation';
+import Footer from '../../components/shared/Footer';
+import marketplaceService from '../../services/marketplace';
+import BookingModal from '../tourist/BookingModal';
+import authService from '../../services/auth';
 import {
     Users, MapPin, Phone, ArrowLeft, Calendar, CheckCircle, Star
 } from 'lucide-react';

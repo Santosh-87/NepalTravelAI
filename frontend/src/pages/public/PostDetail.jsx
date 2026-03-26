@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import Navigation from '../components/Navigation';
-import Footer from '../components/Footer';
-import communityService from '../services/community';
-import { useAuth } from '../context/AuthContext';
+import Navigation from '../../components/shared/Navigation';
+import Footer from '../../components/shared/Footer';
+import communityService from '../../services/community';
+import { useAuth } from '../../context/AuthContext';
 import {
     Heart, MessageCircle, MapPin, Clock, ArrowLeft, Send, Reply, Trash2
 } from 'lucide-react';

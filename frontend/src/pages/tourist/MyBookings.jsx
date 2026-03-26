@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import Navigation from '../components/Navigation';
-import Footer from '../components/Footer';
-import RatingModal from '../components/RatingModal';
-import marketplaceService from '../services/marketplace';
+import Navigation from '../../components/shared/Navigation';
+import Footer from '../../components/shared/Footer';
+import RatingModal from '../../components/tourist/RatingModal';
+import marketplaceService from '../../services/marketplace';
 import { Calendar, MapPin, User, Phone, CheckCircle, XCircle, Clock, AlertCircle, Star, DollarSign } from 'lucide-react';
 import './MyBookings.css';
 
