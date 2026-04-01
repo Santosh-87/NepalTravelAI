@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import authService from '../../services/auth';
 import { useAuth } from '../../context/AuthContext';
+import LogoutModal from '../shared/LogoutModal';
 import './VendorLayout.css';
 
 const NAV_ITEMS = [
@@ -16,7 +17,8 @@ const NAV_ITEMS = [
 ];
 
 const VendorLayout = ({ children }) => {
-    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [sidebarOpen,   setSidebarOpen]   = useState(false);
+    const [confirmLogout, setConfirmLogout] = useState(false);
     const [user, setUser] = useState(null);
     const navigate = useNavigate();
     const { signOut } = useAuth();
@@ -27,13 +29,24 @@ const VendorLayout = ({ children }) => {
             .catch(() => {});
     }, []);
 
-    const handleLogout = async () => {
+    const handleLogout = () => setConfirmLogout(true);
+
+    const doLogout = async () => {
+        setConfirmLogout(false);
         await signOut();
         navigate('/login', { replace: true });
     };
 
     return (
         <div className="vendor-layout">
+            {/* Logout confirmation */}
+            {confirmLogout && (
+                <LogoutModal
+                    onConfirm={doLogout}
+                    onCancel={() => setConfirmLogout(false)}
+                />
+            )}
+
             {/* Mobile overlay */}
             {sidebarOpen && (
                 <div

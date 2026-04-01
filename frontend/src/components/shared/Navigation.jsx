@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Menu, X, Mountain, LogOut, User, ChevronDown, Settings } from 'lucide-react';
 import authService from '../../services/auth';
 import { useAuth } from '../../context/AuthContext';
+import LogoutModal from './LogoutModal';
 import './Navigation.css';
 
 const Navigation = () => {
@@ -11,6 +12,7 @@ const Navigation = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [confirmLogout, setConfirmLogout] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const profileRef = useRef(null);
@@ -56,17 +58,18 @@ const Navigation = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Logout handler
-  const handleLogout = async () => {
-    console.log('Logging out...');
-
-    await signOut();
-
-    setUser(null);
+  // Show confirmation modal
+  const handleLogout = () => {
     setIsProfileOpen(false);
     setIsMobileMenuOpen(false);
+    setConfirmLogout(true);
+  };
 
-    console.log('Redirecting to login...');
+  // Confirmed — actually sign out
+  const doLogout = async () => {
+    setConfirmLogout(false);
+    await signOut();
+    setUser(null);
     navigate('/login', { replace: true });
   };
 
@@ -104,6 +107,13 @@ const Navigation = () => {
   }
 
   return (
+    <>
+    {confirmLogout && (
+      <LogoutModal
+        onConfirm={doLogout}
+        onCancel={() => setConfirmLogout(false)}
+      />
+    )}
     <nav className={`navigation ${isScrolled ? 'scrolled' : ''}`}>
       <div className="container">
         <div className="nav-content">
@@ -290,6 +300,7 @@ const Navigation = () => {
         )}
       </div>
     </nav>
+    </>
   );
 };
 

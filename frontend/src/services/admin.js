@@ -26,6 +26,11 @@ class AdminService {
         return this._request('/stats/');
     }
 
+    // Analytics (chart data)
+    getAnalytics() {
+        return this._request('/analytics/');
+    }
+
     // Users
     getUsers(params = {}) {
         const qs = new URLSearchParams(params).toString();

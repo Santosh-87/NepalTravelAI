@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import get_user_model
 from django.db.models import Count, Sum, Q
+from django.utils import timezone
 
 from marketplace.models import VehicleListing, Booking
 from community.models import CommunityPost
@@ -254,3 +255,66 @@ class AdminCommunityPostActionView(APIView):
             return Response({'message': f'Post "{post.title}" activated.'})
 
         return Response({'error': 'Invalid action.'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AdminAnalyticsView(APIView):
+    """GET /api/admin-panel/analytics/ — chart data for the dashboard."""
+    permission_classes = [IsAdminUser]
+
+    def get(self, request):
+        from datetime import datetime as dt
+
+        now = timezone.now()
+
+        # ---- Monthly trends: last 6 calendar months ----
+        monthly_trends = []
+        for i in range(5, -1, -1):
+            year = now.year
+            month = now.month - i
+            while month <= 0:
+                month += 12
+                year -= 1
+
+            label = dt(year, month, 1).strftime('%b')
+
+            bookings_count = Booking.objects.filter(
+                created_at__year=year,
+                created_at__month=month,
+            ).count()
+
+            revenue = Booking.objects.filter(
+                status__in=['confirmed', 'completed'],
+                created_at__year=year,
+                created_at__month=month,
+            ).aggregate(total=Sum('total_price'))['total'] or 0
+
+            monthly_trends.append({
+                'month': label,
+                'bookings': bookings_count,
+                'revenue': float(revenue),
+            })
+
+        # ---- Booking status distribution ----
+        status_counts = Booking.objects.values('status').annotate(count=Count('id'))
+        booking_status_dist = [
+            {'status': s['status'].capitalize(), 'count': s['count']}
+            for s in status_counts
+        ]
+
+        # ---- Vehicle type distribution ----
+        vehicle_type_dist = [
+            {
+                'type': v['vehicle_type'].replace('_', ' ').title(),
+                'count': v['count'],
+            }
+            for v in VehicleListing.objects
+            .values('vehicle_type')
+            .annotate(count=Count('id'))
+            .order_by('-count')
+        ]
+
+        return Response({
+            'monthly_trends': monthly_trends,
+            'booking_status_dist': booking_status_dist,
+            'vehicle_type_dist': vehicle_type_dist,
+        })

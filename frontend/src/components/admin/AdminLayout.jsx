@@ -5,6 +5,7 @@ import {
     LogOut, Menu, X, ChevronRight,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import LogoutModal from '../shared/LogoutModal';
 import './AdminLayout.css';
 
 const NAV_ITEMS = [
@@ -16,17 +17,29 @@ const NAV_ITEMS = [
 ];
 
 const AdminLayout = ({ children, user }) => {
-    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [sidebarOpen,  setSidebarOpen]  = useState(false);
+    const [confirmLogout, setConfirmLogout] = useState(false);
     const navigate = useNavigate();
     const { signOut } = useAuth();
 
-    const handleLogout = async () => {
+    const handleLogout = () => setConfirmLogout(true);
+
+    const doLogout = async () => {
+        setConfirmLogout(false);
         await signOut();
         navigate('/login', { replace: true });
     };
 
     return (
         <div className="admin-layout">
+            {/* Logout confirmation */}
+            {confirmLogout && (
+                <LogoutModal
+                    onConfirm={doLogout}
+                    onCancel={() => setConfirmLogout(false)}
+                />
+            )}
+
             {/* Mobile overlay */}
             {sidebarOpen && (
                 <div

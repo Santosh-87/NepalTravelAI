@@ -82,11 +82,11 @@
 
 .bookings-hero-content h1 {
   font-family: var(--mb-font-display);
-  font-size: clamp(1.875rem, 4vw, 2.625rem);
+  font-size: clamp(1.25rem, 2.2vw, 1.625rem);
   font-weight: 700;
   color: #ffffff;
   margin: 0 0 0.5rem;
-  line-height: 1.15;
+  line-height: 1.2;
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 

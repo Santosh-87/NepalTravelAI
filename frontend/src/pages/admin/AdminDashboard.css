@@ -316,11 +316,131 @@
 }
 
 /* ============================================
+   ANALYTICS CHARTS
+   ============================================ */
+
+/* Chart row grid */
+.adp-charts-row {
+    display: grid;
+    gap: 1.25rem;
+}
+
+.adp-charts-row--60-40 { grid-template-columns: 3fr 2fr; }
+.adp-charts-row--50-50 { grid-template-columns: 1fr 1fr; }
+
+/* Chart card */
+.adp-chart-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 1.375rem 1.5rem 1.5rem;
+    border: 1px solid var(--adp-border);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.adp-chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+}
+
+.adp-chart-header .adp-section-title { margin-bottom: 0; }
+
+.adp-chart-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748b;
+    background: #f1f5f9;
+    padding: 0.25rem 0.625rem;
+    border-radius: 50px;
+    white-space: nowrap;
+}
+
+/* Donut wrap + center label */
+.adp-donut-wrap { position: relative; }
+
+.adp-donut-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    pointer-events: none;
+    line-height: 1.2;
+}
+
+.adp-donut-total {
+    display: block;
+    font-family: var(--adp-font-display);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.adp-donut-label {
+    display: block;
+    font-size: 0.72rem;
+    color: #64748b;
+    font-weight: 500;
+    margin-top: 2px;
+}
+
+/* Donut legend */
+.adp-donut-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    margin-top: 0.875rem;
+}
+
+.adp-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.82rem;
+}
+
+.adp-legend-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.adp-legend-name {
+    color: #374151;
+    font-weight: 500;
+    flex: 1;
+}
+
+.adp-legend-count {
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 0.85rem;
+}
+
+/* Empty state inside chart cards */
+.adp-chart-empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #94a3b8;
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+/* ============================================
    RESPONSIVE
    ============================================ */
 @media (max-width: 1200px) {
     .adp-stat-grid {
         grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 1100px) {
+    .adp-charts-row--60-40,
+    .adp-charts-row--50-50 {
+        grid-template-columns: 1fr;
     }
 }
 
