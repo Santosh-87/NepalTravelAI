@@ -291,8 +291,8 @@
   justify-content: flex-end;
 }
 
-.btn-secondary,
-.btn-primary {
+.bm-btn-secondary,
+.bm-btn-primary {
   padding: 12px 24px;
   border-radius: 8px;
   font-weight: 500;
@@ -305,27 +305,27 @@
   white-space: nowrap;
 }
 
-.btn-secondary {
+.bm-btn-secondary {
   background: white;
   color: #495057;
   border: 1px solid #ced4da;
 }
 
-.btn-secondary:hover {
+.bm-btn-secondary:hover {
   background: #f8f9fa;
 }
 
-.btn-primary {
+.bm-btn-primary {
   background: #667eea;
   color: white;
   border: none;
 }
 
-.btn-primary:hover {
+.bm-btn-primary:hover {
   background: #5568d3;
 }
 
-.btn-primary:disabled {
+.bm-btn-primary:disabled {
   background: #c8d0f0;
   cursor: not-allowed;
 }

@@ -1,17 +1,21 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { User, Store, Eye, EyeOff, Check, Mountain, ArrowLeft, Loader2 } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { User, Store, Eye, EyeOff, Check, ArrowLeft, Loader2 } from 'lucide-react';
 import Navigation from '../../components/shared/Navigation';
+import { useAuth } from '../../context/AuthContext';
 import authService from '../../services/auth';
+import logoSvg from '../../assets/logo.svg';
 import './SignUp.css';
 
 const SignUpPage = () => {
+  const { updateUser } = useAuth();
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [selectedRole, setSelectedRole] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
+  const [showSuccess, setShowSuccess] = useState(false);
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
@@ -109,10 +113,9 @@ const SignUpPage = () => {
 
     setIsLoading(true);
     setErrors({});
-    setSuccessMessage('');
 
     try {
-      // Build payload for authService — matches Django backend field names
+      // Build payload — matches Django backend field names
       const userData = {
         email: formData.email,
         password: formData.password,
@@ -127,25 +130,46 @@ const SignUpPage = () => {
         }),
       };
 
-      await authService.register(userData);
+      // Register and store tokens, but don't update AuthContext yet
+      // so GuestRoute won't redirect before the success message shows.
+      const newUser = await authService.register(userData);
 
-      setIsLoading(false);
-      setSuccessMessage(`Welcome, ${formData.full_name.split(' ')[0]}! Account created. Redirecting to login...`);
+      // Show success message
+      setShowSuccess(true);
 
+      // After a brief delay, update context and navigate to dashboard
       setTimeout(() => {
-        window.location.href = '/login';
+        updateUser(newUser);
+
+        if (newUser.is_staff) navigate('/admin/dashboard', { replace: true });
+        else if (newUser.role === 'vendor') navigate(newUser.is_vendor_approved ? '/vendor/dashboard' : '/vendor/pending', { replace: true });
+        else navigate('/tourist/dashboard', { replace: true });
       }, 2000);
 
     } catch (error) {
       console.error('Signup error:', error);
       setIsLoading(false);
 
-      if (error.message?.toLowerCase().includes('email') && error.message?.toLowerCase().includes('exist')) {
+      const errorMsg = error.message || 'Something went wrong. Please try again.';
+
+      if (errorMsg.toLowerCase().includes('email') && errorMsg.toLowerCase().includes('exist')) {
         setErrors({ email: 'This email is already registered. Please sign in.' });
-      } else if (error.message?.toLowerCase().includes('password')) {
-        setErrors({ password: error.message });
+      } else if (errorMsg.toLowerCase().includes('password')) {
+        setErrors({ password: errorMsg });
+      } else if (errorMsg.toLowerCase().includes('email:')) {
+        setErrors({ email: errorMsg.replace('email: ', '') });
+      } else if (errorMsg.toLowerCase().includes('full_name:')) {
+        setErrors({ full_name: errorMsg.replace('full_name: ', '') });
+      } else if (errorMsg.toLowerCase().includes('phone_number:')) {
+        setErrors({ phone_number: errorMsg.replace('phone_number: ', '') });
+      } else if (errorMsg.toLowerCase().includes('business_name:')) {
+        setErrors({ business_name: errorMsg.replace('business_name: ', '') });
+      } else if (errorMsg.toLowerCase().includes('pan_number:')) {
+        setErrors({ pan_number: errorMsg.replace('pan_number: ', '') });
+      } else if (errorMsg.toLowerCase().includes('business_address:')) {
+        setErrors({ business_address: errorMsg.replace('business_address: ', '') });
       } else {
-        setErrors({ general: error.message || 'Something went wrong. Please try again.' });
+        setErrors({ general: errorMsg });
       }
     }
   };
@@ -160,7 +184,7 @@ const SignUpPage = () => {
         {step === 1 && (
           <div className="role-selection">
             <div className="signup-header">
-              <Mountain className="header-icon" />
+              <img src={logoSvg} alt="NepalTravelAI" className="header-icon" />
               <h1 className="signup-title">Join NepalTravel AI</h1>
               <p className="signup-subtitle">Choose your account type to get started</p>
             </div>
@@ -202,10 +226,6 @@ const SignUpPage = () => {
               <h2 className="form-title">Create your account</h2>
               <p className="form-subtitle">Fill in your details to get started</p>
             </div>
-
-            {successMessage && (
-              <div className="alert alert-success">✅ {successMessage}</div>
-            )}
 
             {errors.general && (
               <div className="alert alert-error">{errors.general}</div>
@@ -337,7 +357,7 @@ const SignUpPage = () => {
               </div>
 
               {/* Submit */}
-              <button type="submit" className="submit-button" disabled={isLoading || !!successMessage}>
+              <button type="submit" className="submit-button" disabled={isLoading}>
                 {isLoading
                   ? <><Loader2 className="spinner" size={20} /><span>Creating Account...</span></>
                   : 'Create Account'
@@ -348,6 +368,17 @@ const SignUpPage = () => {
                 <p>Already have an account? <Link to="/login">Sign in</Link></p>
               </div>
             </form>
+
+            {/* Success Message */}
+            {showSuccess && (
+              <div className="success-overlay">
+                <div className="success-message">
+                  <div className="success-icon">✓</div>
+                  <h3>Account Created Successfully!</h3>
+                  <p>Welcome to NepalTravel AI. Redirecting to your dashboard...</p>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

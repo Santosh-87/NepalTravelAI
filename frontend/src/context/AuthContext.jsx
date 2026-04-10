@@ -67,10 +67,22 @@ export const AuthProvider = ({ children }) => {
         return loggedInUser;
     };
 
+    const signUp = async (userData) => {
+        const newUser = await authService.register(userData);
+        setUser(newUser);
+        setProfile(newUser);
+        return newUser;
+    };
+
     const signOut = async () => {
         await authService.logout();
         setUser(null);
         setProfile(null);
+    };
+
+    const updateUser = (updatedData) => {
+        setUser(prev => ({ ...prev, ...updatedData }));
+        setProfile(prev => ({ ...prev, ...updatedData }));
     };
 
     const value = {
@@ -79,7 +91,9 @@ export const AuthProvider = ({ children }) => {
         loading,
         isAuthenticated: !!user,
         signIn,
+        signUp,
         signOut,
+        updateUser,
         // A method to refresh profile data (e.g. after role approval) without reloading the page
         refreshProfile: loadUserProfile,
     };

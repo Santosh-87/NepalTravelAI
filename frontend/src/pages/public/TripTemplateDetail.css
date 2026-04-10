@@ -8,6 +8,7 @@
 .trip-detail-hero {
     position: relative;
     height: 420px;
+    padding-top: 72px;
     background: linear-gradient(135deg, #1a4d6f, #0d2b3e);
     background-size: cover;
     background-position: center;

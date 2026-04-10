@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
     LayoutDashboard, Users, Car, CalendarCheck, MessageSquare,
-    LogOut, Menu, X, ChevronRight,
+    UserCircle, LogOut, Menu, X, ChevronRight,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import LogoutModal from '../shared/LogoutModal';
+import logoSvg from '../../assets/logo.svg';
 import './AdminLayout.css';
 
 const NAV_ITEMS = [
@@ -14,6 +15,7 @@ const NAV_ITEMS = [
     { to: '/admin/vehicles',  label: 'Vehicles',    Icon: Car },
     { to: '/admin/bookings',  label: 'Bookings',    Icon: CalendarCheck },
     { to: '/admin/community', label: 'Community',   Icon: MessageSquare },
+    { to: '/profile',         label: 'My Profile',  Icon: UserCircle },
 ];
 
 const AdminLayout = ({ children, user }) => {
@@ -52,7 +54,7 @@ const AdminLayout = ({ children, user }) => {
             <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
                 {/* Logo */}
                 <div className="admin-sidebar-logo">
-                    <div className="admin-logo-icon">NT</div>
+                    <img src={logoSvg} alt="NepalTravelAI" className="admin-logo-icon" />
                     <div className="admin-logo-text">
                         <span className="admin-logo-name">Nepal Travel AI</span>
                         <span className="admin-logo-badge">Admin Panel</span>

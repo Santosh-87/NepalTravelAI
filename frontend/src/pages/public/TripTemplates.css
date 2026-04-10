@@ -8,6 +8,7 @@
 .trips-hero {
     position: relative;
     height: 340px;
+    padding-top: 92px;
     background: linear-gradient(135deg, #1a4d6f 0%, #0d2b3e 100%);
     display: flex;
     align-items: center;

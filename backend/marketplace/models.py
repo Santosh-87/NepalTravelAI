@@ -12,6 +12,7 @@ class VehicleListing(models.Model):
     VEHICLE_TYPES = [
         ('car', 'Car'),
         ('suv', 'SUV'),
+        ('jeep', 'Jeep'),
         ('hiace', 'Hiace/Van'),
         ('coaster', 'Coaster'),
         ('bus', 'Bus'),
@@ -299,7 +300,7 @@ class Booking(models.Model):
         self.recalculate_total(self.final_price_per_day)
         self.negotiation_status = 'accepted'
         self.price_negotiated = True
-        self.status = 'pending'
+        self.status = 'confirmed'
         self.save()
 
     def vendor_counter_offer(self, counter_price):
@@ -317,7 +318,7 @@ class Booking(models.Model):
         self.recalculate_total(self.final_price_per_day)
         self.negotiation_status = 'accepted'
         self.price_negotiated = True
-        self.status = 'pending'
+        self.status = 'confirmed'
         self.save()
 
     def customer_reject_counter(self):

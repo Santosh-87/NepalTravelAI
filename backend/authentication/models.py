@@ -7,6 +7,33 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.core.validators import MinLengthValidator, RegexValidator
 
+class PasswordResetToken(models.Model):
+    """
+    Stores a short-lived token for password resets.
+    Token is a uuid4 hex string (32 chars, only a-f and 0-9).
+    Checked via simple DB lookup + timestamp expiry — no hash involved.
+    """
+    user = models.ForeignKey(
+        'User',
+        on_delete=models.CASCADE,
+        related_name='password_reset_tokens',
+    )
+    token = models.CharField(max_length=64, unique=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'password_reset_tokens'
+
+    def is_expired(self):
+        from django.utils import timezone
+        from django.conf import settings
+        timeout = getattr(settings, 'PASSWORD_RESET_TIMEOUT', 3600)
+        return (timezone.now() - self.created_at).total_seconds() > timeout
+
+    def __str__(self):
+        return f"Reset token for {self.user.email}"
+
+
 class User(AbstractUser):
     """
     Extended User model with role-based fields

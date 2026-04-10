@@ -15,8 +15,6 @@ const Marketplace = () => {
         vehicle_type: '',
         location: '',
         min_capacity: '',
-        min_price: '',
-        max_price: '',
     });
 
     useEffect(() => {
@@ -56,15 +54,7 @@ const Marketplace = () => {
             filtered = filtered.filter(v => v.seating_capacity >= parseInt(filters.min_capacity));
         }
 
-        if (filters.min_price) {
-            filtered = filtered.filter(v => v.price_per_day >= parseFloat(filters.min_price));
-        }
-
-        if (filters.max_price) {
-            filtered = filtered.filter(v => v.price_per_day <= parseFloat(filters.max_price));
-        }
-
-        setFilteredVehicles(filtered);
+setFilteredVehicles(filtered);
     };
 
     const handleFilterChange = (name, value) => {
@@ -76,8 +66,6 @@ const Marketplace = () => {
             vehicle_type: '',
             location: '',
             min_capacity: '',
-            min_price: '',
-            max_price: '',
         });
     };
 
@@ -140,6 +128,7 @@ const Marketplace = () => {
                             <option value="">All Types</option>
                             <option value="car">Car</option>
                             <option value="suv">SUV</option>
+                            <option value="jeep">Jeep</option>
                             <option value="hiace">Hiace/Van</option>
                             <option value="coaster">Coaster</option>
                             <option value="bus">Bus</option>
@@ -167,24 +156,6 @@ const Marketplace = () => {
                         />
                     </div>
 
-                    <div className="filter-group">
-                        <label>Price Range (NPR/day)</label>
-                        <div className="price-inputs">
-                            <input
-                                type="number"
-                                placeholder="Min"
-                                value={filters.min_price}
-                                onChange={(e) => handleFilterChange('min_price', e.target.value)}
-                            />
-                            <span>to</span>
-                            <input
-                                type="number"
-                                placeholder="Max"
-                                value={filters.max_price}
-                                onChange={(e) => handleFilterChange('max_price', e.target.value)}
-                            />
-                        </div>
-                    </div>
                 </aside>
 
                 {/* Main Content Area */}
@@ -241,6 +212,7 @@ const VehicleMarketplaceCard = ({ vehicle }) => {
         const labels = {
             car: 'Car',
             suv: 'SUV',
+            jeep: 'Jeep',
             hiace: 'Hiace/Van',
             coaster: 'Coaster',
             bus: 'Bus',

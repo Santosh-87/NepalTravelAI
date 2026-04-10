@@ -30,6 +30,7 @@ const EditVehicle = () => {
     const vehicleTypes = [
         { value: 'car', label: 'Car' },
         { value: 'suv', label: 'SUV' },
+        { value: 'jeep', label: 'Jeep' },
         { value: 'hiace', label: 'Hiace/Van' },
         { value: 'coaster', label: 'Coaster' },
         { value: 'bus', label: 'Bus' },

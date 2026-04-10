@@ -10,7 +10,8 @@ User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
     """Serializer for User model"""
-    
+    role = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = [
@@ -19,6 +20,9 @@ class UserSerializer(serializers.ModelSerializer):
             'is_staff', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'is_staff', 'created_at', 'updated_at']
+
+    def get_role(self, obj):
+        return 'admin' if obj.is_staff else obj.role
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -93,10 +97,63 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 class LoginSerializer(serializers.Serializer):
     """Serializer for login"""
-    
+
     email = serializers.EmailField(required=True)
     password = serializers.CharField(
         required=True,
         write_only=True,
         style={'input_type': 'password'}
     )
+
+
+class UpdateProfileSerializer(serializers.ModelSerializer):
+    """Serializer for updating user profile fields"""
+
+    class Meta:
+        model = User
+        fields = ['full_name', 'business_address']
+
+    def validate_full_name(self, value):
+        if len(value.split()) < 2:
+            raise serializers.ValidationError("Full name must contain at least 2 words.")
+        return value
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    """Serializer for changing password (requires current password)"""
+
+    current_password = serializers.CharField(required=True, write_only=True)
+    new_password = serializers.CharField(
+        required=True,
+        write_only=True,
+        validators=[validate_password]
+    )
+    new_password_confirm = serializers.CharField(required=True, write_only=True)
+
+    def validate(self, attrs):
+        if attrs['new_password'] != attrs['new_password_confirm']:
+            raise serializers.ValidationError({"new_password_confirm": "Password fields didn't match."})
+        return attrs
+
+
+class ForgotPasswordSerializer(serializers.Serializer):
+    """Serializer for forgot-password email request"""
+
+    email = serializers.EmailField(required=True)
+
+
+class ResetPasswordSerializer(serializers.Serializer):
+    """Serializer for confirming a password reset via DB-stored token"""
+
+    token = serializers.CharField(required=True)
+    new_password = serializers.CharField(
+        required=True,
+        write_only=True,
+        validators=[validate_password]
+    )
+    new_password_confirm = serializers.CharField(required=True, write_only=True)
+
+    def validate(self, attrs):
+        if attrs['new_password'] != attrs['new_password_confirm']:
+            raise serializers.ValidationError({"new_password_confirm": "Password fields didn't match."})
+        return attrs

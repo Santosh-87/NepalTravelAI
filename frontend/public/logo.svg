@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="brandGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#1a4d6f" />
+      <stop offset="100%" stop-color="#e67e50" />
+    </linearGradient>
+    <linearGradient id="fillGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a4d6f" stop-opacity="0.15" />
+      <stop offset="100%" stop-color="#e67e50" stop-opacity="0.15" />
+    </linearGradient>
+  </defs>
+
+  <!-- Mountain with fill and stroke -->
+  <polygon
+    points="20,80 40,25 60,60 75,40 85,80"
+    fill="url(#fillGrad)"
+    stroke="url(#brandGrad)"
+    stroke-width="6"
+    stroke-linejoin="round"
+    stroke-linecap="round"
+  />
+
+  <!-- AI dot -->
+  <circle cx="70" cy="25" r="5" fill="#e67e50" />
+</svg>

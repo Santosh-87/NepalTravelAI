@@ -47,7 +47,8 @@
 .bookings-hero {
   position: relative;
   background: linear-gradient(135deg, #1a4d6f 0%, #0f2f45 100%);
-  min-height: 220px;
+  min-height: 260px;
+  padding-top: 72px;
   display: flex;
   align-items: center;
   isolation: isolate;
@@ -516,8 +517,9 @@
 }
 
 .btn-cancel:hover {
-  background: #dc2626;
-  color: var(--mb-white);
+  background: #dc2626 !important;
+  border-color: #dc2626 !important;
+  color: #ffffff !important;
   box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
   transform: translateY(-1px);
 }

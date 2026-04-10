@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
     LayoutDashboard, Car, Calendar, Plus,
-    LogOut, Menu, X, ChevronRight,
+    UserCircle, LogOut, Menu, X, ChevronRight,
 } from 'lucide-react';
 import authService from '../../services/auth';
 import { useAuth } from '../../context/AuthContext';
 import LogoutModal from '../shared/LogoutModal';
+import logoSvg from '../../assets/logo.svg';
 import './VendorLayout.css';
 
 const NAV_ITEMS = [
@@ -14,6 +15,7 @@ const NAV_ITEMS = [
     { to: '/vendor/listings',    label: 'My Vehicles', Icon: Car },
     { to: '/vendor/bookings',    label: 'Bookings',    Icon: Calendar },
     { to: '/vendor/add-vehicle', label: 'Add Vehicle', Icon: Plus },
+    { to: '/profile',            label: 'My Profile',  Icon: UserCircle },
 ];
 
 const VendorLayout = ({ children }) => {
@@ -59,7 +61,7 @@ const VendorLayout = ({ children }) => {
             <aside className={`vendor-sidebar ${sidebarOpen ? 'open' : ''}`}>
                 {/* Logo */}
                 <div className="vendor-sidebar-logo">
-                    <div className="vendor-logo-icon">NT</div>
+                    <img src={logoSvg} alt="NepalTravelAI" className="vendor-logo-icon" />
                     <div className="vendor-logo-text">
                         <span className="vendor-logo-name">Nepal Travel AI</span>
                         <span className="vendor-logo-badge">Vendor Portal</span>

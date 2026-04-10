@@ -35,6 +35,7 @@
   background-position: center 40%;
   background-repeat: no-repeat;
   min-height: 380px;
+  padding-top: 72px;
   display: flex;
   align-items: center;
   isolation: isolate;
@@ -222,22 +223,6 @@
   box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.12);
 }
 
-.price-inputs {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-}
-
-.price-inputs input {
-  flex: 1;
-}
-
-.price-inputs span {
-  color: var(--mp-muted);
-  font-size: 0.8rem;
-  font-weight: 500;
-  flex-shrink: 0;
-}
 
 /* ============================================
    MOBILE FILTER TOGGLE

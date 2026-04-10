@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Mountain, Mail, MapPin, Phone, Facebook, Instagram, Twitter } from 'lucide-react';
+import { Mail, MapPin, Phone, Facebook, Instagram, Twitter } from 'lucide-react';
+import logoSvg from '../../assets/logo.svg';
 import './Footer.css';
 
 /**
@@ -21,7 +22,7 @@ const Footer = () => {
           {/* Brand Section */}
           <div className="footer-brand">
             <Link to="/" className="footer-logo">
-              <Mountain size={32} className="footer-logo-icon" />
+              <img src={logoSvg} alt="NepalTravelAI" className="footer-logo-icon" />
               <div className="footer-logo-text">
                 <span>Nepal</span>
                 <span>Travel</span>
@@ -50,22 +51,20 @@ const Footer = () => {
           <div className="footer-section">
             <h4 className="footer-title">Quick Links</h4>
             <ul className="footer-links">
-              <li><Link to="#features">Features</Link></li>
-              <li><Link to="#vehicles">Vehicle Marketplace</Link></li>
-              <li><Link to="#community">Community</Link></li>
-              <li><Link to="#about">About Us</Link></li>
-              <li><Link to="#pricing">Pricing</Link></li>
+              <li><Link to="/trips">Trip Packages</Link></li>
+              <li><Link to="/marketplace">Vehicle Marketplace</Link></li>
+              <li><Link to="/community">Community</Link></li>
+              <li><Link to="/about">About Us</Link></li>
             </ul>
           </div>
 
-          {/* Resources */}
+          {/* Account */}
           <div className="footer-section">
-            <h4 className="footer-title">Resources</h4>
+            <h4 className="footer-title">Account</h4>
             <ul className="footer-links">
-              <li><Link to="#guides">Trip Guides</Link></li>
-              <li><Link to="#help">Help Center</Link></li>
-              <li><Link to="#faq">FAQ</Link></li>
-              <li><Link to="#natta">NATTA Info</Link></li>
+              <li><Link to="/login">Sign In</Link></li>
+              <li><Link to="/signup">Create Account</Link></li>
+              <li><Link to="/forgot-password">Reset Password</Link></li>
             </ul>
           </div>
 

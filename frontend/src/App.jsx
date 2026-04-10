@@ -7,6 +7,8 @@ import { useAuth } from './context/AuthContext';
 import HomePage from './pages/public/HomePage';
 import SignUpPage from './pages/public/SignUp';
 import LoginPage from './pages/public/Login';
+import ForgotPasswordPage from './pages/public/ForgotPassword';
+import ResetPasswordPage from './pages/public/ResetPassword';
 import Marketplace from './pages/public/Marketplace';
 import VehicleDetails from './pages/public/VehicleDetails';
 import TripTemplates from './pages/public/TripTemplates';
@@ -26,6 +28,10 @@ import AddVehicle from './pages/vendor/AddVehicle';
 import MyListings from './pages/vendor/MyListings';
 import EditVehicle from './pages/vendor/EditVehicle';
 import VendorBookings from './pages/vendor/MyBookings';
+
+// Profile pages (all authenticated roles)
+import UserProfile from './pages/profile/UserProfile';
+import EditProfile from './pages/profile/EditProfile';
 
 // Admin pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -68,6 +74,8 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/signup" element={<GuestRoute><SignUpPage /></GuestRoute>} />
         <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
+        <Route path="/forgot-password" element={<GuestRoute><ForgotPasswordPage /></GuestRoute>} />
+        <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
         <Route path="/get-started" element={<GuestRoute><SignUpPage /></GuestRoute>} />
         <Route path="/trips" element={<TripTemplates />} />
         <Route path="/trips/:slug" element={<TripTemplateDetail />} />
@@ -75,6 +83,24 @@ function App() {
         <Route path="/community/:id" element={<PostDetail />} />
         <Route path="/marketplace" element={<Marketplace />} />
         <Route path="/vehicle/:id" element={<VehicleDetails />} />
+
+        {/* Protected Routes - Any authenticated user */}
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <UserProfile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile/edit"
+          element={
+            <ProtectedRoute>
+              <EditProfile />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Protected Routes - Tourist Only */}
         <Route

@@ -211,8 +211,8 @@ class ChatView(APIView):
     # Knowledge base uses: car, van, jeep, hiace, coaster, bus
     # Marketplace model uses: car, suv, hiace, coaster, bus
     PASSENGER_TO_VEHICLE_TYPES = [
-        (1,  3,  ['car', 'suv']),
-        (4,  6,  ['suv', 'hiace']),
+        (1,  3,  ['car', 'suv', 'jeep']),
+        (4,  6,  ['jeep', 'suv', 'hiace']),
         (7,  14, ['hiace']),
         (15, 24, ['coaster']),
         (25, 35, ['coaster', 'bus']),

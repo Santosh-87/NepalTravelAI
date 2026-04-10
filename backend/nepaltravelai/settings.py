@@ -186,6 +186,23 @@ REST_FRAMEWORK = {
     ],
 }
 
+# Email Configuration
+# Default: console backend (prints email to terminal — no SMTP needed for development)
+# To send real emails, set EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend in .env
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'NepalTravel AI <noreply@nepaltravelai.com>')
+
+# Frontend URL for password reset links
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
+
+# Password reset token expires in 1 hour (matches the message sent in the email)
+PASSWORD_RESET_TIMEOUT = 3600
+
 # Ollama Configuration
 OLLAMA_BASE_URL = 'http://localhost:11434'
 OLLAMA_MODEL = 'llama3.2:3b-instruct-q4_K_M'

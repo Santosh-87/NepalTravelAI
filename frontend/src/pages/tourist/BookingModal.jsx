@@ -255,7 +255,7 @@ const BookingModal = ({ vehicle, onClose }) => {
                 </div>
 
                 <div className="modal-footer">
-                    <button className="btn-secondary" onClick={onClose}>Cancel</button>
+                    <button className="bm-btn-secondary" onClick={onClose}>Cancel</button>
                 </div>
             </div>
         </div>
@@ -426,8 +426,8 @@ const BookingModal = ({ vehicle, onClose }) => {
                 </div>
 
                 <div className="modal-footer">
-                    <button className="btn-secondary" onClick={() => setStep(1)}>Back</button>
-                    <button className="btn-primary" onClick={handleDetailsNext}>
+                    <button className="bm-btn-secondary" onClick={() => setStep(1)}>Back</button>
+                    <button className="bm-btn-primary" onClick={handleDetailsNext}>
                         Next: Pricing <ArrowRight size={16} />
                     </button>
                 </div>
@@ -549,8 +549,8 @@ const BookingModal = ({ vehicle, onClose }) => {
                 </div>
 
                 <div className="modal-footer">
-                    <button className="btn-secondary" onClick={() => setStep(2)}>Back</button>
-                    <button className="btn-primary" onClick={handlePriceNext}>
+                    <button className="bm-btn-secondary" onClick={() => setStep(2)}>Back</button>
+                    <button className="bm-btn-primary" onClick={handlePriceNext}>
                         Review Booking <ArrowRight size={16} />
                     </button>
                 </div>
@@ -711,7 +711,7 @@ const BookingModal = ({ vehicle, onClose }) => {
                 </div>
 
                 <div className="modal-footer">
-                    <button className="btn-secondary" onClick={() => setStep(3)}>Back</button>
+                    <button className="bm-btn-secondary" onClick={() => setStep(3)}>Back</button>
                     <button className="btn-confirm" onClick={handleSubmit} disabled={loading}>
                         {loading ? 'Submitting...' : wantToNegotiate ? '✓ Submit Offer' : '✓ Confirm Booking'}
                     </button>

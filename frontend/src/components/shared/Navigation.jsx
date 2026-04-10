@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, Mountain, LogOut, User, ChevronDown, Settings } from 'lucide-react';
+import { Menu, X, LogOut, User, ChevronDown, Settings, LayoutDashboard } from 'lucide-react';
 import authService from '../../services/auth';
 import { useAuth } from '../../context/AuthContext';
 import LogoutModal from './LogoutModal';
+import logoSvg from '../../assets/logo.svg';
 import './Navigation.css';
 
 const Navigation = () => {
@@ -86,6 +87,12 @@ const Navigation = () => {
     return user?.email?.split('@')[0] || 'User';
   };
 
+  // Get role-based dashboard path
+  const getDashboardPath = () => {
+    if (user?.role === 'vendor') return '/vendor/dashboard';
+    return '/tourist/dashboard';
+  };
+
   // Show loading state briefly
   if (loading) {
     return (
@@ -93,7 +100,7 @@ const Navigation = () => {
         <div className="container">
           <div className="nav-content">
             <Link to="/" className="logo">
-              <Mountain className="logo-icon" />
+              <img src={logoSvg} alt="NepalTravelAI" className="logo-icon" />
               <span className="logo-text">
                 <span className="logo-nepal">Nepal</span>
                 <span className="logo-travel">Travel</span>
@@ -120,7 +127,7 @@ const Navigation = () => {
 
           {/* Logo */}
           <Link to="/" className="logo">
-            <Mountain className="logo-icon" />
+            <img src={logoSvg} alt="NepalTravelAI" className="logo-icon" />
             <span className="logo-text">
               <span className="logo-nepal">Nepal</span>
               <span className="logo-travel">Travel</span>
@@ -134,6 +141,11 @@ const Navigation = () => {
             <Link to="/marketplace" className="nav-link">Vehicle Marketplace</Link>
             <Link to="/community" className="nav-link">Community</Link>
             <Link to="/about" className="nav-link">About</Link>
+            {user && (
+              <Link to={getDashboardPath()} className="nav-dashboard-btn">
+                Dashboard
+              </Link>
+            )}
           </div>
 
           {/* NOT logged in */}
@@ -173,6 +185,14 @@ const Navigation = () => {
                       </div>
                     </div>
                     <div className="dropdown-divider" />
+                    <Link
+                      to={getDashboardPath()}
+                      className="dropdown-item"
+                      onClick={() => setIsProfileOpen(false)}
+                    >
+                      <LayoutDashboard size={16} />
+                      <span>Dashboard</span>
+                    </Link>
                     <Link
                       to="/profile"
                       className="dropdown-item"
@@ -243,6 +263,15 @@ const Navigation = () => {
             >
               About
             </Link>
+            {user && (
+              <Link
+                to={getDashboardPath()}
+                className="mobile-nav-link mobile-nav-link-dashboard"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Dashboard
+              </Link>
+            )}
 
             <div className="mobile-nav-actions">
               {!user ? (

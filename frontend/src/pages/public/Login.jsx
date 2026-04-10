@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Mountain, Mail, Lock, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, Loader2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import logoSvg from '../../assets/logo.svg';
 import './Login.css';
 
 const LoginPage = () => {
@@ -91,7 +92,7 @@ const LoginPage = () => {
           {/* Left — Branding */}
           <div className="login-branding fade-in-up">
             <div className="branding-header">
-              <Mountain className="branding-icon" />
+              <img src={logoSvg} alt="NepalTravelAI" className="branding-icon" />
               <h1 className="branding-title">
                 Welcome Back to
                 <span className="branding-highlight"> NepalTravel AI</span>
