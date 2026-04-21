@@ -157,7 +157,7 @@ const Community = () => {
                             <h3>No posts yet</h3>
                             <p>{activeCategory ? 'Try a different category' : 'Be the first to share your Nepal travel experience!'}</p>
                             {user && (
-                                <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}>
+                                <button className="create-post-btn" onClick={() => setShowCreateModal(true)}>
                                     Create First Post
                                 </button>
                             )}

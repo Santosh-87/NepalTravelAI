@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, MapPin, Phone, Edit, Trash2 } from 'lucide-react';
+import { Users, MapPin, Phone, Edit, Trash2, AlertCircle, RefreshCw } from 'lucide-react';
 import './VehicleCard.css';
 
 const STATUS_LABELS = {
@@ -14,6 +14,11 @@ const VehicleCard = ({ vehicle, onEdit, onDelete }) => {
 
     return (
         <div className="vehicle-card">
+            {vehicle.primary_image && (
+                <div className="vehicle-card-image">
+                    <img src={vehicle.primary_image} alt={vehicle.vehicle_name} />
+                </div>
+            )}
             <div className="vehicle-card-header">
                 <div>
                     <h3 className="vehicle-name">{vehicle.vehicle_name}</h3>
@@ -60,11 +65,24 @@ const VehicleCard = ({ vehicle, onEdit, onDelete }) => {
                     </div>
                 )}
 
-                {vehicle.admin_notes && (
+                {vehicle.status === 'rejected' ? (
+                    <div className="rejected-notice">
+                        <div className="rejected-notice-header">
+                            <AlertCircle size={15} />
+                            <strong>Rejected by admin</strong>
+                        </div>
+                        {vehicle.admin_notes && (
+                            <p className="rejected-reason">{vehicle.admin_notes}</p>
+                        )}
+                        <p className="rejected-hint">
+                            <RefreshCw size={12} /> Edit your listing to resubmit for review.
+                        </p>
+                    </div>
+                ) : vehicle.admin_notes ? (
                     <div className="admin-notes">
                         <strong>Admin Notes:</strong> {vehicle.admin_notes}
                     </div>
-                )}
+                ) : null}
             </div>
 
             <div className="vehicle-card-actions">
@@ -73,7 +91,7 @@ const VehicleCard = ({ vehicle, onEdit, onDelete }) => {
                     onClick={() => onEdit(vehicle)}
                 >
                     <Edit size={16} />
-                    Edit
+                    {vehicle.status === 'rejected' ? 'Edit & Resubmit' : 'Edit'}
                 </button>
                 <button
                     className="btn-delete"

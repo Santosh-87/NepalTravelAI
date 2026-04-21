@@ -1,15 +1,20 @@
+import stripe
+from decimal import Decimal
+from django.conf import settings as django_settings
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from .models import VehicleListing, Booking, Rating
+from .models import VehicleListing, Booking, Rating, Payment
 from .serializers import (
     VehicleListingSerializer, BookingSerializer,
     VendorNegotiationResponseSerializer, CustomerNegotiationResponseSerializer,
-    RatingSerializer,
+    RatingSerializer, PaymentSerializer,
 )
+
+stripe.api_key = django_settings.STRIPE_SECRET_KEY
 
 class VehicleListingViewSet(viewsets.ModelViewSet):
     """
@@ -82,7 +87,11 @@ class VehicleListingViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         if serializer.instance.vendor != self.request.user:
             raise PermissionError("You can only edit your own listings")
-        serializer.save()
+        # If vendor edits a rejected listing, reset to pending for re-review
+        if serializer.instance.status == 'rejected':
+            serializer.save(status='pending', admin_notes='')
+        else:
+            serializer.save()
     
     def perform_destroy(self, instance):
         if instance.vendor != self.request.user:
@@ -120,9 +129,13 @@ class BookingViewSet(viewsets.ModelViewSet):
         ).update(status='cancelled', negotiation_status='rejected')
 
         if user.role == 'vendor':
-            return Booking.objects.filter(vehicle_listing__vendor=user).select_related('vehicle_listing__vendor', 'tourist')
+            return Booking.objects.filter(vehicle_listing__vendor=user).select_related(
+                'vehicle_listing__vendor', 'tourist', 'rating', 'rating__tourist'
+            )
         else:
-            return Booking.objects.filter(tourist=user).select_related('vehicle_listing__vendor', 'tourist')
+            return Booking.objects.filter(tourist=user).select_related(
+                'vehicle_listing__vendor', 'tourist', 'rating', 'rating__tourist'
+            )
     
     def get_serializer_context(self):
         """Pass request to serializer context"""
@@ -368,3 +381,132 @@ class BookingViewSet(viewsets.ModelViewSet):
         )
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class PaymentViewSet(viewsets.ViewSet):
+    """
+    Stripe payment endpoints for tourists paying confirmed bookings.
+
+    POST /api/marketplace/payments/create-intent/
+        → Creates a Stripe PaymentIntent and returns the client_secret.
+
+    POST /api/marketplace/payments/confirm/
+        → Verifies the PaymentIntent succeeded, records the Payment, and
+          marks the booking as paid.
+    """
+    permission_classes = [IsAuthenticated]
+
+    @action(detail=False, methods=['post'], url_path='create-intent')
+    def create_intent(self, request):
+        """Create a Stripe PaymentIntent for a confirmed booking."""
+        booking_id = request.data.get('booking_id')
+        if not booking_id:
+            return Response(
+                {'error': 'booking_id is required'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        booking = get_object_or_404(Booking, id=booking_id, tourist=request.user)
+
+        if booking.status != 'confirmed':
+            return Response(
+                {'error': 'Only confirmed bookings can be paid'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if booking.payment_status == 'paid':
+            return Response(
+                {'error': 'This booking has already been paid'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Convert NPR to USD cents for Stripe (NPR is not a Stripe-supported currency).
+        # Using approximate exchange rate: 1 USD ≈ 133 NPR.
+        # Example: NPR 11,000 → $82.71 USD → 8271 cents.
+        NPR_TO_USD = Decimal('133')
+        amount_usd = booking.total_price / NPR_TO_USD
+        amount_cents = max(50, int(amount_usd * 100))  # Stripe minimum is 50 cents
+
+        try:
+            payment_intent = stripe.PaymentIntent.create(
+                amount=amount_cents,
+                currency='usd',
+                metadata={
+                    'booking_id': str(booking.id),
+                    'tourist_email': request.user.email,
+                    'vehicle': booking.vehicle_listing.vehicle_name,
+                },
+            )
+        except stripe.error.StripeError as e:
+            return Response(
+                {'error': str(e.user_message)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return Response({
+            'client_secret': payment_intent.client_secret,
+            'payment_intent_id': payment_intent.id,
+            'amount_cents': amount_cents,
+            'amount_display': f"NPR {int(booking.total_price):,}",
+        })
+
+    @action(detail=False, methods=['post'], url_path='confirm')
+    def confirm_payment(self, request):
+        """Verify Stripe PaymentIntent succeeded, record Payment, mark booking paid."""
+        booking_id = request.data.get('booking_id')
+        payment_intent_id = request.data.get('payment_intent_id')
+
+        if not booking_id or not payment_intent_id:
+            return Response(
+                {'error': 'booking_id and payment_intent_id are required'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        booking = get_object_or_404(Booking, id=booking_id, tourist=request.user)
+
+        if booking.payment_status == 'paid':
+            return Response(
+                {'error': 'This booking has already been paid'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+        except stripe.error.StripeError as e:
+            return Response(
+                {'error': str(e.user_message)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if payment_intent.status != 'succeeded':
+            return Response(
+                {'error': f"Payment not successful. Stripe status: {payment_intent.status}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Guard: make sure the intent belongs to this booking
+        if payment_intent.metadata['booking_id'] != str(booking.id):
+            return Response(
+                {'error': 'Payment intent does not match this booking'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Record the payment
+        payment = Payment.objects.create(
+            booking=booking,
+            stripe_payment_intent_id=payment_intent_id,
+            amount_npr=booking.total_price,
+            amount_cents=payment_intent.amount,
+            currency=payment_intent.currency,
+            status='succeeded',
+            paid_at=timezone.now(),
+        )
+
+        booking.payment_status = 'paid'
+        booking.save(update_fields=['payment_status'])
+
+        return Response({
+            'status': 'Payment successful',
+            'payment': PaymentSerializer(payment).data,
+            'booking_payment_status': 'paid',
+        })

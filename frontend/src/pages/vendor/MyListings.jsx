@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import VendorLayout from '../../components/vendor/VendorLayout';
 import VehicleCard from '../../components/vendor/VehicleCard';
 import marketplaceService from '../../services/marketplace';
-import { Plus, Filter, Search } from 'lucide-react';
+import { Plus, Filter, Search, Trash2 } from 'lucide-react';
+import ConfirmModal from '../../components/shared/ConfirmModal';
 import './MyListings.css';
 
 const MyListings = () => {
@@ -13,6 +14,7 @@ const MyListings = () => {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
+    const [modal, setModal] = useState(null);
 
     useEffect(() => {
         loadVehicles();
@@ -53,17 +55,23 @@ const MyListings = () => {
         setFilteredVehicles(filtered);
     };
 
-    const handleDelete = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this vehicle?')) {
-            return;
-        }
-
-        try {
-            await marketplaceService.deleteVehicle(id);
-            setVehicles(vehicles.filter(v => v.id !== id));
-        } catch (err) {
-            alert('Failed to delete vehicle');
-        }
+    const handleDelete = (id) => {
+        setModal({
+            title: 'Delete Vehicle?',
+            message: 'This will permanently remove this vehicle listing and cannot be undone.',
+            confirmLabel: 'Delete',
+            variant: 'danger',
+            icon: <Trash2 size={21} />,
+            onConfirm: async () => {
+                setModal(null);
+                try {
+                    await marketplaceService.deleteVehicle(id);
+                    setVehicles(prev => prev.filter(v => v.id !== id));
+                } catch (err) {
+                    alert('Failed to delete vehicle');
+                }
+            },
+        });
     };
 
     const handleEdit = (vehicle) => {
@@ -80,6 +88,12 @@ const MyListings = () => {
 
     return (
         <VendorLayout>
+            {modal && (
+                <ConfirmModal
+                    {...modal}
+                    onCancel={() => setModal(null)}
+                />
+            )}
             <div className="listings-page">
                 <div className="listings-header">
                     <div>

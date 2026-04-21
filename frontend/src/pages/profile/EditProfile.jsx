@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import authService from '../../services/auth';
@@ -11,13 +11,33 @@ import {
 import './EditProfile.css';
 
 const EditProfile = () => {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, refreshProfile } = useAuth();
   const navigate = useNavigate();
 
   const [profileData, setProfileData] = useState({
-    full_name: user?.full_name || '',
+    full_name:        user?.full_name        || '',
+    email:            user?.email            || '',
+    phone_number:     user?.phone_number     || '',
     business_address: user?.business_address || '',
   });
+
+  // Force-fetch fresh profile from API on mount so phone_number (and other
+  // fields added after the user last logged in) are always up to date.
+  useEffect(() => {
+    refreshProfile();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Sync form fields whenever the user object updates
+  useEffect(() => {
+    if (user) {
+      setProfileData({
+        full_name:        user.full_name        || '',
+        email:            user.email            || '',
+        phone_number:     user.phone_number     || '',
+        business_address: user.business_address || '',
+      });
+    }
+  }, [user]);
 
   const [pwData, setPwData] = useState({
     current_password: '',
@@ -51,6 +71,14 @@ const EditProfile = () => {
       errs.full_name = 'Full name is required';
     } else if (profileData.full_name.trim().split(/\s+/).length < 2) {
       errs.full_name = 'Full name must contain at least 2 words';
+    }
+    if (!profileData.email.trim()) {
+      errs.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profileData.email.trim())) {
+      errs.email = 'Please enter a valid email address';
+    }
+    if (profileData.phone_number && !/^\+?[\d\s\-()+]+$/.test(profileData.phone_number)) {
+      errs.phone_number = 'Please enter a valid phone number';
     }
     return errs;
   };
@@ -175,8 +203,7 @@ const EditProfile = () => {
                 <h3 className="ep-sidebar-name">{user?.full_name}</h3>
                 <p className="ep-sidebar-email">{user?.email}</p>
                 <p className="ep-sidebar-note">
-                  Update your name and details below.
-                  Your email address cannot be changed.
+                  Update your name, email, and contact details below.
                 </p>
               </div>
             </aside>
@@ -229,13 +256,17 @@ const EditProfile = () => {
                           <Mail className="ep-input-icon" size={18} />
                           <input
                             type="email"
-                            className="ep-input ep-input-readonly"
-                            value={user?.email || ''}
-                            readOnly
-                            title="Email address cannot be changed"
+                            name="email"
+                            className={`ep-input ${profileErrors.email ? 'ep-input-error' : ''}`}
+                            placeholder="your@email.com"
+                            value={profileData.email}
+                            onChange={handleProfileChange}
+                            disabled={savingProfile}
                           />
                         </div>
-                        <span className="ep-field-hint">Email cannot be changed</span>
+                        {profileErrors.email && (
+                          <span className="ep-field-error">{profileErrors.email}</span>
+                        )}
                       </div>
                     </div>
 

@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import VendorLayout from '../../components/vendor/VendorLayout';
 import BookingCard from '../../components/vendor/BookingCard';
 import marketplaceService from '../../services/marketplace';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, CheckCircle, XCircle } from 'lucide-react';
+import ConfirmModal from '../../components/shared/ConfirmModal';
 import './MyBookings.css';
 
 const MyBookings = () => {
@@ -10,6 +11,9 @@ const MyBookings = () => {
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('all');
     const [error, setError] = useState('');
+    const [modal, setModal] = useState(null);
+    const [rejectModal, setRejectModal] = useState(null); // { id, type: 'booking'|'offer', title }
+    const [rejectReason, setRejectReason] = useState('');
 
     useEffect(() => {
         loadBookings();
@@ -29,75 +33,110 @@ const MyBookings = () => {
         }
     };
 
-    const handleConfirm = async (id) => {
-        if (!window.confirm('Confirm this booking?')) return;
-        try {
-            await marketplaceService.confirmBooking(id);
-            setBookings(bookings.map(b =>
-                b.id === id ? { ...b, status: 'confirmed' } : b
-            ));
-        } catch (err) {
-            alert('Failed to confirm booking: ' + err.message);
-        }
+    const handleConfirm = (id) => {
+        setModal({
+            title: 'Confirm Booking?',
+            message: 'This will confirm the booking and notify the tourist.',
+            confirmLabel: 'Confirm Booking',
+            variant: 'primary',
+            icon: <CheckCircle size={21} />,
+            onConfirm: async () => {
+                setModal(null);
+                try {
+                    await marketplaceService.confirmBooking(id);
+                    setBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'confirmed' } : b));
+                } catch (err) {
+                    alert('Failed to confirm booking: ' + err.message);
+                }
+            },
+        });
     };
 
-    const handleReject = async (id) => {
-        const reason = prompt('Reason for rejection (optional):');
-        if (reason === null) return;
-        try {
-            await marketplaceService.rejectBooking(id, reason);
-            setBookings(bookings.map(b =>
-                b.id === id ? { ...b, status: 'rejected' } : b
-            ));
-        } catch (err) {
-            alert('Failed to reject booking: ' + err.message);
-        }
+    const handleReject = (id) => {
+        setRejectReason('');
+        setRejectModal({ id, type: 'booking', title: 'Reject Booking' });
     };
 
-    const handleComplete = async (id) => {
-        if (!window.confirm('Mark this booking as completed?')) return;
-        try {
-            await marketplaceService.completeBooking(id);
-            setBookings(bookings.map(b =>
-                b.id === id ? { ...b, status: 'completed' } : b
-            ));
-        } catch (err) {
-            alert('Failed to complete booking: ' + err.message);
-        }
+    const handleComplete = (id) => {
+        setModal({
+            title: 'Mark as Completed?',
+            message: 'This will mark the booking as completed.',
+            confirmLabel: 'Mark Completed',
+            variant: 'primary',
+            icon: <CheckCircle size={21} />,
+            onConfirm: async () => {
+                setModal(null);
+                try {
+                    await marketplaceService.completeBooking(id);
+                    setBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'completed' } : b));
+                } catch (err) {
+                    alert('Failed to complete booking: ' + err.message);
+                }
+            },
+        });
     };
 
-    const handleCancel = async (id) => {
-        if (!window.confirm('Cancel this booking?')) return;
-        try {
-            await marketplaceService.cancelBooking(id);
-            setBookings(bookings.map(b =>
-                b.id === id ? { ...b, status: 'cancelled' } : b
-            ));
-        } catch (err) {
-            alert('Failed to cancel booking: ' + err.message);
-        }
+    const handleCancel = (id) => {
+        setModal({
+            title: 'Cancel Booking?',
+            message: 'This will cancel the booking and cannot be undone.',
+            confirmLabel: 'Yes, Cancel',
+            variant: 'danger',
+            icon: <XCircle size={21} />,
+            onConfirm: async () => {
+                setModal(null);
+                try {
+                    await marketplaceService.cancelBooking(id);
+                    setBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'cancelled' } : b));
+                } catch (err) {
+                    alert('Failed to cancel booking: ' + err.message);
+                }
+            },
+        });
     };
 
     // --- Price Negotiation Handlers ---
 
-    const handleAcceptOffer = async (id) => {
-        if (!window.confirm('Accept customer\'s price offer?')) return;
-        try {
-            const updated = await marketplaceService.vendorRespondToOffer(id, { action: 'accept' });
-            setBookings(bookings.map(b => b.id === id ? updated : b));
-        } catch (err) {
-            alert('Failed to accept offer: ' + err.message);
-        }
+    const handleAcceptOffer = (id) => {
+        setModal({
+            title: "Accept Customer's Offer?",
+            message: "You're accepting the customer's offered price. The booking will be confirmed.",
+            confirmLabel: 'Accept Offer',
+            variant: 'primary',
+            icon: <CheckCircle size={21} />,
+            onConfirm: async () => {
+                setModal(null);
+                try {
+                    const updated = await marketplaceService.vendorRespondToOffer(id, { action: 'accept' });
+                    setBookings(prev => prev.map(b => b.id === id ? updated : b));
+                } catch (err) {
+                    alert('Failed to accept offer: ' + err.message);
+                }
+            },
+        });
     };
 
-    const handleRejectOffer = async (id) => {
-        const reason = prompt('Reason for rejecting the offer (optional):');
-        if (reason === null) return;
+    const handleRejectOffer = (id) => {
+        setRejectReason('');
+        setRejectModal({ id, type: 'offer', title: 'Reject Price Offer' });
+    };
+
+    const handleRejectSubmit = async () => {
+        if (!rejectModal) return;
+        const { id, type } = rejectModal;
         try {
-            const updated = await marketplaceService.vendorRespondToOffer(id, { action: 'reject', reason });
-            setBookings(bookings.map(b => b.id === id ? updated : b));
+            if (type === 'booking') {
+                await marketplaceService.rejectBooking(id, rejectReason);
+                setBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'rejected' } : b));
+            } else {
+                const updated = await marketplaceService.vendorRespondToOffer(id, { action: 'reject', reason: rejectReason });
+                setBookings(prev => prev.map(b => b.id === id ? updated : b));
+            }
         } catch (err) {
-            alert('Failed to reject offer: ' + err.message);
+            alert(`Failed to reject: ${err.message}`);
+        } finally {
+            setRejectModal(null);
+            setRejectReason('');
         }
     };
 
@@ -120,6 +159,32 @@ const MyBookings = () => {
 
     return (
         <VendorLayout>
+            {rejectModal && (
+                <div className="vb-reject-overlay" onClick={() => setRejectModal(null)}>
+                    <div className="vb-reject-modal" onClick={e => e.stopPropagation()}>
+                        <h3 className="vb-reject-title">{rejectModal.title}</h3>
+                        <p className="vb-reject-desc">Optionally provide a reason for the tourist:</p>
+                        <textarea
+                            className="vb-reject-textarea"
+                            rows={3}
+                            placeholder="Reason (optional)…"
+                            value={rejectReason}
+                            onChange={e => setRejectReason(e.target.value)}
+                            autoFocus
+                        />
+                        <div className="vb-reject-actions">
+                            <button className="vb-reject-cancel" onClick={() => setRejectModal(null)}>Cancel</button>
+                            <button className="vb-reject-confirm" onClick={handleRejectSubmit}>Confirm Rejection</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {modal && (
+                <ConfirmModal
+                    {...modal}
+                    onCancel={() => setModal(null)}
+                />
+            )}
             <div className="vendor-bookings-page">
                 <div className="page-header">
                     <div>

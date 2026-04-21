@@ -188,3 +188,92 @@
         padding: 0.4rem 0.625rem;
     }
 }
+
+/* ---- Reject reason modal ---- */
+.vb-reject-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+.vb-reject-modal {
+    background: #fff;
+    border-radius: 14px;
+    padding: 1.75rem;
+    width: 100%;
+    max-width: 440px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+}
+
+.vb-reject-title {
+    font-family: 'Sora', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+}
+
+.vb-reject-desc {
+    font-size: 0.875rem;
+    color: #64748b;
+    margin: 0;
+}
+
+.vb-reject-textarea {
+    width: 100%;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    font-family: inherit;
+    color: #0f172a;
+    resize: vertical;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.15s;
+}
+
+.vb-reject-textarea:focus {
+    border-color: #0d9488;
+}
+
+.vb-reject-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+}
+
+.vb-reject-cancel {
+    padding: 0.55rem 1.25rem;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    color: #374151;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.vb-reject-cancel:hover { background: #e2e8f0; }
+
+.vb-reject-confirm {
+    padding: 0.55rem 1.25rem;
+    border-radius: 8px;
+    border: none;
+    background: #dc2626;
+    color: #fff;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.vb-reject-confirm:hover { background: #b91c1c; }

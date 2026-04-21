@@ -15,9 +15,9 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'id', 'email', 'full_name', 'role',
+            'id', 'email', 'full_name', 'role', 'phone_number',
             'pan_number', 'business_address', 'is_vendor_approved',
-            'is_staff', 'created_at', 'updated_at'
+            'is_vendor_rejected', 'is_staff', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'is_staff', 'created_at', 'updated_at']
 
@@ -44,7 +44,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'email', 'password', 'password_confirm',
-            'full_name', 'role', 'pan_number', 'business_address', 'is_vendor_approved',
+            'full_name', 'role', 'phone_number', 'pan_number', 'business_address', 'is_vendor_approved',
         ]
     
     def validate(self, attrs):
@@ -88,6 +88,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             password=validated_data['password'],
             full_name=validated_data['full_name'],
             role=validated_data.get('role', 'tourist'),
+            phone_number=validated_data.get('phone_number'),
             pan_number=validated_data.get('pan_number'),
             business_address=validated_data.get('business_address'),
         )
@@ -111,12 +112,24 @@ class UpdateProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['full_name', 'business_address']
+        fields = ['full_name', 'email', 'phone_number', 'business_address']
 
     def validate_full_name(self, value):
         if len(value.split()) < 2:
             raise serializers.ValidationError("Full name must contain at least 2 words.")
         return value
+
+    def validate_email(self, value):
+        user = self.instance
+        if User.objects.filter(email=value).exclude(pk=user.pk).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        return value
+
+    def update(self, instance, validated_data):
+        # Keep username in sync with email (AbstractUser has a separate username column)
+        if 'email' in validated_data:
+            validated_data['username'] = validated_data['email']
+        return super().update(instance, validated_data)
 
 
 class ChangePasswordSerializer(serializers.Serializer):

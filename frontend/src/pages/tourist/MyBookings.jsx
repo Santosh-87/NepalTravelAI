@@ -3,8 +3,10 @@ import { useLocation, Link } from 'react-router-dom';
 import Navigation from '../../components/shared/Navigation';
 import Footer from '../../components/shared/Footer';
 import RatingModal from '../../components/tourist/RatingModal';
+import PaymentModal from '../../components/tourist/PaymentModal';
 import marketplaceService from '../../services/marketplace';
-import { Calendar, MapPin, User, Phone, CheckCircle, XCircle, Clock, AlertCircle, Star, DollarSign } from 'lucide-react';
+import { Calendar, MapPin, User, Phone, CheckCircle, XCircle, Clock, AlertCircle, Star, DollarSign, CreditCard, BadgeCheck } from 'lucide-react';
+import ConfirmModal from '../../components/shared/ConfirmModal';
 import './MyBookings.css';
 
 const MyBookings = () => {
@@ -13,6 +15,9 @@ const MyBookings = () => {
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('all');
     const [successMessage, setSuccessMessage] = useState('');
+    const [modal, setModal] = useState(null);
+    const [ratingBooking, setRatingBooking] = useState(null);
+    const [paymentBooking, setPaymentBooking] = useState(null);
 
     useEffect(() => {
         loadBookings();
@@ -35,45 +40,79 @@ const MyBookings = () => {
         }
     };
 
-    const handleCancel = async (id) => {
-        if (!window.confirm('Are you sure you want to cancel this booking?')) return;
-
-        try {
-            await marketplaceService.cancelBooking(id);
-            setBookings(bookings.map(b =>
-                b.id === id ? { ...b, status: 'cancelled' } : b
-            ));
-        } catch (err) {
-            alert('Failed to cancel booking');
-        }
+    const handleCancel = (id) => {
+        setModal({
+            title: 'Cancel Booking?',
+            message: 'This will cancel your booking and cannot be undone.',
+            confirmLabel: 'Yes, Cancel',
+            variant: 'danger',
+            icon: <XCircle size={21} />,
+            onConfirm: async () => {
+                setModal(null);
+                try {
+                    await marketplaceService.cancelBooking(id);
+                    setBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'cancelled' } : b));
+                } catch (err) {
+                    alert('Failed to cancel booking');
+                }
+            },
+        });
     };
 
-    const handleAcceptCounter = async (id) => {
-        if (!window.confirm('Accept the vendor\'s counter-offer?')) return;
-        try {
-            const updated = await marketplaceService.customerRespondToCounter(id, { action: 'accept' });
-            setBookings(bookings.map(b => b.id === id ? updated : b));
-        } catch (err) {
-            alert('Failed to accept counter: ' + err.message);
-        }
+    const handleAcceptCounter = (id) => {
+        setModal({
+            title: 'Accept Counter-Offer?',
+            message: "You're agreeing to the vendor's counter price. The booking will be confirmed.",
+            confirmLabel: 'Accept Offer',
+            variant: 'primary',
+            icon: <CheckCircle size={21} />,
+            onConfirm: async () => {
+                setModal(null);
+                try {
+                    const updated = await marketplaceService.customerRespondToCounter(id, { action: 'accept' });
+                    setBookings(prev => prev.map(b => b.id === id ? updated : b));
+                } catch (err) {
+                    alert('Failed to accept counter: ' + err.message);
+                }
+            },
+        });
     };
 
-    const handleRejectCounter = async (id) => {
-        if (!window.confirm('Reject the counter-offer? This will cancel the booking.')) return;
-        try {
-            const updated = await marketplaceService.customerRespondToCounter(id, { action: 'reject' });
-            setBookings(bookings.map(b => b.id === id ? updated : b));
-        } catch (err) {
-            alert('Failed to reject counter: ' + err.message);
-        }
+    const handleRejectCounter = (id) => {
+        setModal({
+            title: 'Reject Counter-Offer?',
+            message: 'Rejecting the counter-offer will cancel this booking.',
+            confirmLabel: 'Reject & Cancel',
+            variant: 'danger',
+            icon: <XCircle size={21} />,
+            onConfirm: async () => {
+                setModal(null);
+                try {
+                    const updated = await marketplaceService.customerRespondToCounter(id, { action: 'reject' });
+                    setBookings(prev => prev.map(b => b.id === id ? updated : b));
+                } catch (err) {
+                    alert('Failed to reject counter: ' + err.message);
+                }
+            },
+        });
     };
 
     const handleRated = (bookingId) => {
+        setRatingBooking(null);
         setBookings(bookings.map(b =>
             b.id === bookingId ? { ...b, has_rating: true } : b
         ));
         setSuccessMessage('Thank you for your review!');
         setTimeout(() => setSuccessMessage(''), 5000);
+    };
+
+    const handlePaymentSuccess = (bookingId) => {
+        setPaymentBooking(null);
+        setBookings(prev => prev.map(b =>
+            b.id === bookingId ? { ...b, payment_status: 'paid' } : b
+        ));
+        setSuccessMessage('Payment successful! Your booking is fully confirmed.');
+        setTimeout(() => setSuccessMessage(''), 6000);
     };
 
     const countByStatus = (s) => bookings.filter(b => b.status === s).length;
@@ -102,6 +141,26 @@ const MyBookings = () => {
 
     return (
         <div className="my-bookings-page">
+            {modal && (
+                <ConfirmModal
+                    {...modal}
+                    onCancel={() => setModal(null)}
+                />
+            )}
+            {ratingBooking && (
+                <RatingModal
+                    booking={ratingBooking}
+                    onClose={() => setRatingBooking(null)}
+                    onRated={handleRated}
+                />
+            )}
+            {paymentBooking && (
+                <PaymentModal
+                    booking={paymentBooking}
+                    onClose={() => setPaymentBooking(null)}
+                    onPaymentSuccess={handlePaymentSuccess}
+                />
+            )}
             <Navigation />
 
             {/* Page Hero */}
@@ -186,7 +245,8 @@ const MyBookings = () => {
                                 onCancel={handleCancel}
                                 onAcceptCounter={handleAcceptCounter}
                                 onRejectCounter={handleRejectCounter}
-                                onRated={handleRated}
+                                onRate={() => setRatingBooking(booking)}
+                                onPay={() => setPaymentBooking(booking)}
                             />
                         ))}
                     </div>
@@ -201,9 +261,7 @@ const MyBookings = () => {
 /* ============================================================
    BookingCard Component
    ============================================================ */
-const BookingCard = ({ booking, onCancel, onAcceptCounter, onRejectCounter, onRated }) => {
-    const [showRatingModal, setShowRatingModal] = useState(false);
-
+const BookingCard = ({ booking, onCancel, onAcceptCounter, onRejectCounter, onRate, onPay }) => {
     const statusConfig = {
         pending: {
             Icon: Clock,
@@ -378,6 +436,19 @@ const BookingCard = ({ booking, onCancel, onAcceptCounter, onRejectCounter, onRa
                     </div>
                 )}
 
+                {/* Rejection / Cancellation reason */}
+                {['rejected', 'cancelled'].includes(booking.status) && booking.admin_notes && (
+                    <div className="booking-rejection-note">
+                        <XCircle size={15} />
+                        <div>
+                            <strong>
+                                {booking.status === 'rejected' ? 'Rejection reason' : 'Cancellation note'}
+                            </strong>
+                            <p>{booking.admin_notes}</p>
+                        </div>
+                    </div>
+                )}
+
                 {/* Footer */}
                 <div className="booking-footer">
                     <div className="booking-price">
@@ -403,10 +474,25 @@ const BookingCard = ({ booking, onCancel, onAcceptCounter, onRejectCounter, onRa
                             </button>
                         )}
 
+                        {/* Payment actions for confirmed bookings */}
+                        {booking?.status === 'confirmed' && booking?.payment_status === 'unpaid' && (
+                            <button className="btn-pay-now" onClick={onPay}>
+                                <CreditCard size={16} />
+                                Pay Now
+                            </button>
+                        )}
+
+                        {booking?.status === 'confirmed' && booking?.payment_status === 'paid' && (
+                            <span className="payment-paid-tag">
+                                <BadgeCheck size={15} />
+                                Paid
+                            </span>
+                        )}
+
                         {booking?.status === 'completed' && !booking?.has_rating && (
                             <button
                                 className="btn-rate"
-                                onClick={() => setShowRatingModal(true)}
+                                onClick={onRate}
                             >
                                 <Star size={16} />
                                 Rate Trip
@@ -423,13 +509,6 @@ const BookingCard = ({ booking, onCancel, onAcceptCounter, onRejectCounter, onRa
                 </div>
             </div>
 
-            {showRatingModal && (
-                <RatingModal
-                    booking={booking}
-                    onClose={() => setShowRatingModal(false)}
-                    onRated={onRated}
-                />
-            )}
         </article>
     );
 };

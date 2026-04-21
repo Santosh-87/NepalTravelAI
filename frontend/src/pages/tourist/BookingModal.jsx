@@ -77,7 +77,6 @@ const BookingModal = ({ vehicle, onClose }) => {
     };
 
     const calcDays = () => {
-        if (isValley) return 1;
         if (!formData.start_date || !formData.end_date) return 0;
         const diff = (new Date(formData.end_date) - new Date(formData.start_date)) / 86400000;
         return diff >= 0 ? Math.round(diff) + 1 : 0;
@@ -85,8 +84,7 @@ const BookingModal = ({ vehicle, onClose }) => {
 
     const calcTotal = (priceOverride) => {
         const price = priceOverride || effectivePrice;
-        if (isValley) return price; // IV: listed price for 1 day
-        return calcDays() * price;  // OV: effective rate × days
+        return calcDays() * price; // rate × days for both trip types
     };
 
     const selectTripType = (type) => {
@@ -104,12 +102,12 @@ const BookingModal = ({ vehicle, onClose }) => {
 
     const validateForm = () => {
         if (!formData.start_date) {
-            setError('Please select a trip date'); return false;
+            setError('Please select a start date'); return false;
         }
-        if (!isValley && !formData.end_date) {
-            setError('Please select a return date'); return false;
+        if (!formData.end_date) {
+            setError('Please select an end date'); return false;
         }
-        if (!isValley && new Date(formData.end_date) < new Date(formData.start_date)) {
+        if (new Date(formData.end_date) < new Date(formData.start_date)) {
             setError('End date cannot be before start date'); return false;
         }
         if (!formData.pickup_location) {
@@ -158,7 +156,7 @@ const BookingModal = ({ vehicle, onClose }) => {
                 vehicle_listing: vehicle.id,
                 trip_type: tripType,
                 start_date: formData.start_date,
-                end_date: isValley ? formData.start_date : formData.end_date,
+                end_date: formData.end_date,
                 pickup_location: formData.pickup_location,
                 dropoff_location: formData.dropoff_location,
                 number_of_passengers: parseInt(formData.number_of_passengers),
@@ -230,10 +228,10 @@ const BookingModal = ({ vehicle, onClose }) => {
                             <div className="ttc-icon">🏙️</div>
                             <div className="ttc-body">
                                 <div className="ttc-title">Within Valley</div>
-                                <div className="ttc-desc">Short local trips within Kathmandu, Patan & Bhaktapur</div>
+                                <div className="ttc-desc">Local trips within Kathmandu, Patan & Bhaktapur — single or multi-day</div>
                                 <div className="ttc-rate-box">
-                                    <span className="ttc-rate-label">Flat rate</span>
-                                    <strong className="ttc-rate-value">NPR {basePrice.toLocaleString()}</strong>
+                                    <span className="ttc-rate-label">Per-day rate</span>
+                                    <strong className="ttc-rate-value">NPR {basePrice.toLocaleString()}<span className="ttc-per-day">/day</span></strong>
                                 </div>
                             </div>
                             <ArrowRight size={20} className="ttc-arrow" />
@@ -289,7 +287,7 @@ const BookingModal = ({ vehicle, onClose }) => {
                 <div className="modal-body">
                     {/* Date(s) */}
                     <div className="form-group">
-                        <label>{isValley ? 'Trip Date *' : 'Travel Dates *'}</label>
+                        <label>Travel Dates *</label>
                         <div className="date-inputs">
                             <div className="date-input">
                                 <Calendar size={18} />
@@ -301,25 +299,19 @@ const BookingModal = ({ vehicle, onClose }) => {
                                     min={today}
                                 />
                             </div>
-                            {!isValley && (
-                                <>
-                                    <span className="date-sep">→</span>
-                                    <div className="date-input">
-                                        <Calendar size={18} />
-                                        <input
-                                            type="date"
-                                            name="end_date"
-                                            value={formData.end_date}
-                                            onChange={handleChange}
-                                            min={formData.start_date || today}
-                                        />
-                                    </div>
-                                </>
-                            )}
+                            <span className="date-sep">→</span>
+                            <div className="date-input">
+                                <Calendar size={18} />
+                                <input
+                                    type="date"
+                                    name="end_date"
+                                    value={formData.end_date}
+                                    onChange={handleChange}
+                                    min={formData.start_date || today}
+                                />
+                            </div>
                         </div>
-                        {!isValley && (
-                            <span className="form-hint">Same-day bookings are supported — select the same date for a 1-day trip.</span>
-                        )}
+                        <span className="form-hint">Select the same date for a single-day trip.</span>
                     </div>
 
                     {/* Pickup */}
@@ -409,15 +401,12 @@ const BookingModal = ({ vehicle, onClose }) => {
                     </div>
 
                     {/* Fare preview */}
-                    {(isValley || calcDays() > 0) && (
+                    {calcDays() > 0 && (
                         <div className="fare-preview">
                             <div className="fare-left">
                                 <span className="fare-label">Estimated Fare</span>
                                 <span className="fare-calc-text">
-                                    {isValley
-                                        ? 'Within Valley flat rate'
-                                        : `NPR ${effectivePrice.toLocaleString()} × ${calcDays()} day${calcDays() !== 1 ? 's' : ''}`
-                                    }
+                                    NPR {effectivePrice.toLocaleString()} × {calcDays()} day{calcDays() !== 1 ? 's' : ''}
                                 </span>
                             </div>
                             <strong className="fare-total">NPR {calcTotal().toLocaleString()}</strong>
@@ -536,10 +525,7 @@ const BookingModal = ({ vehicle, onClose }) => {
                                 {wantToNegotiate && offeredPrice ? 'Estimated Total (at your offer)' : 'Estimated Total'}
                             </span>
                             <span className="fare-calc-text">
-                                {isValley
-                                    ? 'Within Valley flat rate'
-                                    : `NPR ${(wantToNegotiate && offeredPrice ? parseFloat(offeredPrice) : effectivePrice).toLocaleString()} × ${calcDays()} day${calcDays() !== 1 ? 's' : ''}`
-                                }
+                                NPR {(wantToNegotiate && offeredPrice ? parseFloat(offeredPrice) : effectivePrice).toLocaleString()} × {calcDays()} day{calcDays() !== 1 ? 's' : ''}
                             </span>
                         </div>
                         <strong className="fare-total">
@@ -624,19 +610,14 @@ const BookingModal = ({ vehicle, onClose }) => {
                     {/* Details grid */}
                     <div className="confirm-details">
                         <div className="cd-item">
-                            <span className="cd-label">{isValley ? 'Date' : 'Dates'}</span>
+                            <span className="cd-label">Dates</span>
                             <span className="cd-val">
-                                {isValley
-                                    ? fmtDate(formData.start_date)
-                                    : `${fmtDate(formData.start_date)} → ${fmtDate(formData.end_date)}`
-                                }
+                                {`${fmtDate(formData.start_date)} → ${fmtDate(formData.end_date)}`}
                             </span>
                         </div>
                         <div className="cd-item">
                             <span className="cd-label">Duration</span>
-                            <span className="cd-val">
-                                {isValley ? '1 local trip' : `${calcDays()} day${calcDays() !== 1 ? 's' : ''}`}
-                            </span>
+                            <span className="cd-val">{calcDays()} day{calcDays() !== 1 ? 's' : ''}</span>
                         </div>
                         <div className="cd-item">
                             <span className="cd-label">Passengers</span>
@@ -650,29 +631,16 @@ const BookingModal = ({ vehicle, onClose }) => {
 
                     {/* Price breakdown */}
                     <div className="confirm-price">
-                        {isValley ? (
-                            <>
-                                <div className="cp-row">
-                                    <span>Within Valley rate</span>
-                                    <span>NPR {effectivePrice.toLocaleString()}</span>
-                                </div>
-                                <div className="cp-row">
-                                    <span>Duration</span>
-                                    <span>1 local trip</span>
-                                </div>
-                            </>
-                        ) : (
-                            <>
-                                <div className="cp-row">
-                                    <span>Outside Valley rate (+15%)</span>
-                                    <span>NPR {effectivePrice.toLocaleString()}/day</span>
-                                </div>
-                                <div className="cp-row">
-                                    <span>Number of days</span>
-                                    <span>{calcDays()}</span>
-                                </div>
-                            </>
-                        )}
+                        <>
+                            <div className="cp-row">
+                                <span>{isValley ? 'Within Valley rate' : 'Outside Valley rate (+15%)'}</span>
+                                <span>NPR {effectivePrice.toLocaleString()}/day</span>
+                            </div>
+                            <div className="cp-row">
+                                <span>Number of days</span>
+                                <span>{calcDays()}</span>
+                            </div>
+                        </>
 
                         {wantToNegotiate && offeredPrice && (
                             <div className="cp-row cp-negotiate">

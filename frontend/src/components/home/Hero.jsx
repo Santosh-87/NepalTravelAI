@@ -68,19 +68,17 @@ const Hero = () => {
 
               <div className="hs-chat-messages">
                 <div className="hs-msg hs-msg-user">
-                  I need transport from Kathmandu to Pokhara for 4 people
+                  Generate a Mustang trip itinerary for my friends trip
                 </div>
                 <div className="hs-msg hs-msg-ai">
-                  I recommend an SUV for your group. The trip takes 6–7 hours.
-                  NATTA rate: NPR 18,000 for round trip. Would you like to see
-                  available vehicles?
-                </div>
-                <div className="hs-msg hs-msg-user">
-                  Yes, show me available SUVs
+                  Perfect! Here's a 3-day Mustang trip itinerary for your group:
                 </div>
                 <div className="hs-msg hs-msg-ai">
-                  Here are 3 verified NATTA-certified SUVs available for your dates.
-                  All include a professional driver and fuel.
+                  Day 1: Kathmandu → Chame (scenic drives)
+                  Day 2: Chame → Jomsom (hiking)
+                  Day 3: Jomsom → Marpha → Kathmandu
+
+                  Total: NPR 25,000 per person. Jeep recommended for 8 friends.
                 </div>
               </div>
 

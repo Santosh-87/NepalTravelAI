@@ -151,7 +151,7 @@ const ChatPage = () => {
               <h2 className="chat-title">NepalTravel AI</h2>
               <span className="chat-status">
                 <span className="status-dot" />
-                Online — powered by Llama 3.2
+                Online
               </span>
             </div>
           </div>

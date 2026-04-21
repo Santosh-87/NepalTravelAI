@@ -301,7 +301,7 @@ const AdminDashboard = () => {
                                     {/* Vehicle Type Horizontal Bar */}
                                     <div className="adp-chart-card">
                                         <div className="adp-chart-header">
-                                            <h2 className="adp-section-title">Vehicle Types</h2>
+                                            <h2 className="adp-section-title">Registered Vehicle Types</h2>
                                         </div>
                                         {analytics.vehicle_type_dist.length > 0 ? (
                                             <ResponsiveContainer width="100%" height={220}>

@@ -127,6 +127,19 @@
 
 .lm-btn--confirm:hover { background: #b91c1c; }
 
+/* Primary (green) variant — for non-destructive confirmations */
+.lm-icon--primary {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.lm-btn--confirm-primary {
+    background: #059669;
+    color: #ffffff;
+}
+
+.lm-btn--confirm-primary:hover { background: #047857; }
+
 /* Mobile */
 @media (max-width: 400px) {
     .lm-dialog {

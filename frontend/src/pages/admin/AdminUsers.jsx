@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Search, CheckCircle, XCircle, UserX, UserCheck, Filter, Briefcase, FileText, MapPin } from 'lucide-react';
+import { Search, CheckCircle, XCircle, UserX, UserCheck, Filter, FileText, MapPin } from 'lucide-react';
+import ConfirmModal from '../../components/shared/ConfirmModal';
 import AdminLayout from '../../components/admin/AdminLayout';
 import adminService from '../../services/admin';
 import { useAuth } from '../../context/AuthContext';
@@ -14,6 +15,7 @@ const AdminUsers = () => {
     const [toast, setToast] = useState('');
     const [actionLoading, setActionLoading] = useState(null);
     const [expanded, setExpanded] = useState(null);
+    const [modal, setModal] = useState(null);
 
     useEffect(() => {
         loadUsers();
@@ -44,18 +46,27 @@ const AdminUsers = () => {
         setTimeout(() => setToast(''), 3500);
     };
 
-    const doAction = async (fn, id, label) => {
-        if (!window.confirm(`${label}?`)) return;
-        setActionLoading(id);
-        try {
-            const res = await fn(id);
-            showToast(res.message);
-            await loadUsers();
-        } catch (err) {
-            showToast(err.message || `Failed: ${label}`, 'error');
-        } finally {
-            setActionLoading(null);
-        }
+    const doAction = (fn, id, label, variant = 'danger') => {
+        setModal({
+            title: `${label}?`,
+            message: 'This action will update the user account.',
+            confirmLabel: label,
+            variant,
+            icon: variant === 'primary' ? <CheckCircle size={21} /> : <XCircle size={21} />,
+            onConfirm: async () => {
+                setModal(null);
+                setActionLoading(id);
+                try {
+                    const res = await fn(id);
+                    showToast(res.message);
+                    await loadUsers();
+                } catch (err) {
+                    showToast(err.message || `Failed: ${label}`, 'error');
+                } finally {
+                    setActionLoading(null);
+                }
+            },
+        });
     };
 
     const filteredUsers = search
@@ -69,6 +80,12 @@ const AdminUsers = () => {
 
     return (
         <AdminLayout user={user}>
+            {modal && (
+                <ConfirmModal
+                    {...modal}
+                    onCancel={() => setModal(null)}
+                />
+            )}
             <div className="adu">
                 {/* Toast */}
                 {toast && (
@@ -145,7 +162,7 @@ const AdminUsers = () => {
                                             expanded={expanded}
                                             setExpanded={setExpanded}
                                             onApprove={() => doAction(adminService.approveVendor.bind(adminService), u.id, 'Approve this vendor')}
-                                            onReject={() => doAction(adminService.rejectVendor.bind(adminService), u.id, 'Revoke vendor status')}
+                                            onReject={() => doAction(adminService.rejectVendor.bind(adminService), u.id, 'Reject vendor')}
                                             onToggle={() => doAction(adminService.toggleUserActive.bind(adminService), u.id, u.is_active ? 'Deactivate this user' : 'Activate this user')}
                                         />
                                     ))}
@@ -187,10 +204,10 @@ const UserRow = ({ u, isLoading, expanded, setExpanded, onApprove, onReject, onT
                     className="adu-btn adu-btn--reject"
                     onClick={(e) => { e.stopPropagation(); onReject(); }}
                     disabled={isLoading}
-                    title="Revoke vendor status"
+                    title="Reject vendor"
                 >
                     <UserX size={15} />
-                    Revoke
+                    Reject
                 </button>
             )}
             <button
@@ -263,12 +280,6 @@ const UserRow = ({ u, isLoading, expanded, setExpanded, onApprove, onReject, onT
 const VendorDetail = ({ u, ActionButtons }) => (
     <div className="adu-detail">
         <div className="adu-detail-grid">
-            <div className="adu-detail-item">
-                <div className="adu-detail-label">
-                    <Briefcase size={14} /> Business Name
-                </div>
-                <div className="adu-detail-value">{u.full_name}</div>
-            </div>
             <div className="adu-detail-item">
                 <div className="adu-detail-label">
                     <FileText size={14} /> PAN Number

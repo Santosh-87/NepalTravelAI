@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageSquare, Car, MapPin } from 'lucide-react';
+import { MessageSquare, Car, MapPin, Users } from 'lucide-react';
 import './Features.css';
 
 /**
@@ -25,9 +25,15 @@ const Features = () => {
     },
     {
       icon: MapPin,
-      title: "Destination Information",
-      description: "Explore popular destinations, treks, and attractions with detailed guides, practical travel information, and local insights.",
+      title: "Trip Catalogs & Destinations",
+      description: "Explore curated trip templates and popular destinations with detailed guides, practical travel information, and local insights.",
       color: "accent"
+    },
+    {
+      icon: Users,
+      title: "Traveler Community",
+      description: "Connect with fellow travelers, share experiences, discover itineraries, exchange tips, and build lasting travel memories together.",
+      color: "primary"
     }
   ];
 

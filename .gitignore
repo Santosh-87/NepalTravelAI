@@ -24,3 +24,4 @@ testing-docs/
 
 # Debug/demo test files
 backend/authentication/tests_bug_demo.py
+project-context.md

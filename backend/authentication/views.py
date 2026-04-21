@@ -58,13 +58,22 @@ class LoginView(APIView):
         email = serializer.validated_data['email']
         password = serializer.validated_data['password']
 
+        # Check for deactivated account before authenticate() swallows it
+        User = get_user_model()
+        try:
+            account = User.objects.get(email=email)
+            if not account.is_active:
+                return Response(
+                    {'error': 'Your account has been deactivated. Please contact support.'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+        except User.DoesNotExist:
+            pass
+
         user = authenticate(username=email, password=password)
 
         if user is None:
             return Response({'error': 'Invalid email or password'}, status=status.HTTP_401_UNAUTHORIZED)
-
-        if not user.is_active:
-            return Response({'error': 'Account is disabled'}, status=status.HTTP_401_UNAUTHORIZED)
 
         refresh = RefreshToken.for_user(user)
 

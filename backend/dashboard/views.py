@@ -105,13 +105,15 @@ class AdminUserActionView(APIView):
 
         if action == 'approve':
             user.is_vendor_approved = True
+            user.is_vendor_rejected = False
             user.save()
             return Response({'message': f'{user.full_name} approved as vendor.'})
 
         if action == 'reject':
             user.is_vendor_approved = False
+            user.is_vendor_rejected = True
             user.save()
-            return Response({'message': f'{user.full_name} vendor status revoked.'})
+            return Response({'message': f'{user.full_name} vendor application rejected.'})
 
         if action == 'toggle-active':
             user.is_active = not user.is_active

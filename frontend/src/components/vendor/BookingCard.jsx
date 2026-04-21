@@ -1,6 +1,22 @@
 import { useState } from 'react';
-import { Calendar, MapPin, User, Phone, CheckCircle, XCircle, Clock, Award, DollarSign } from 'lucide-react';
+import { Calendar, MapPin, User, Phone, CheckCircle, XCircle, Clock, Award, DollarSign, Star } from 'lucide-react';
 import './BookingCard.css';
+
+const StarDisplay = ({ rating, size = 16 }) => {
+    const stars = [];
+    const fullStars = Math.floor(rating);
+    const hasHalf = rating - fullStars >= 0.5;
+    for (let i = 0; i < 5; i++) {
+        if (i < fullStars) {
+            stars.push(<Star key={i} size={size} fill="#f59e0b" stroke="#f59e0b" />);
+        } else if (i === fullStars && hasHalf) {
+            stars.push(<Star key={i} size={size} fill="#f59e0b" stroke="#f59e0b" style={{ clipPath: 'inset(0 50% 0 0)' }} />);
+        } else {
+            stars.push(<Star key={i} size={size} fill="none" stroke="#d1d5db" />);
+        }
+    }
+    return <div className="star-display-vendor">{stars}</div>;
+};
 
 const STATUS_CONFIG = {
     pending:                    { Icon: Clock,       label: 'Pending Approval' },
@@ -256,9 +272,41 @@ const BookingCard = ({ booking, onConfirm, onReject, onComplete, onCancel, onAcc
                         {(booking.status === 'rejected' || booking.status === 'cancelled' || booking.status === 'completed') && (
                             <div className="booking-final-status">
                                 {booking.status === 'completed' && (
-                                    <span className="status-message success">
-                                        ✓ Trip completed successfully
-                                    </span>
+                                    <>
+                                        <span className="status-message success">
+                                            ✓ Trip completed successfully
+                                        </span>
+                                        {booking.rating_data && (
+                                            <div className="vendor-rating-section">
+                                                <div className="vendor-rating-header">
+                                                    <div className="vendor-rating-title">
+                                                        <Star size={16} fill="#f59e0b" stroke="#f59e0b" />
+                                                        <span>Tourist Review</span>
+                                                    </div>
+                                                    <StarDisplay rating={booking.rating_data.overall_rating} size={16} />
+                                                </div>
+                                                {(booking.rating_data.vehicle_condition_rating || booking.rating_data.punctuality_rating || booking.rating_data.driver_behavior_rating) && (
+                                                    <div className="vendor-sub-ratings">
+                                                        {booking.rating_data.vehicle_condition_rating && (
+                                                            <span className="vendor-sub-rating">Vehicle: {booking.rating_data.vehicle_condition_rating}/5</span>
+                                                        )}
+                                                        {booking.rating_data.punctuality_rating && (
+                                                            <span className="vendor-sub-rating">Punctuality: {booking.rating_data.punctuality_rating}/5</span>
+                                                        )}
+                                                        {booking.rating_data.driver_behavior_rating && (
+                                                            <span className="vendor-sub-rating">Driver: {booking.rating_data.driver_behavior_rating}/5</span>
+                                                        )}
+                                                    </div>
+                                                )}
+                                                {booking.rating_data.review_text && (
+                                                    <p className="vendor-review-text">"{booking.rating_data.review_text}"</p>
+                                                )}
+                                                <div className="vendor-rating-meta">
+                                                    by {booking.rating_data.tourist_name} · {formatDate(booking.rating_data.created_at)}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </>
                                 )}
                                 {booking.status === 'rejected' && (
                                     <span className="status-message error">

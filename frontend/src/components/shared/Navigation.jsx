@@ -69,9 +69,10 @@ const Navigation = () => {
   // Confirmed — actually sign out
   const doLogout = async () => {
     setConfirmLogout(false);
+    const destination = (!user?.is_staff && user?.role === 'tourist') ? '/' : '/login';
+    navigate(destination, { replace: true });
     await signOut();
     setUser(null);
-    navigate('/login', { replace: true });
   };
 
   // Get user initial for avatar
@@ -137,15 +138,14 @@ const Navigation = () => {
 
           {/* Desktop Nav Links */}
           <div className="nav-menu desktop-menu">
-            <Link to="/trips" className="nav-link">Trip Packages</Link>
-            <Link to="/marketplace" className="nav-link">Vehicle Marketplace</Link>
+            {(!user || user.role !== 'vendor') && (
+              <>
+                <Link to="/trips" className="nav-link">Trip Packages</Link>
+                <Link to="/marketplace" className="nav-link">Vehicle Marketplace</Link>
+              </>
+            )}
             <Link to="/community" className="nav-link">Community</Link>
             <Link to="/about" className="nav-link">About</Link>
-            {user && (
-              <Link to={getDashboardPath()} className="nav-dashboard-btn">
-                Dashboard
-              </Link>
-            )}
           </div>
 
           {/* NOT logged in */}
@@ -236,26 +236,30 @@ const Navigation = () => {
         {isMobileMenuOpen && (
           <div className="mobile-menu">
             <Link
-              to="/trips"
-              className="mobile-nav-link"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Trip Packages
-            </Link>
-            <Link
-              to="/marketplace"
-              className="mobile-nav-link"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Vehicle Marketplace
-            </Link>
-            <Link
               to="/community"
               className="mobile-nav-link"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Community
             </Link>
+            {(!user || user.role !== 'vendor') && (
+              <>
+                <Link
+                  to="/trips"
+                  className="mobile-nav-link"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Trip Packages
+                </Link>
+                <Link
+                  to="/marketplace"
+                  className="mobile-nav-link"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Vehicle Marketplace
+                </Link>
+              </>
+            )}
             <Link
               to="/about"
               className="mobile-nav-link"

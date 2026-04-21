@@ -1,0 +1,246 @@
+/* ─── Payment Modal ───────────────────────────────────────────── */
+
+.pm-modal {
+    background: #fff;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 440px;
+    margin: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+    overflow: hidden;
+    animation: pm-slide-in 0.22s ease;
+}
+
+@keyframes pm-slide-in {
+    from { opacity: 0; transform: translateY(16px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.pm-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem 1rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.pm-modal-header h2 {
+    font-family: 'Sora', 'Plus Jakarta Sans', sans-serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+}
+
+/* ─── Booking Summary ──────────────────────────────────────────── */
+
+.pm-booking-summary {
+    background: linear-gradient(135deg, #f0f7ff 0%, #e8f4f0 100%);
+    border: 1px solid #bfdbfe;
+    border-radius: 10px;
+    padding: 1rem 1.125rem;
+    margin: 1.25rem 1.5rem 0;
+}
+
+.pm-summary-vehicle {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #1a4d6f;
+    margin-bottom: 0.25rem;
+}
+
+.pm-summary-meta {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin-bottom: 0.75rem;
+}
+
+.pm-summary-amount {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding-top: 0.625rem;
+    border-top: 1px dashed #93c5fd;
+}
+
+.pm-summary-amount span {
+    font-size: 0.8rem;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+}
+
+.pm-summary-amount strong {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #1a4d6f;
+    font-family: 'Sora', sans-serif;
+}
+
+/* ─── Form ─────────────────────────────────────────────────────── */
+
+.pm-form {
+    padding: 1.25rem 1.5rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* ─── Card Section ─────────────────────────────────────────────── */
+
+.pm-card-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.pm-card-label {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.825rem;
+    font-weight: 600;
+    color: #334155;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.pm-card-element-wrapper {
+    border: 1.5px solid #cbd5e1;
+    border-radius: 10px;
+    padding: 0.875rem 1rem;
+    background: #f8fafc;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.pm-card-element-wrapper:focus-within {
+    border-color: #1a4d6f;
+    box-shadow: 0 0 0 3px rgba(26, 77, 111, 0.1);
+    background: #fff;
+}
+
+.pm-test-hint {
+    font-size: 0.75rem;
+    color: #64748b;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* ─── Error ────────────────────────────────────────────────────── */
+
+.pm-error {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    background: #fef2f2;
+    border: 1px solid #fca5a5;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    color: #dc2626;
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+.pm-error svg { flex-shrink: 0; margin-top: 1px; }
+
+/* ─── Pay Button ───────────────────────────────────────────────── */
+
+.pm-pay-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: #1a4d6f;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 0.875rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 700;
+    font-family: 'Sora', 'Plus Jakarta Sans', sans-serif;
+    cursor: pointer;
+    transition: background 0.18s, transform 0.1s, box-shadow 0.18s;
+    width: 100%;
+    letter-spacing: 0.01em;
+}
+
+.pm-pay-btn:hover:not(:disabled) {
+    background: #15405e;
+    box-shadow: 0 4px 14px rgba(26, 77, 111, 0.35);
+}
+
+.pm-pay-btn:active:not(:disabled) {
+    transform: scale(0.98);
+}
+
+.pm-pay-btn:disabled {
+    background: #94a3b8;
+    cursor: not-allowed;
+}
+
+/* Spinner animation */
+.pm-spinner {
+    animation: pm-spin 0.8s linear infinite;
+}
+
+@keyframes pm-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+/* ─── Secure Note ──────────────────────────────────────────────── */
+
+.pm-secure-note {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    font-size: 0.72rem;
+    color: #94a3b8;
+    margin: 0;
+}
+
+/* ─── Success State ────────────────────────────────────────────── */
+
+.pm-success {
+    padding: 2.5rem 2rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.pm-success-icon {
+    color: #16a34a;
+    animation: pm-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes pm-pop {
+    from { transform: scale(0.5); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
+}
+
+.pm-success h3 {
+    font-family: 'Sora', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+}
+
+.pm-success p {
+    font-size: 0.9rem;
+    color: #334155;
+    margin: 0;
+}
+
+.pm-success-sub {
+    color: #64748b !important;
+    font-size: 0.82rem !important;
+}

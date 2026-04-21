@@ -71,7 +71,9 @@ const LoginPage = () => {
     } catch (error) {
       console.error('Login error:', error);
 
-      if (error.message?.toLowerCase().includes('invalid') || error.message?.toLowerCase().includes('credentials') || error.message?.toLowerCase().includes('password')) {
+      if (error.message?.toLowerCase().includes('deactivated') || error.message?.toLowerCase().includes('disabled')) {
+        setErrors({ general: 'Your account has been deactivated. Please contact support.' });
+      } else if (error.message?.toLowerCase().includes('invalid') || error.message?.toLowerCase().includes('credentials') || error.message?.toLowerCase().includes('password')) {
         setErrors({ general: 'Wrong email or password. Please try again.' });
       } else if (error.message?.toLowerCase().includes('not confirmed') || error.message?.toLowerCase().includes('verify')) {
         setErrors({ general: 'Please verify your email before signing in.' });

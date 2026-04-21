@@ -31,8 +31,10 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
         console.log("PROFILE ROLE:", user?.role);
         console.log("ALLOWED ROLES:", allowedRoles);
 
-        // Wrong role
+        // Wrong role — redirect to their own dashboard
         if (!allowedRoles.includes(user.role)) {
+            if (user.role === 'vendor') return <Navigate to="/vendor/dashboard" replace />;
+            if (user.role === 'tourist') return <Navigate to="/tourist/dashboard" replace />;
             return <Navigate to="/" replace />;
         }
 

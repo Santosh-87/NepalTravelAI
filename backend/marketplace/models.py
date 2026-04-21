@@ -227,6 +227,18 @@ class Booking(models.Model):
         default='pending'
     )
 
+    # Payment
+    PAYMENT_STATUS_CHOICES = [
+        ('unpaid', 'Unpaid'),
+        ('paid', 'Paid'),
+        ('refunded', 'Refunded'),
+    ]
+    payment_status = models.CharField(
+        max_length=10,
+        choices=PAYMENT_STATUS_CHOICES,
+        default='unpaid',
+    )
+
     admin_notes = models.TextField(blank=True)
 
     # Timestamps
@@ -386,3 +398,37 @@ class Rating(models.Model):
 
     def __str__(self):
         return f"Rating for Booking #{self.booking_id} by {self.tourist.email}"
+
+
+class Payment(models.Model):
+    """
+    Stripe payment record for a confirmed booking.
+    amount_npr stores the original NPR booking total.
+    amount_cents is what we passed to Stripe (NPR treated as cents → USD simulation).
+    """
+
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('succeeded', 'Succeeded'),
+        ('failed', 'Failed'),
+    ]
+
+    booking = models.OneToOneField(
+        Booking,
+        on_delete=models.CASCADE,
+        related_name='payment',
+    )
+    stripe_payment_intent_id = models.CharField(max_length=255, unique=True)
+    amount_npr = models.DecimalField(max_digits=10, decimal_places=2)
+    amount_cents = models.IntegerField(help_text="Amount passed to Stripe in cents (NPR value as USD cents for simulation)")
+    currency = models.CharField(max_length=10, default='usd')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    paid_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'payments'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Payment #{self.id} for Booking #{self.booking_id} — {self.status}"

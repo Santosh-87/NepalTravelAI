@@ -134,7 +134,7 @@ const RatingModal = ({ booking, onClose, onRated }) => {
                 </div>
 
                 <div className="rating-modal-footer">
-                    <button className="btn-secondary" onClick={onClose}>Cancel</button>
+                    <button className="btn-cancel-rating" onClick={onClose}>Cancel</button>
                     <button
                         className="btn-rate-submit"
                         onClick={handleSubmit}

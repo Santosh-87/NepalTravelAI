@@ -1,36 +1,48 @@
-import { Car, Calendar, CheckCircle, Clock } from 'lucide-react';
+import { Car, Calendar, TrendingUp, Clock } from 'lucide-react';
 import './Stats.css';
 
-const buildStats = (vehicles, bookings) => [
-    {
-        Icon: Car,
-        label: 'Total Vehicles',
-        value: vehicles.length,
-        sub: `${vehicles.filter(v => v.status === 'approved').length} approved`,
-        cls: 'blue',
-    },
-    {
-        Icon: CheckCircle,
-        label: 'Approved',
-        value: vehicles.filter(v => v.status === 'approved').length,
-        sub: 'Active listings',
-        cls: 'green',
-    },
-    {
-        Icon: Clock,
-        label: 'Pending Review',
-        value: vehicles.filter(v => v.status === 'pending').length,
-        sub: 'Awaiting admin approval',
-        cls: 'gold',
-    },
-    {
-        Icon: Calendar,
-        label: 'Total Bookings',
-        value: bookings.length,
-        sub: `${bookings.filter(b => b.status === 'pending').length} pending`,
-        cls: 'teal',
-    },
-];
+const formatCurrency = (n) => `NPR ${Number(n).toLocaleString()}`;
+
+const buildStats = (vehicles, bookings) => {
+    const earningBookings = bookings.filter(
+        b => b.status === 'confirmed' || b.status === 'completed'
+    );
+    const revenue = earningBookings.reduce(
+        (sum, b) => sum + Number(b.total_price || 0),
+        0
+    );
+
+    return [
+        {
+            Icon: Car,
+            label: 'Total Vehicles',
+            value: vehicles.length,
+            sub: `${vehicles.filter(v => v.status === 'approved').length} approved · ${vehicles.filter(v => v.status === 'pending').length} pending`,
+            cls: 'blue',
+        },
+        {
+            Icon: TrendingUp,
+            label: 'Total Revenue',
+            value: formatCurrency(revenue),
+            sub: 'confirmed & completed bookings',
+            cls: 'green',
+        },
+        {
+            Icon: Calendar,
+            label: 'Total Bookings',
+            value: bookings.length,
+            sub: `${bookings.filter(b => b.status === 'confirmed').length} confirmed · ${bookings.filter(b => b.status === 'completed').length} completed`,
+            cls: 'teal',
+        },
+        {
+            Icon: Clock,
+            label: 'Pending Bookings',
+            value: bookings.filter(b => b.status === 'pending').length,
+            sub: 'Awaiting your response',
+            cls: 'gold',
+        },
+    ];
+};
 
 const Stats = ({ vehicles, bookings }) => (
     <div className="vnd-stat-grid">

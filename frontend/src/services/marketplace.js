@@ -243,6 +243,37 @@ class MarketplaceService {
     return await response.json();
   }
 
+  // --- Stripe Payments ---
+
+  async createPaymentIntent(bookingId) {
+    const response = await fetch(`${API_URL}/payments/create-intent/`, {
+      method: 'POST',
+      headers: this.getAuthHeader(),
+      body: JSON.stringify({ booking_id: bookingId }),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to create payment intent');
+    }
+    return await response.json();
+  }
+
+  async confirmPayment(bookingId, paymentIntentId) {
+    const response = await fetch(`${API_URL}/payments/confirm/`, {
+      method: 'POST',
+      headers: this.getAuthHeader(),
+      body: JSON.stringify({
+        booking_id: bookingId,
+        payment_intent_id: paymentIntentId,
+      }),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to confirm payment');
+    }
+    return await response.json();
+  }
+
   // Create booking (authenticated)
 
   async createBooking(bookingData) {

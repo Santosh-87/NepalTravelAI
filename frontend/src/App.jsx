@@ -50,6 +50,14 @@ const AdminRoute = ({ children }) => {
     return children;
 };
 
+// Guard: vendors cannot access tourist-facing marketplace/trip pages
+const NonVendorRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (user?.role === 'vendor') return <Navigate to="/vendor/dashboard" replace />;
+  return children;
+};
+
 // Guard: logged-in users should not access login/signup again.
 const GuestRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -77,12 +85,12 @@ function App() {
         <Route path="/forgot-password" element={<GuestRoute><ForgotPasswordPage /></GuestRoute>} />
         <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
         <Route path="/get-started" element={<GuestRoute><SignUpPage /></GuestRoute>} />
-        <Route path="/trips" element={<TripTemplates />} />
-        <Route path="/trips/:slug" element={<TripTemplateDetail />} />
+        <Route path="/trips" element={<NonVendorRoute><TripTemplates /></NonVendorRoute>} />
+        <Route path="/trips/:slug" element={<NonVendorRoute><TripTemplateDetail /></NonVendorRoute>} />
         <Route path="/community" element={<Community />} />
         <Route path="/community/:id" element={<PostDetail />} />
-        <Route path="/marketplace" element={<Marketplace />} />
-        <Route path="/vehicle/:id" element={<VehicleDetails />} />
+        <Route path="/marketplace" element={<NonVendorRoute><Marketplace /></NonVendorRoute>} />
+        <Route path="/vehicle/:id" element={<NonVendorRoute><VehicleDetails /></NonVendorRoute>} />
 
         {/* Protected Routes - Any authenticated user */}
         <Route

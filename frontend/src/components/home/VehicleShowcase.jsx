@@ -14,29 +14,36 @@ const VehicleShowcase = () => {
   const vehicles = [
     {
       type: "Car / SUV",
-      image: ".images/car-suv.jpg",
-      capacity: "1-5 passengers",
+      image: "/images/car-suv.jpg",
+      capacity: "1-4 passengers",
       description: "Ideal for small groups and families",
       useCase: "Airport transfers, city tours, short trips"
     },
     {
+      type: "Jeep",
+      image: "/images/jeep.jpeg",
+      capacity: "6-8 passengers",
+      description: "Perfect for offroad adventure travel",
+      useCase: "Mountain treks, offroad expeditions, adventure tours"
+    },
+    {
       type: "Hiace / Van",
-      image: ".images/hiace-van.jpg",
+      image: "/images/hiace.jpg",
       capacity: "6-12 passengers",
       description: "Perfect for group travel",
       useCase: "Trekking groups, family trips, tours"
     },
     {
       type: "Coaster",
-      image: ".images/coaster.jpg",
+      image: "/images/coaster.jpg",
       capacity: "15-25 passengers",
       description: "Comfortable for larger groups",
       useCase: "Group tours, long-distance travel"
     },
     {
       type: "Bus",
-      image: ".images/bus.jpg",
-      capacity: "25-45 passengers",
+      image: "/images/bus.jpg",
+      capacity: "25-40 passengers",
       description: "Best for large tour groups",
       useCase: "Corporate trips, school tours, events"
     }

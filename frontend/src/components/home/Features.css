@@ -152,6 +152,10 @@
   animation-delay: 0.4s;
 }
 
+.feature-card-3 {
+  animation-delay: 0.5s;
+}
+
 .feature-card::before {
   content: "";
   position: absolute;

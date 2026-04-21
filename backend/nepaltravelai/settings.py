@@ -203,6 +203,10 @@ FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
 # Password reset token expires in 1 hour (matches the message sent in the email)
 PASSWORD_RESET_TIMEOUT = 3600
 
+# Stripe Payment Configuration
+STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY', '')
+STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY', '')
+
 # Ollama Configuration
 OLLAMA_BASE_URL = 'http://localhost:11434'
 OLLAMA_MODEL = 'llama3.2:3b-instruct-q4_K_M'

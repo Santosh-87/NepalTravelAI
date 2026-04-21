@@ -79,10 +79,22 @@ class User(AbstractUser):
         blank=True,
         help_text="Business address (vendors only)"
     )
-    
+
+    phone_number = models.CharField(
+        max_length=20,
+        null=True,
+        blank=True,
+        help_text="Contact phone number"
+    )
+
     is_vendor_approved = models.BooleanField(
         default=False,
         help_text="Admin approval for vendor account"
+    )
+
+    is_vendor_rejected = models.BooleanField(
+        default=False,
+        help_text="Admin explicitly rejected this vendor application"
     )
     
     # Metadata

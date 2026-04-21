@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import VehicleListing, Booking, Rating
+from .models import VehicleListing, Booking, Rating, Payment
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.db.models import Avg
@@ -82,12 +82,24 @@ class VehicleListingSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
+class PaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Payment
+        fields = [
+            'id', 'stripe_payment_intent_id', 'amount_npr',
+            'amount_cents', 'currency', 'status', 'created_at', 'paid_at',
+        ]
+        read_only_fields = fields
+
+
 class BookingSerializer(serializers.ModelSerializer):
     tourist_name = serializers.CharField(source='tourist.full_name', read_only=True)
     tourist_email = serializers.EmailField(source='tourist.email', read_only=True)
     vehicle_name = serializers.CharField(source='vehicle_listing.vehicle_name', read_only=True)
     vendor_name = serializers.CharField(source='vehicle_listing.vendor.full_name', read_only=True)
     has_rating = serializers.SerializerMethodField()
+    rating_data = serializers.SerializerMethodField()
+    payment_data = serializers.SerializerMethodField()
 
     class Meta:
         model = Booking
@@ -116,9 +128,12 @@ class BookingSerializer(serializers.ModelSerializer):
             'negotiation_expires_at',
             'price_negotiated',
             'has_rating',
+            'rating_data',
             'contact_number',
             'special_requests',
             'status',
+            'payment_status',
+            'payment_data',
             'created_at',
             'updated_at',
             'admin_notes',
@@ -128,11 +143,22 @@ class BookingSerializer(serializers.ModelSerializer):
             'tourist', 'price_per_day', 'total_days', 'total_price',
             'original_price_per_day', 'vendor_counter_price', 'final_price_per_day',
             'negotiation_status', 'negotiation_expires_at', 'price_negotiated',
-            'has_rating', 'admin_notes', 'completed_at', 'created_at', 'updated_at',
+            'has_rating', 'rating_data', 'payment_status', 'payment_data',
+            'admin_notes', 'completed_at', 'created_at', 'updated_at',
         ]
 
     def get_has_rating(self, obj):
         return hasattr(obj, 'rating')
+
+    def get_rating_data(self, obj):
+        if hasattr(obj, 'rating'):
+            return RatingSerializer(obj.rating).data
+        return None
+
+    def get_payment_data(self, obj):
+        if hasattr(obj, 'payment'):
+            return PaymentSerializer(obj.payment).data
+        return None
     
     def validate(self, attrs):
         """Custom validation"""
@@ -213,16 +239,10 @@ class BookingSerializer(serializers.ModelSerializer):
         validated_data['price_per_day'] = effective_rate
         validated_data['original_price_per_day'] = effective_rate
 
-        if trip_type == 'within_valley':
-            validated_data['total_days'] = 1
-            validated_data['total_price'] = effective_rate
-            # Normalise end_date to match start_date for within-valley trips
-            validated_data['end_date'] = start_date
-        else:
-            # Outside valley: per-day rate; same-day (start==end) counts as 1 day
-            days = (end_date - start_date).days + 1
-            validated_data['total_days'] = days
-            validated_data['total_price'] = effective_rate * days
+        # Both trip types: rate × days; same-day (start==end) counts as 1 day
+        days = (end_date - start_date).days + 1
+        validated_data['total_days'] = days
+        validated_data['total_price'] = effective_rate * days
 
         # Handle price negotiation (counter-offer on the effective rate)
         customer_offered_price = validated_data.get('customer_offered_price')

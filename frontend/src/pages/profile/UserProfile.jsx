@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import Navigation from '../../components/shared/Navigation';
 import Footer from '../../components/shared/Footer';
 import {
-  User, Mail, Calendar, Shield, Building2, Hash,
+  User, Mail, Phone, Calendar, Shield, Building2, Hash,
   MapPin, CheckCircle, Clock, Edit3, ChevronRight
 } from 'lucide-react';
 import './UserProfile.css';
@@ -104,6 +104,12 @@ const UserProfile = () => {
                     <span className="up-field-label">Email Address</span>
                     <span className="up-field-value">{user.email}</span>
                   </div>
+                  {user.phone_number && (
+                    <div className="up-field">
+                      <span className="up-field-label">Phone Number</span>
+                      <span className="up-field-value">{user.phone_number}</span>
+                    </div>
+                  )}
                 </div>
               </section>
 

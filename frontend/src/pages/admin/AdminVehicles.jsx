@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import {
     Search, CheckCircle, XCircle, Car,
-    MapPin, Users, DollarSign, Filter,
+    MapPin, Users, Filter,
 } from 'lucide-react';
+import ConfirmModal from '../../components/shared/ConfirmModal';
 import AdminLayout from '../../components/admin/AdminLayout';
 import adminService from '../../services/admin';
 import { useAuth } from '../../context/AuthContext';
@@ -20,6 +21,7 @@ const AdminVehicles = () => {
     const [actionLoading, setActionLoading] = useState(null);
     const [rejectModal, setRejectModal] = useState(null); // { id, name }
     const [rejectReason, setRejectReason] = useState('');
+    const [modal, setModal] = useState(null);
 
     useEffect(() => {
         loadVehicles();
@@ -45,18 +47,27 @@ const AdminVehicles = () => {
         setTimeout(() => setToast(''), 3500);
     };
 
-    const handleApprove = async (id) => {
-        if (!window.confirm('Approve this vehicle listing?')) return;
-        setActionLoading(id);
-        try {
-            const res = await adminService.approveVehicle(id);
-            showToast(res.message);
-            await loadVehicles();
-        } catch (err) {
-            showToast(err.message || 'Approval failed.', 'error');
-        } finally {
-            setActionLoading(null);
-        }
+    const handleApprove = (id) => {
+        setModal({
+            title: 'Approve Vehicle Listing?',
+            message: 'This will approve the listing and make it visible in the marketplace.',
+            confirmLabel: 'Approve',
+            variant: 'primary',
+            icon: <CheckCircle size={21} />,
+            onConfirm: async () => {
+                setModal(null);
+                setActionLoading(id);
+                try {
+                    const res = await adminService.approveVehicle(id);
+                    showToast(res.message);
+                    await loadVehicles();
+                } catch (err) {
+                    showToast(err.message || 'Approval failed.', 'error');
+                } finally {
+                    setActionLoading(null);
+                }
+            },
+        });
     };
 
     const handleRejectSubmit = async () => {
@@ -89,6 +100,12 @@ const AdminVehicles = () => {
 
     return (
         <AdminLayout user={user}>
+            {modal && (
+                <ConfirmModal
+                    {...modal}
+                    onCancel={() => setModal(null)}
+                />
+            )}
             <div className="adv">
                 {/* Toast */}
                 {toast && (
@@ -228,7 +245,7 @@ const VehicleCard = ({ v, typeLabel, isLoading, onApprove, onReject }) => {
                 <div className="adv-card-meta">
                     <span><Users size={13} /> {v.seating_capacity} seats</span>
                     <span><MapPin size={13} /> {v.available_location}</span>
-                    <span><DollarSign size={13} /> NPR {Number(v.price_per_day).toLocaleString()}/day</span>
+                    <span>NPR {Number(v.price_per_day).toLocaleString()}/day</span>
                 </div>
 
                 <div className="adv-card-vendor">
@@ -246,7 +263,7 @@ const VehicleCard = ({ v, typeLabel, isLoading, onApprove, onReject }) => {
                 )}
 
                 {/* Actions */}
-                {(v.status === 'pending') && (
+                {v.status === 'pending' && (
                     <div className="adv-card-actions">
                         <button
                             className="adv-btn adv-btn--approve"
@@ -272,6 +289,17 @@ const VehicleCard = ({ v, typeLabel, isLoading, onApprove, onReject }) => {
                             disabled={isLoading}
                         >
                             <XCircle size={15} /> Revoke Approval
+                        </button>
+                    </div>
+                )}
+                {v.status === 'rejected' && (
+                    <div className="adv-card-actions">
+                        <button
+                            className="adv-btn adv-btn--approve"
+                            onClick={onApprove}
+                            disabled={isLoading}
+                        >
+                            <CheckCircle size={15} /> Approve
                         </button>
                     </div>
                 )}

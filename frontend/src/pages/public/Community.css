@@ -158,7 +158,7 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.6rem 1.1rem;
-    background: #d4a574;
+    background: var(--color-accent);
     color: #ffffff;
     border: none;
     border-radius: 8px;
@@ -171,7 +171,7 @@
 }
 
 .create-post-btn:hover {
-    background: #c49563;
+    background: #153d5a;
 }
 
 /* Layout */
