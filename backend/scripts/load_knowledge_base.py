@@ -98,12 +98,6 @@ class KnowledgeLoader:
         Split on ### headings — one chunk per site/park.
         Used for fee files that list many sites in one document.
 
-        Prepends SITE: <name> so the exact site name dominates the
-        embedding — prevents wrong site chunks from winning retrieval.
-
-        e.g. 'SITE: Bhaktapur Durbar Square' beats
-             'SITE: National Art Museum Bhaktapur' for the query
-             'entry fee for Bhaktapur Durbar Square'
         """
         chunks = []
         sections = content.split('\n### ')

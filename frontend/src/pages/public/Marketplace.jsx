@@ -206,7 +206,7 @@ const getImgSrc = (url) => {
     return `http://localhost:8000${url.startsWith('/') ? url : `/${url}`}`;
 };
 
-// Vehicle Marketplace Card Component - MOVED OUTSIDE the main component
+// Vehicle Marketplace Card Component 
 const VehicleMarketplaceCard = ({ vehicle }) => {
     const getVehicleTypeLabel = (type) => {
         const labels = {

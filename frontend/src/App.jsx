@@ -15,6 +15,7 @@ import TripTemplates from './pages/public/TripTemplates';
 import TripTemplateDetail from './pages/public/TripTemplateDetail';
 import Community from './pages/public/Community';
 import PostDetail from './pages/public/PostDetail';
+import About from './pages/public/About';
 
 // Tourist pages
 import TouristDashboard from './pages/tourist/TouristDashboard';
@@ -89,6 +90,7 @@ function App() {
         <Route path="/trips/:slug" element={<NonVendorRoute><TripTemplateDetail /></NonVendorRoute>} />
         <Route path="/community" element={<Community />} />
         <Route path="/community/:id" element={<PostDetail />} />
+        <Route path="/about" element={<About />} />
         <Route path="/marketplace" element={<NonVendorRoute><Marketplace /></NonVendorRoute>} />
         <Route path="/vehicle/:id" element={<NonVendorRoute><VehicleDetails /></NonVendorRoute>} />
 
