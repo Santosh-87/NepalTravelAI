@@ -12,7 +12,7 @@ class OllamaClient:
 
     # Token limits by query type — itineraries need more room
     TOKEN_LIMITS = {
-        'itinerary':  512,
+        'itinerary':  900,
         'transport':  384,
         'default':    384,
     }

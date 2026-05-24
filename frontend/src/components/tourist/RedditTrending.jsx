@@ -12,7 +12,7 @@ const RedditTrending = () => {
 
     const fetchRedditPosts = async () => {
         try {
-            const response = await fetch('https://www.reddit.com/r/nepal/hot.json?limit=6', {
+            const response = await fetch('https://www.reddit.com/r/nepal/search.json?q=trek+travel+tourism+hiking&sort=hot&limit=6&restrict_sr=1', {
                 headers: { 'Accept': 'application/json' }
             });
             if (!response.ok) throw new Error('Reddit fetch failed');
